@@ -9,12 +9,10 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"swiftinstall/internal/appinfo"
 	"swiftinstall/internal/config"
 	"swiftinstall/internal/i18n"
 )
 
-// MenuItem 菜单项
 type MenuItem struct {
 	Title       string
 	Description string
@@ -24,7 +22,6 @@ type MenuItem struct {
 
 func (i MenuItem) FilterValue() string { return i.Title }
 
-// MainMenuModel 主菜单模型
 type MainMenuModel struct {
 	list     list.Model
 	quitting bool
@@ -32,7 +29,6 @@ type MainMenuModel struct {
 	height   int
 }
 
-// NewMainMenu 创建主菜单
 func NewMainMenu() MainMenuModel {
 	items := []list.Item{
 		MenuItem{
@@ -42,28 +38,22 @@ func NewMainMenu() MainMenuModel {
 			Action:      func() { RunInstall(config.Get().GetSoftwareList(), false) },
 		},
 		MenuItem{
-			Title:       i18n.T("menu_uninstall"),
-			Description: i18n.T("cmd_uninstall_long"),
-			Icon:        "🗑️",
-			Action:      func() { RunUninstall(config.Get().GetSoftwareList()) },
-		},
-		MenuItem{
 			Title:       i18n.T("menu_search"),
 			Description: i18n.T("cmd_search_long"),
 			Icon:        "🔍",
 			Action:      func() { RunSearch("") },
 		},
 		MenuItem{
-			Title:       i18n.T("menu_config"),
-			Description: i18n.T("cmd_config_long"),
-			Icon:        "⚙️",
-			Action:      func() { RunConfigManager() },
+			Title:       i18n.T("menu_uninstall"),
+			Description: i18n.T("cmd_uninstall_long"),
+			Icon:        "🗑",
+			Action:      func() { RunUninstall(config.Get().GetSoftwareList()) },
 		},
 		MenuItem{
-			Title:       i18n.T("menu_wizard"),
-			Description: i18n.T("cmd_wizard_long"),
-			Icon:        "🧙",
-			Action:      func() { RunWizard() },
+			Title:       i18n.T("menu_config"),
+			Description: i18n.T("cmd_config_long"),
+			Icon:        "⚙",
+			Action:      func() { RunConfigManager() },
 		},
 		MenuItem{
 			Title:       i18n.T("menu_status"),
@@ -72,35 +62,24 @@ func NewMainMenu() MainMenuModel {
 			Action:      func() { RunStatus() },
 		},
 		MenuItem{
-			Title:       i18n.T("menu_clean"),
-			Description: i18n.T("cmd_clean_long"),
-			Icon:        "🧹",
-			Action:      func() { RunClean() },
-		},
-		MenuItem{
-			Title:       i18n.T("menu_update"),
-			Description: i18n.T("cmd_update_long"),
-			Icon:        "🔄",
-			Action:      func() { RunUpdateCheck() },
-		},
-		MenuItem{
 			Title:       i18n.T("menu_about"),
 			Description: i18n.T("menu_about_desc"),
-			Icon:        "ℹ️",
+			Icon:        "ℹ",
 			Action:      func() { RunAbout() },
 		},
 		MenuItem{
 			Title:       i18n.T("menu_exit"),
 			Description: i18n.T("menu_exit_desc"),
-			Icon:        "🚪",
+			Icon:        "✕",
 			Action:      func() { os.Exit(0) },
 		},
 	}
 
-	l := list.New(items, menuItemDelegate{}, 60, 20)
-	l.Title = i18n.T("menu_title")
+	l := list.New(items, menuItemDelegate{}, 50, 16)
+	l.Title = ""
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
+	l.SetShowHelp(false)
 	l.Styles.Title = TitleStyle
 	l.Styles.PaginationStyle = HelpStyle
 	l.Styles.HelpStyle = HelpStyle
@@ -108,12 +87,10 @@ func NewMainMenu() MainMenuModel {
 	return MainMenuModel{list: l}
 }
 
-// Init 初始化
 func (m MainMenuModel) Init() tea.Cmd {
 	return nil
 }
 
-// Update 更新
 func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -127,10 +104,10 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "ctrl+c":
 			m.quitting = true
 			return m, tea.Quit
-		case "up":
+		case "up", "k":
 			m.list.CursorUp()
 			return m, nil
-		case "down":
+		case "down", "j":
 			m.list.CursorDown()
 			return m, nil
 		case "enter":
@@ -153,7 +130,6 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-// View 视图
 func (m MainMenuModel) View() string {
 	if m.quitting {
 		return "\n  " + i18n.T("menu_exit") + "\n"
@@ -162,48 +138,40 @@ func (m MainMenuModel) View() string {
 	logo := GetCompactLogo()
 	menu := m.list.View()
 
-	// 构建帮助信息
-	helpText := fmt.Sprintf("%s: ↑/%s • ↓/%s • Enter %s • i:%s • s:%s • c:%s • a:%s • q:%s",
-		i18n.T("common_navigation"),
-		i18n.T("common_up"),
-		i18n.T("common_down"),
-		i18n.T("common_select"),
-		i18n.T("menu_install"),
-		i18n.T("menu_search"),
-		i18n.T("menu_config"),
-		i18n.T("menu_about"),
-		i18n.T("common_quit"),
+	helpItems := []string{
+		KeyStyle.Render("↑/↓") + HelpStyle.Render(" navigate"),
+		KeyStyle.Render("Enter") + HelpStyle.Render(" select"),
+		KeyStyle.Render("q") + HelpStyle.Render(" quit"),
+	}
+	helpText := lipgloss.NewStyle().Foreground(lipgloss.Color(ColorMuted)).Render(
+		"  " + helpItems[0] + "  " + helpItems[1] + "  " + helpItems[2],
 	)
-	help := HelpStyle.Render(helpText)
 
-	// 添加命令提示
-	tip := SubtitleStyle.Render(fmt.Sprintf("%s: sis install, sis search, sis list...", i18n.T("common_tip")))
-
-	meta := SubtitleStyle.Render(fmt.Sprintf("%s: %s", i18n.T("about_author"), appinfo.Author))
-	copy := HelpStyle.Render(appinfo.Copyright)
+	shortcuts := []string{
+		KeyStyle.Render("i") + HelpStyle.Render(" install"),
+		KeyStyle.Render("s") + HelpStyle.Render(" search"),
+		KeyStyle.Render("c") + HelpStyle.Render(" config"),
+		KeyStyle.Render("a") + HelpStyle.Render(" about"),
+	}
+	shortcutText := lipgloss.NewStyle().Foreground(lipgloss.Color(ColorMuted)).Render(
+		"  " + shortcuts[0] + "  " + shortcuts[1] + "  " + shortcuts[2] + "  " + shortcuts[3],
+	)
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		logo,
 		"",
-		TitleStyle.Render(i18n.T("menu_title")),
-		"",
 		menu,
 		"",
-		help,
-		"",
-		tip,
-		"",
-		meta,
-		copy,
+		helpText,
+		shortcutText,
 	)
 }
 
-// menuItemDelegate 菜单项委托
 type menuItemDelegate struct{}
 
-func (d menuItemDelegate) Height() int                             { return 3 }
-func (d menuItemDelegate) Spacing() int                            { return 1 }
+func (d menuItemDelegate) Height() int                             { return 2 }
+func (d menuItemDelegate) Spacing() int                            { return 0 }
 func (d menuItemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd { return nil }
 func (d menuItemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
 	item, ok := listItem.(MenuItem)
@@ -211,21 +179,29 @@ func (d menuItemDelegate) Render(w io.Writer, m list.Model, index int, listItem 
 		return
 	}
 
-	title := fmt.Sprintf("%s %s", item.Icon, item.Title)
-	desc := item.Description
+	selected := index == m.Index()
 
-	if index == m.Index() {
-		title = MenuSelectedStyle.Render("> " + title)
-		desc = MenuSelectedStyle.UnsetBold().Foreground(lipgloss.Color(ColorMuted)).Render("  " + desc)
+	var title, desc string
+	if selected {
+		title = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(ColorPrimaryBright)).
+			Bold(true).
+			Render(fmt.Sprintf("  → %s  %s", item.Icon, item.Title))
+		desc = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(ColorMuted)).
+			Render("     " + item.Description)
 	} else {
-		title = MenuStyle.Render("  " + title)
-		desc = MenuDescriptionStyle.Render(desc)
+		title = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(ColorText)).
+			Render(fmt.Sprintf("    %s  %s", item.Icon, item.Title))
+		desc = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(ColorMuted)).
+			Render("     " + item.Description)
 	}
 
 	fmt.Fprint(w, lipgloss.JoinVertical(lipgloss.Left, title, desc))
 }
 
-// RunMainMenu 运行主菜单
 func RunMainMenu() {
 	p := tea.NewProgram(NewMainMenu(), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
@@ -234,14 +210,12 @@ func RunMainMenu() {
 	}
 }
 
-// SpinnerModel 加载动画模型
 type SpinnerModel struct {
 	spinner  spinner.Model
 	message  string
 	quitting bool
 }
 
-// NewSpinner 创建加载动画
 func NewSpinner(message string) SpinnerModel {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
@@ -249,12 +223,10 @@ func NewSpinner(message string) SpinnerModel {
 	return SpinnerModel{spinner: s, message: message}
 }
 
-// Init 初始化
 func (m SpinnerModel) Init() tea.Cmd {
 	return m.spinner.Tick
 }
 
-// Update 更新
 func (m SpinnerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -270,7 +242,6 @@ func (m SpinnerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// View 视图
 func (m SpinnerModel) View() string {
 	if m.quitting {
 		return ""
@@ -283,7 +254,6 @@ func (m SpinnerModel) View() string {
 	)
 }
 
-// ShowSpinner 显示加载动画
 func ShowSpinner(message string, action func()) {
 	p := tea.NewProgram(NewSpinner(message))
 	go func() {

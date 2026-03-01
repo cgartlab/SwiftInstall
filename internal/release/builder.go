@@ -21,26 +21,26 @@ const (
 )
 
 type BuildResult struct {
-	Platform      PlatformConfig
-	Status        BuildStatus
-	OutputPath    string
-	Size          int64
-	Duration      time.Duration
-	Error         error
-	BuildLog      string
-	ArtifactHash  string
+	Platform     PlatformConfig
+	Status       BuildStatus
+	OutputPath   string
+	Size         int64
+	Duration     time.Duration
+	Error        error
+	BuildLog     string
+	ArtifactHash string
 }
 
 type TestResult struct {
-	Suite        string
-	Status       BuildStatus
-	Coverage     float64
-	Passed       int
-	Failed       int
-	Skipped      int
-	Duration     time.Duration
-	Error        error
-	TestLog      string
+	Suite    string
+	Status   BuildStatus
+	Coverage float64
+	Passed   int
+	Failed   int
+	Skipped  int
+	Duration time.Duration
+	Error    error
+	TestLog  string
 }
 
 type BuildManager struct {
@@ -50,8 +50,8 @@ type BuildManager struct {
 }
 
 type TestManager struct {
-	config TestConfig
-	logger *ReleaseLogger
+	config  TestConfig
+	logger  *ReleaseLogger
 	results []TestResult
 }
 
@@ -66,7 +66,7 @@ func NewBuildManager(config BuildConfig, logger *ReleaseLogger) *BuildManager {
 func (bm *BuildManager) Build(ctx context.Context, version string, projectName string) ([]BuildResult, error) {
 	bm.logger.SetStage(StageBuild)
 	bm.logger.Info("Starting build process", map[string]interface{}{
-		"version": version,
+		"version":   version,
 		"platforms": len(bm.config.Platforms),
 	})
 
@@ -170,11 +170,11 @@ func (bm *BuildManager) buildPlatform(ctx context.Context, platform PlatformConf
 	result.Duration = time.Since(startTime)
 
 	bm.logger.Debug("Build completed for platform", map[string]interface{}{
-		"goos":      platform.GOOS,
-		"goarch":    platform.GOARCH,
-		"output":    outputPath,
-		"size":      result.Size,
-		"duration":  result.Duration,
+		"goos":     platform.GOOS,
+		"goarch":   platform.GOARCH,
+		"output":   outputPath,
+		"size":     result.Size,
+		"duration": result.Duration,
 	})
 
 	return result

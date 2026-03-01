@@ -1,65 +1,57 @@
 package ui
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/lipgloss"
+	"swiftinstall/internal/appinfo"
 )
 
-// 颜色常量
 const (
-	ColorPrimary       = "#c7894e" // Muted orange
+	ColorPrimary       = "#c7894e"
 	ColorPrimaryBright = "#d9a56f"
-	ColorSecondary     = "#2f3338" // Muted slate
-	ColorAccent        = "#6da874" // Muted green
-	ColorWarning       = "#c99b67" // Warm orange
-	ColorError         = "#ef4444" // Red
-	ColorInfo          = "#7f9ab5" // Muted blue
-	ColorMuted         = "#6b7280" // Gray
-	ColorText          = "#f8fafc" // White
-	ColorBackground    = "#1e293b" // Dark slate
+	ColorSecondary     = "#2f3338"
+	ColorAccent        = "#6da874"
+	ColorWarning       = "#c99b67"
+	ColorError         = "#ef4444"
+	ColorInfo          = "#7f9ab5"
+	ColorMuted         = "#6b7280"
+	ColorText          = "#f8fafc"
+	ColorBackground    = "#1e293b"
 )
 
-// 样式定义
 var (
-	// 基础样式
 	BaseStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(ColorText))
 
-	// 标题样式
 	TitleStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(ColorPrimary)).
 			Bold(true).
 			Padding(0, 1)
 
-	// 副标题样式
 	SubtitleStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(ColorMuted)).
 			Italic(true)
 
-	// 成功样式
 	SuccessStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(ColorAccent)).
 			Bold(true)
 
-	// 警告样式
 	WarningStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(ColorWarning)).
 			Bold(true)
 
-	// 错误样式
 	ErrorStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(ColorError)).
 			Bold(true)
 
-	// 信息样式
 	InfoStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(ColorInfo))
 
-	// 高亮样式
 	HighlightStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(ColorPrimaryBright)).
 			Bold(true)
 
-	// 菜单样式
 	MenuStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(ColorText)).
 			Padding(0, 1)
@@ -73,7 +65,6 @@ var (
 				Bold(true).
 				Padding(0, 1)
 
-	// 盒子样式
 	BoxStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color(ColorPrimary)).
@@ -84,7 +75,6 @@ var (
 			BorderForeground(lipgloss.Color(ColorAccent)).
 			Padding(1, 2)
 
-	// 状态样式
 	StatusSuccess = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(ColorAccent))
 
@@ -97,14 +87,12 @@ var (
 	StatusInstalling = lipgloss.NewStyle().
 				Foreground(lipgloss.Color(ColorInfo))
 
-	// 进度条样式
 	ProgressBarStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color(ColorPrimary))
 
 	ProgressCompleteStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color(ColorAccent))
 
-	// 表格样式
 	TableHeaderStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color(ColorPrimaryBright)).
 				Bold(true)
@@ -112,25 +100,70 @@ var (
 	TableCellStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(ColorText))
 
-	// 输入样式
 	InputStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(ColorText)).
 			Border(lipgloss.NormalBorder()).
 			BorderForeground(lipgloss.Color(ColorPrimary))
 
-	// 帮助样式
 	HelpStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(ColorMuted))
 
-	// Logo 样式
 	LogoStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(ColorPrimary)).
 			Bold(true)
 
-	// 分隔线样式
 	DividerStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(ColorMuted))
+
+	KeyStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(ColorPrimary)).
+			Bold(true)
+
+	CmdStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(ColorAccent))
+
+	SectionStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(ColorPrimaryBright)).
+			Bold(true).
+			Underline(true)
 )
+
+func PrintWelcomeScreen(version string) {
+	fmt.Println(GetCompactLogo())
+	fmt.Println()
+
+	infoStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color(ColorMuted))
+	fmt.Println(infoStyle.Render(fmt.Sprintf("v%s | %s", version, appinfo.Author)))
+	fmt.Println()
+
+	commands := []struct {
+		cmd  string
+		desc string
+	}{
+		{"install", "Install software packages"},
+		{"uninstall", "Uninstall software packages"},
+		{"search", "Search for packages"},
+		{"list", "List configured packages"},
+		{"config", "Manage configuration"},
+		{"status", "Show system status"},
+		{"about", "About SwiftInstall"},
+	}
+
+	fmt.Println(SectionStyle.Render("Commands"))
+	fmt.Println()
+
+	maxCmdLen := 12
+	for _, c := range commands {
+		cmdStr := KeyStyle.Render(fmt.Sprintf("  %-"+fmt.Sprintf("%d", maxCmdLen)+"s", c.cmd))
+		descStr := HelpStyle.Render(c.desc)
+		fmt.Printf("%s %s\n", cmdStr, descStr)
+	}
+
+	fmt.Println()
+	fmt.Println(HelpStyle.Render("Run 'sis help' for more information"))
+	fmt.Println()
+}
 
 // GetStatusStyle 根据状态获取样式
 func GetStatusStyle(status string) lipgloss.Style {

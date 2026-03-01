@@ -8,39 +8,39 @@ func TestChangeAnalyzer_AnalyzeCommitMessage(t *testing.T) {
 	analyzer := NewChangeAnalyzer()
 
 	tests := []struct {
-		name            string
-		message         string
-		expectedType    ChangeCategory
+		name             string
+		message          string
+		expectedType     ChangeCategory
 		expectedBreaking bool
 	}{
 		{
-			name:            "feature commit",
-			message:         "feat: add new user authentication",
-			expectedType:    CategoryFeature,
+			name:             "feature commit",
+			message:          "feat: add new user authentication",
+			expectedType:     CategoryFeature,
 			expectedBreaking: false,
 		},
 		{
-			name:            "breaking feature",
-			message:         "feat!: breaking API change",
-			expectedType:    CategoryFeature,
+			name:             "breaking feature",
+			message:          "feat!: breaking API change",
+			expectedType:     CategoryFeature,
 			expectedBreaking: true,
 		},
 		{
-			name:            "fix commit",
-			message:         "fix: resolve login issue",
-			expectedType:    CategoryFix,
+			name:             "fix commit",
+			message:          "fix: resolve login issue",
+			expectedType:     CategoryFix,
 			expectedBreaking: false,
 		},
 		{
-			name:            "breaking change in body",
-			message:         "feat: new feature\nBREAKING CHANGE: API changed",
-			expectedType:    CategoryFeature,
+			name:             "breaking change in body",
+			message:          "feat: new feature\nBREAKING CHANGE: API changed",
+			expectedType:     CategoryFeature,
 			expectedBreaking: true,
 		},
 		{
-			name:            "docs commit",
-			message:         "docs: update README",
-			expectedType:    CategoryDocs,
+			name:             "docs commit",
+			message:          "docs: update README",
+			expectedType:     CategoryDocs,
 			expectedBreaking: false,
 		},
 	}

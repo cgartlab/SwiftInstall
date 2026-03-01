@@ -1,5 +1,9 @@
 package appinfo
 
+var (
+	Version = "v0.1.3"
+)
+
 const (
 	Name      = "SwiftInstall"
 	Author    = "CGArtLab"

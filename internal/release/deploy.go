@@ -46,10 +46,10 @@ type RollbackInfo struct {
 }
 
 type DeployManager struct {
-	config      DeployConfig
-	logger      *ReleaseLogger
+	config       DeployConfig
+	logger       *ReleaseLogger
 	errorHandler *ErrorHandler
-	deployments []DeployResult
+	deployments  []DeployResult
 }
 
 type HealthChecker struct {
@@ -228,7 +228,7 @@ func (dm *DeployManager) canaryDeploy(ctx context.Context, env EnvironmentConfig
 func (dm *DeployManager) rollback(ctx context.Context, env EnvironmentConfig, failedDeploy DeployResult) *RollbackInfo {
 	dm.logger.SetStage(StageRollback)
 	dm.logger.Warn("Initiating rollback", map[string]interface{}{
-		"environment": env.Name,
+		"environment":   env.Name,
 		"failedVersion": failedDeploy.Version,
 	})
 
@@ -255,7 +255,7 @@ func (dm *DeployManager) rollback(ctx context.Context, env EnvironmentConfig, fa
 
 	if healthy {
 		dm.logger.Info("Rollback successful", map[string]interface{}{
-			"environment": env.Name,
+			"environment":     env.Name,
 			"previousVersion": rollbackInfo.PreviousVersion,
 		})
 	} else {
@@ -311,9 +311,9 @@ func (hc *HealthChecker) Check(ctx context.Context, url string) bool {
 	healthy := resp.StatusCode >= 200 && resp.StatusCode < 300
 
 	hc.logger.Debug("Health check completed", map[string]interface{}{
-		"url":      url,
-		"status":   resp.StatusCode,
-		"healthy":  healthy,
+		"url":     url,
+		"status":  resp.StatusCode,
+		"healthy": healthy,
 	})
 
 	return healthy

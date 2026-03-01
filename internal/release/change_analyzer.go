@@ -31,13 +31,13 @@ const (
 )
 
 type FileChange struct {
-	Path        string
-	ChangeType  string
-	AddedLines  int
+	Path         string
+	ChangeType   string
+	AddedLines   int
 	DeletedLines int
-	Modified    bool
-	IsNew       bool
-	IsDeleted   bool
+	Modified     bool
+	IsNew        bool
+	IsDeleted    bool
 }
 
 type CommitAnalysis struct {
@@ -50,19 +50,19 @@ type CommitAnalysis struct {
 }
 
 type ChangeAnalysisResult struct {
-	TotalCommits      int
-	BreakingChanges   int
-	NewFeatures       int
-	BugFixes          int
-	OtherChanges      int
-	FilesModified     int
-	FilesAdded        int
-	FilesDeleted      int
-	LinesAdded        int
-	LinesDeleted      int
-	SuggestedVersion  ChangeType
-	Confidence        float64
-	AnalysisDetails   []CommitAnalysis
+	TotalCommits     int
+	BreakingChanges  int
+	NewFeatures      int
+	BugFixes         int
+	OtherChanges     int
+	FilesModified    int
+	FilesAdded       int
+	FilesDeleted     int
+	LinesAdded       int
+	LinesDeleted     int
+	SuggestedVersion ChangeType
+	Confidence       float64
+	AnalysisDetails  []CommitAnalysis
 }
 
 type ChangeAnalyzer struct {

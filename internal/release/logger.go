@@ -33,24 +33,24 @@ const (
 )
 
 type LogEntry struct {
-	Timestamp   time.Time    `json:"timestamp"`
-	Level       LogLevel     `json:"level"`
-	Stage       ReleaseStage `json:"stage"`
-	Message     string       `json:"message"`
-	Details     interface{}  `json:"details,omitempty"`
-	Error       string       `json:"error,omitempty"`
-	ReleaseID   string       `json:"releaseId"`
-	Duration    time.Duration `json:"duration,omitempty"`
+	Timestamp time.Time     `json:"timestamp"`
+	Level     LogLevel      `json:"level"`
+	Stage     ReleaseStage  `json:"stage"`
+	Message   string        `json:"message"`
+	Details   interface{}   `json:"details,omitempty"`
+	Error     string        `json:"error,omitempty"`
+	ReleaseID string        `json:"releaseId"`
+	Duration  time.Duration `json:"duration,omitempty"`
 }
 
 type ReleaseLogger struct {
-	mu          sync.Mutex
-	file        *os.File
-	config      LoggingConfig
-	entries     []LogEntry
+	mu           sync.Mutex
+	file         *os.File
+	config       LoggingConfig
+	entries      []LogEntry
 	currentStage ReleaseStage
-	releaseID   string
-	startTime   time.Time
+	releaseID    string
+	startTime    time.Time
 }
 
 type ReleaseError struct {
@@ -64,10 +64,10 @@ type ReleaseError struct {
 
 func NewReleaseLogger(config LoggingConfig, releaseID string) (*ReleaseLogger, error) {
 	logger := &ReleaseLogger{
-		config:      config,
-		entries:     make([]LogEntry, 0),
-		releaseID:   releaseID,
-		startTime:   time.Now(),
+		config:    config,
+		entries:   make([]LogEntry, 0),
+		releaseID: releaseID,
+		startTime: time.Now(),
 	}
 
 	if config.OutputPath != "" {
@@ -351,15 +351,15 @@ func (h *ErrorHandler) WrapAndHandle(code string, stage ReleaseStage, message st
 }
 
 const (
-	ErrCodeVersionParse    = "VERSION_PARSE_ERROR"
-	ErrCodeBuildFailed     = "BUILD_FAILED"
-	ErrCodeTestFailed      = "TEST_FAILED"
-	ErrCodeDeployFailed    = "DEPLOY_FAILED"
-	ErrCodeHealthCheck     = "HEALTH_CHECK_FAILED"
-	ErrCodeRollbackFailed  = "ROLLBACK_FAILED"
-	ErrCodeConfigInvalid   = "CONFIG_INVALID"
-	ErrCodeGitOperation    = "GIT_OPERATION_ERROR"
-	ErrCodeNetworkError    = "NETWORK_ERROR"
-	ErrCodeTimeout         = "TIMEOUT_ERROR"
+	ErrCodeVersionParse     = "VERSION_PARSE_ERROR"
+	ErrCodeBuildFailed      = "BUILD_FAILED"
+	ErrCodeTestFailed       = "TEST_FAILED"
+	ErrCodeDeployFailed     = "DEPLOY_FAILED"
+	ErrCodeHealthCheck      = "HEALTH_CHECK_FAILED"
+	ErrCodeRollbackFailed   = "ROLLBACK_FAILED"
+	ErrCodeConfigInvalid    = "CONFIG_INVALID"
+	ErrCodeGitOperation     = "GIT_OPERATION_ERROR"
+	ErrCodeNetworkError     = "NETWORK_ERROR"
+	ErrCodeTimeout          = "TIMEOUT_ERROR"
 	ErrCodePermissionDenied = "PERMISSION_DENIED"
 )

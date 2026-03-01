@@ -16,7 +16,6 @@ import (
 	"swiftinstall/internal/installer"
 )
 
-// InstallModel 安装界面模型
 type InstallModel struct {
 	packages  []config.Software
 	results   []*installer.InstallResult
@@ -32,18 +31,16 @@ type InstallModel struct {
 	showAbout bool
 }
 
-// tickMsg 定时消息
 type tickMsg struct{}
 
-// NewInstallModel 创建安装模型
 func NewInstallModel(packages []config.Software, parallel bool) InstallModel {
 	p := progress.New(progress.WithDefaultGradient())
-	p.Width = 50
+	p.Width = 40
 
 	columns := []table.Column{
-		{Title: i18n.T("config_name"), Width: 20},
-		{Title: i18n.T("config_id"), Width: 30},
-		{Title: i18n.T("common_status"), Width: 15},
+		{Title: "Package", Width: 24},
+		{Title: "ID", Width: 28},
+		{Title: "Status", Width: 12},
 	}
 
 	var rows []table.Row
@@ -55,7 +52,7 @@ func NewInstallModel(packages []config.Software, parallel bool) InstallModel {
 		rows = append(rows, table.Row{
 			pkg.Name,
 			id,
-			i18n.T("common_pending"),
+			"○",
 		})
 	}
 
@@ -68,13 +65,11 @@ func NewInstallModel(packages []config.Software, parallel bool) InstallModel {
 
 	s := table.DefaultStyles()
 	s.Header = s.Header.
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color(ColorPrimary)).
-		BorderBottom(true).
-		Bold(false)
-	s.Selected = s.Selected.
 		Foreground(lipgloss.Color(ColorPrimaryBright)).
-		Bold(true)
+		Bold(true).
+		Padding(0, 1)
+	s.Selected = s.Selected.
+		Foreground(lipgloss.Color(ColorPrimaryBright))
 	t.SetStyles(s)
 
 	return InstallModel{
@@ -87,7 +82,6 @@ func NewInstallModel(packages []config.Software, parallel bool) InstallModel {
 	}
 }
 
-// Init 初始化
 func (m *InstallModel) Init() tea.Cmd {
 	return tea.Batch(
 		tickCmd(),
@@ -95,14 +89,12 @@ func (m *InstallModel) Init() tea.Cmd {
 	)
 }
 
-// tickCmd 定时命令
 func tickCmd() tea.Cmd {
 	return tea.Tick(time.Millisecond*100, func(t time.Time) tea.Msg {
 		return tickMsg{}
 	})
 }
 
-// runInstall 运行安装
 func (m *InstallModel) runInstall() tea.Cmd {
 	return func() tea.Msg {
 		var wg sync.WaitGroup
@@ -139,7 +131,6 @@ func (m *InstallModel) runInstall() tea.Cmd {
 	}
 }
 
-// installPackage 安装单个包
 func (m *InstallModel) installPackage(index int) {
 	inst := installer.NewInstaller()
 	if inst == nil {
@@ -177,13 +168,13 @@ func (m *InstallModel) installPackage(index int) {
 	m.mu.Lock()
 	m.results[index] = result
 
-	status := string(result.Status)
+	status := "○"
 	if result.Status == installer.StatusSuccess {
-		status = SuccessStyle.Render(i18n.T("common_success"))
+		status = SuccessStyle.Render("✓")
 	} else if result.Status == installer.StatusFailed {
-		status = ErrorStyle.Render(i18n.T("common_failed"))
+		status = ErrorStyle.Render("✗")
 	} else if result.Status == installer.StatusSkipped {
-		status = WarningStyle.Render(i18n.T("install_skipped"))
+		status = WarningStyle.Render("⊘")
 	}
 
 	rows := m.table.Rows()
@@ -194,10 +185,8 @@ func (m *InstallModel) installPackage(index int) {
 	m.mu.Unlock()
 }
 
-// installDoneMsg 安装完成消息
 type installDoneMsg struct{}
 
-// Update 更新
 func (m *InstallModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -226,7 +215,6 @@ func (m *InstallModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tickMsg:
-		// 计算进度
 		completed := 0
 		for _, r := range m.results {
 			if r != nil {
@@ -257,7 +245,6 @@ func (m *InstallModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-// View 视图
 func (m *InstallModel) View() string {
 	if m.quitting {
 		return "\n  " + i18n.T("common_cancel") + "\n"
@@ -272,27 +259,22 @@ func (m *InstallModel) View() string {
 		return b.String()
 	}
 
-	// 标题
 	b.WriteString(TitleStyle.Render(i18n.T("install_title")))
 	b.WriteString("\n\n")
 
-	// 进度条
 	b.WriteString(m.progress.View())
 	b.WriteString("\n\n")
 
-	// 状态
 	if m.done {
-		b.WriteString(SuccessStyle.Render(m.status))
+		b.WriteString(SuccessStyle.Render("✓ " + m.status))
 	} else {
-		b.WriteString(HighlightStyle.Render(m.status))
+		b.WriteString(HighlightStyle.Render("◉ " + m.status))
 	}
 	b.WriteString("\n\n")
 
-	// 表格
 	b.WriteString(m.table.View())
 	b.WriteString("\n")
 
-	// 统计
 	if m.done {
 		success, failed, skipped := 0, 0, 0
 		for _, r := range m.results {
@@ -309,26 +291,25 @@ func (m *InstallModel) View() string {
 		}
 
 		b.WriteString("\n")
-		b.WriteString(SuccessStyle.Render(fmt.Sprintf("✓ %s: %d", i18n.T("install_completed"), success)))
-		b.WriteString("  ")
+		b.WriteString(SuccessStyle.Render(fmt.Sprintf("✓ %d", success)))
 		if failed > 0 {
-			b.WriteString(ErrorStyle.Render(fmt.Sprintf("✗ %s: %d", i18n.T("install_failed"), failed)))
 			b.WriteString("  ")
+			b.WriteString(ErrorStyle.Render(fmt.Sprintf("✗ %d", failed)))
 		}
 		if skipped > 0 {
-			b.WriteString(WarningStyle.Render(fmt.Sprintf("⊘ %s: %d", i18n.T("install_skipped"), skipped)))
+			b.WriteString("  ")
+			b.WriteString(WarningStyle.Render(fmt.Sprintf("⊘ %d", skipped)))
 		}
 		b.WriteString("\n\n")
-		b.WriteString(HelpStyle.Render(i18n.T("common_confirm") + " Enter | a " + i18n.T("menu_about") + " | " + i18n.T("common_cancel") + " q"))
+		b.WriteString(HelpStyle.Render("Enter confirm | q quit"))
 	} else {
 		b.WriteString("\n")
-		b.WriteString(HelpStyle.Render("a " + i18n.T("menu_about") + " | " + i18n.T("common_cancel") + " q"))
+		b.WriteString(HelpStyle.Render("q quit"))
 	}
 
 	return b.String()
 }
 
-// RunInstall 运行安装界面
 func RunInstall(packages []config.Software, parallel bool) {
 	if len(packages) == 0 {
 		fmt.Println(WarningStyle.Render(i18n.T("warn_no_packages")))
@@ -343,7 +324,6 @@ func RunInstall(packages []config.Software, parallel bool) {
 	}
 }
 
-// RunInstallByName 按名称安装
 func RunInstallByName(packageNames []string, parallel bool) {
 	packages := make([]config.Software, len(packageNames))
 	for i, name := range packageNames {
@@ -355,9 +335,7 @@ func RunInstallByName(packageNames []string, parallel bool) {
 	RunInstall(packages, parallel)
 }
 
-// RunUninstall 运行卸载界面
 func RunUninstall(packages []config.Software) {
-	// 简化版本，直接卸载
 	inst := installer.NewInstaller()
 	if inst == nil {
 		fmt.Println(ErrorStyle.Render("Unsupported platform"))
@@ -373,19 +351,18 @@ func RunUninstall(packages []config.Software) {
 			packageID = pkg.Package
 		}
 
-		fmt.Printf("Uninstalling %s... ", pkg.Name)
+		fmt.Printf("  %s... ", pkg.Name)
 		result, err := inst.Uninstall(packageID)
 		if err != nil || result.Status == installer.StatusFailed {
-			fmt.Println(ErrorStyle.Render("✗ Failed"))
+			fmt.Println(ErrorStyle.Render("✗"))
 		} else if result.Status == installer.StatusSkipped {
-			fmt.Println(WarningStyle.Render("⊘ Not installed"))
+			fmt.Println(WarningStyle.Render("⊘"))
 		} else {
-			fmt.Println(SuccessStyle.Render("✓ Success"))
+			fmt.Println(SuccessStyle.Render("✓"))
 		}
 	}
 }
 
-// RunUninstallByName 按名称卸载
 func RunUninstallByName(packageNames []string) {
 	packages := make([]config.Software, len(packageNames))
 	for i, name := range packageNames {

@@ -21,14 +21,14 @@ const (
 )
 
 type ReleasePipeline struct {
-	configManager  *ConfigManager
-	analyzer       *ChangeAnalyzer
-	versionEngine  *VersionEngine
-	buildManager   *BuildManager
-	testManager    *TestManager
-	deployManager  *DeployManager
-	logger         *ReleaseLogger
-	errorHandler   *ErrorHandler
+	configManager *ConfigManager
+	analyzer      *ChangeAnalyzer
+	versionEngine *VersionEngine
+	buildManager  *BuildManager
+	testManager   *TestManager
+	deployManager *DeployManager
+	logger        *ReleaseLogger
+	errorHandler  *ErrorHandler
 
 	state          ReleaseState
 	currentVersion Version
@@ -37,17 +37,17 @@ type ReleasePipeline struct {
 }
 
 type ReleaseResult struct {
-	ReleaseID      string
-	Success        bool
+	ReleaseID       string
+	Success         bool
 	PreviousVersion string
-	NewVersion     string
-	ChangeType     ChangeType
-	AnalysisResult ChangeAnalysisResult
-	BuildResults   []BuildResult
-	TestResults    []TestResult
-	DeployResults  []DeployResult
-	Duration       time.Duration
-	Error          error
+	NewVersion      string
+	ChangeType      ChangeType
+	AnalysisResult  ChangeAnalysisResult
+	BuildResults    []BuildResult
+	TestResults     []TestResult
+	DeployResults   []DeployResult
+	Duration        time.Duration
+	Error           error
 }
 
 func NewReleasePipeline(configPath string, projectName string) (*ReleasePipeline, error) {
@@ -84,7 +84,7 @@ func NewReleasePipeline(configPath string, projectName string) (*ReleasePipeline
 func (p *ReleasePipeline) Execute(ctx context.Context, commits []string, fileChanges []FileChange, currentVersionStr string) (*ReleaseResult, error) {
 	startTime := time.Now()
 	result := &ReleaseResult{
-		ReleaseID:      p.releaseID,
+		ReleaseID:       p.releaseID,
 		PreviousVersion: currentVersionStr,
 	}
 
@@ -97,7 +97,7 @@ func (p *ReleasePipeline) Execute(ctx context.Context, commits []string, fileCha
 	defer func() {
 		result.Duration = time.Since(startTime)
 		p.logger.Info("Release pipeline completed", map[string]interface{}{
-			"success": result.Success,
+			"success":  result.Success,
 			"duration": result.Duration,
 		})
 	}()
@@ -167,11 +167,11 @@ func (p *ReleasePipeline) analyzeChanges(commits []string, fileChanges []FileCha
 	result := p.analyzer.AnalyzeChanges(commits, fileChanges)
 
 	p.logger.Info("Change analysis completed", map[string]interface{}{
-		"breakingChanges": result.BreakingChanges,
-		"newFeatures":     result.NewFeatures,
-		"bugFixes":        result.BugFixes,
+		"breakingChanges":  result.BreakingChanges,
+		"newFeatures":      result.NewFeatures,
+		"bugFixes":         result.BugFixes,
 		"suggestedVersion": result.SuggestedVersion.String(),
-		"confidence":      result.Confidence,
+		"confidence":       result.Confidence,
 	})
 
 	return result
@@ -188,11 +188,11 @@ func (p *ReleasePipeline) decideVersion(currentVersion Version, analysis ChangeA
 	decision := p.versionEngine.DetermineNewVersion(currentVersion, analysis)
 
 	p.logger.Info("Version decision made", map[string]interface{}{
-		"currentVersion": decision.CurrentVersion.String(),
-		"newVersion":     decision.NewVersion.String(),
-		"changeType":     decision.ChangeType.String(),
-		"reason":         decision.Reason,
-		"confidence":     decision.Confidence,
+		"currentVersion":   decision.CurrentVersion.String(),
+		"newVersion":       decision.NewVersion.String(),
+		"changeType":       decision.ChangeType.String(),
+		"reason":           decision.Reason,
+		"confidence":       decision.Confidence,
 		"requiresApproval": decision.RequiresApproval,
 	})
 

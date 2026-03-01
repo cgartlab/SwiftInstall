@@ -8,40 +8,40 @@ import (
 )
 
 type ReleaseConfig struct {
-	Versioning      VersioningConfig      `json:"versioning"`
-	AutoRelease     AutoReleaseConfig     `json:"autoRelease"`
-	Build           BuildConfig           `json:"build"`
-	Test            TestConfig            `json:"test"`
-	Deploy          DeployConfig          `json:"deploy"`
-	Notifications   NotificationsConfig   `json:"notifications"`
-	Logging         LoggingConfig         `json:"logging"`
+	Versioning    VersioningConfig    `json:"versioning"`
+	AutoRelease   AutoReleaseConfig   `json:"autoRelease"`
+	Build         BuildConfig         `json:"build"`
+	Test          TestConfig          `json:"test"`
+	Deploy        DeployConfig        `json:"deploy"`
+	Notifications NotificationsConfig `json:"notifications"`
+	Logging       LoggingConfig       `json:"logging"`
 }
 
 type VersioningConfig struct {
-	Strategy              string   `json:"strategy"`
-	PrereleaseEnabled     bool     `json:"prereleaseEnabled"`
-	PrereleaseIdentifier  string   `json:"prereleaseIdentifier"`
-	CommitMessagePatterns []string `json:"commitMessagePatterns"`
-	VersionFilePattern    string   `json:"versionFilePattern"`
+	Strategy              string            `json:"strategy"`
+	PrereleaseEnabled     bool              `json:"prereleaseEnabled"`
+	PrereleaseIdentifier  string            `json:"prereleaseIdentifier"`
+	CommitMessagePatterns []string          `json:"commitMessagePatterns"`
+	VersionFilePattern    string            `json:"versionFilePattern"`
 	BranchPatterns        map[string]string `json:"branchPatterns"`
 }
 
 type AutoReleaseConfig struct {
-	Enabled              bool     `json:"enabled"`
-	TriggerBranches      []string `json:"triggerBranches"`
-	RequireApproval      bool     `json:"requireApproval"`
-	ApprovalThreshold    float64  `json:"approvalThreshold"`
-	MaxAutoBumpLevel     string   `json:"maxAutoBumpLevel"`
-	QuietPeriodHours     int      `json:"quietPeriodHours"`
-	MinCommitsThreshold  int      `json:"minCommitsThreshold"`
+	Enabled             bool     `json:"enabled"`
+	TriggerBranches     []string `json:"triggerBranches"`
+	RequireApproval     bool     `json:"requireApproval"`
+	ApprovalThreshold   float64  `json:"approvalThreshold"`
+	MaxAutoBumpLevel    string   `json:"maxAutoBumpLevel"`
+	QuietPeriodHours    int      `json:"quietPeriodHours"`
+	MinCommitsThreshold int      `json:"minCommitsThreshold"`
 }
 
 type BuildConfig struct {
-	Platforms          []PlatformConfig `json:"platforms"`
-	ArtifactNaming     string           `json:"artifactNaming"`
-	BuildTimeout       int              `json:"buildTimeout"`
-	CacheEnabled       bool             `json:"cacheEnabled"`
-	BuildArgs          map[string]string `json:"buildArgs"`
+	Platforms      []PlatformConfig  `json:"platforms"`
+	ArtifactNaming string            `json:"artifactNaming"`
+	BuildTimeout   int               `json:"buildTimeout"`
+	CacheEnabled   bool              `json:"cacheEnabled"`
+	BuildArgs      map[string]string `json:"buildArgs"`
 }
 
 type PlatformConfig struct {
@@ -51,36 +51,36 @@ type PlatformConfig struct {
 }
 
 type TestConfig struct {
-	Enabled            bool     `json:"enabled"`
-	MinCoverage        float64  `json:"minCoverage"`
-	Timeout            int      `json:"timeout"`
-	TestSuites         []string `json:"testSuites"`
-	Parallel           bool     `json:"parallel"`
-	RequiredTests      []string `json:"requiredTests"`
+	Enabled       bool     `json:"enabled"`
+	MinCoverage   float64  `json:"minCoverage"`
+	Timeout       int      `json:"timeout"`
+	TestSuites    []string `json:"testSuites"`
+	Parallel      bool     `json:"parallel"`
+	RequiredTests []string `json:"requiredTests"`
 }
 
 type DeployConfig struct {
-	Enabled           bool              `json:"enabled"`
-	Environments      []EnvironmentConfig `json:"environments"`
-	RollbackStrategy  string            `json:"rollbackStrategy"`
-	HealthCheckPath   string            `json:"healthCheckPath"`
-	HealthCheckTimeout int             `json:"healthCheckTimeout"`
+	Enabled            bool                `json:"enabled"`
+	Environments       []EnvironmentConfig `json:"environments"`
+	RollbackStrategy   string              `json:"rollbackStrategy"`
+	HealthCheckPath    string              `json:"healthCheckPath"`
+	HealthCheckTimeout int                 `json:"healthCheckTimeout"`
 }
 
 type EnvironmentConfig struct {
-	Name        string            `json:"name"`
-	Type        string            `json:"type"`
-	AutoDeploy  bool              `json:"autoDeploy"`
-	DeployStrategy string          `json:"deployStrategy"`
-	Variables   map[string]string `json:"variables"`
+	Name           string            `json:"name"`
+	Type           string            `json:"type"`
+	AutoDeploy     bool              `json:"autoDeploy"`
+	DeployStrategy string            `json:"deployStrategy"`
+	Variables      map[string]string `json:"variables"`
 }
 
 type NotificationsConfig struct {
-	Enabled    bool     `json:"enabled"`
-	Channels   []string `json:"channels"`
-	Webhooks   []string `json:"webhooks"`
-	Slack      SlackConfig `json:"slack"`
-	Email      EmailConfig `json:"email"`
+	Enabled  bool        `json:"enabled"`
+	Channels []string    `json:"channels"`
+	Webhooks []string    `json:"webhooks"`
+	Slack    SlackConfig `json:"slack"`
+	Email    EmailConfig `json:"email"`
 }
 
 type SlackConfig struct {
@@ -161,9 +161,9 @@ func (cm *ConfigManager) SetConfig(config *ReleaseConfig) {
 func (cm *ConfigManager) createDefaultConfig() error {
 	defaultConfig := &ReleaseConfig{
 		Versioning: VersioningConfig{
-			Strategy:              "semantic",
-			PrereleaseEnabled:     false,
-			PrereleaseIdentifier:  "rc",
+			Strategy:             "semantic",
+			PrereleaseEnabled:    false,
+			PrereleaseIdentifier: "rc",
 			CommitMessagePatterns: []string{
 				`^feat(\(.+\))?!?:`,
 				`^fix(\(.+\))?:`,
@@ -171,19 +171,19 @@ func (cm *ConfigManager) createDefaultConfig() error {
 			},
 			VersionFilePattern: "VERSION",
 			BranchPatterns: map[string]string{
-				"main":     "release",
-				"develop":  "prerelease",
+				"main":      "release",
+				"develop":   "prerelease",
 				"feature/*": "none",
 			},
 		},
 		AutoRelease: AutoReleaseConfig{
-			Enabled:              true,
-			TriggerBranches:      []string{"main"},
-			RequireApproval:      true,
-			ApprovalThreshold:    0.8,
-			MaxAutoBumpLevel:     "minor",
-			QuietPeriodHours:     2,
-			MinCommitsThreshold:  1,
+			Enabled:             true,
+			TriggerBranches:     []string{"main"},
+			RequireApproval:     true,
+			ApprovalThreshold:   0.8,
+			MaxAutoBumpLevel:    "minor",
+			QuietPeriodHours:    2,
+			MinCommitsThreshold: 1,
 		},
 		Build: BuildConfig{
 			Platforms: []PlatformConfig{
@@ -194,40 +194,40 @@ func (cm *ConfigManager) createDefaultConfig() error {
 				{GOOS: "darwin", GOARCH: "amd64", Suffix: ""},
 				{GOOS: "darwin", GOARCH: "arm64", Suffix: ""},
 			},
-			ArtifactNaming:     "{{.Name}}-{{.Version}}-{{.GOOS}}-{{.GOARCH}}{{.Suffix}}",
-			BuildTimeout:       30,
-			CacheEnabled:       true,
-			BuildArgs:          map[string]string{
+			ArtifactNaming: "{{.Name}}-{{.Version}}-{{.GOOS}}-{{.GOARCH}}{{.Suffix}}",
+			BuildTimeout:   30,
+			CacheEnabled:   true,
+			BuildArgs: map[string]string{
 				"-ldflags": "-s -w",
 			},
 		},
 		Test: TestConfig{
-			Enabled:      true,
-			MinCoverage:  0.8,
-			Timeout:      10,
-			TestSuites:   []string{"./..."},
-			Parallel:     true,
+			Enabled:       true,
+			MinCoverage:   0.8,
+			Timeout:       10,
+			TestSuites:    []string{"./..."},
+			Parallel:      true,
 			RequiredTests: []string{"unit", "integration"},
 		},
 		Deploy: DeployConfig{
-			Enabled:          true,
-			RollbackStrategy: "automatic",
-			HealthCheckPath:   "/health",
+			Enabled:            true,
+			RollbackStrategy:   "automatic",
+			HealthCheckPath:    "/health",
 			HealthCheckTimeout: 30,
 			Environments: []EnvironmentConfig{
 				{
-					Name:        "staging",
-					Type:        "testing",
-					AutoDeploy:  true,
+					Name:           "staging",
+					Type:           "testing",
+					AutoDeploy:     true,
 					DeployStrategy: "rolling",
-					Variables:   map[string]string{},
+					Variables:      map[string]string{},
 				},
 				{
-					Name:        "production",
-					Type:        "production",
-					AutoDeploy:  false,
+					Name:           "production",
+					Type:           "production",
+					AutoDeploy:     false,
 					DeployStrategy: "blue-green",
-					Variables:   map[string]string{},
+					Variables:      map[string]string{},
 				},
 			},
 		},
@@ -326,7 +326,7 @@ func (cm *ConfigManager) ShouldAutoRelease(branch string) bool {
 
 func (cm *ConfigManager) GetBranchVersioningStrategy(branch string) string {
 	versioningConfig := cm.GetVersioningConfig()
-	
+
 	for pattern, strategy := range versioningConfig.BranchPatterns {
 		matched, err := filepath.Match(pattern, branch)
 		if err == nil && matched {

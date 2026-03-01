@@ -7,20 +7,33 @@ import (
 	"swiftinstall/internal/i18n"
 )
 
-// GetAboutText 返回关于信息
 func GetAboutText() string {
-	return fmt.Sprintf("%s\n%s: %s\n%s: %s\nGitHub: %s\n%s",
-		TitleStyle.Render(i18n.T("about_title")),
-		i18n.T("about_author"), appinfo.Author,
-		i18n.T("about_contact"), appinfo.Contact,
-		appinfo.GitHubURL,
-		HelpStyle.Render(appinfo.Copyright),
-	)
+	var content string
+
+	content += TitleStyle.Render("SwiftInstall") + "\n\n"
+
+	items := []struct {
+		label string
+		value string
+	}{
+		{i18n.T("about_author"), appinfo.Author},
+		{i18n.T("about_contact"), appinfo.Contact},
+		{"GitHub", appinfo.GitHubURL},
+	}
+
+	for _, item := range items {
+		label := KeyStyle.Render(item.label + ":")
+		value := HelpStyle.Render(item.value)
+		content += fmt.Sprintf("  %s %s\n", label, value)
+	}
+
+	content += "\n" + HelpStyle.Render(appinfo.Copyright)
+
+	return content
 }
 
-// RunAbout 显示关于页面
 func RunAbout() {
-	fmt.Println(GetLogo())
+	fmt.Println(GetCompactLogo())
 	fmt.Println()
 	fmt.Println(GetAboutText())
 }

@@ -29,37 +29,16 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "sis",
 	Short: i18n.T("app_short_desc"),
-	Long:  ui.GetLogo() + "\n\n" + i18n.T("app_long_desc"),
+	Long:  ui.GetLogo() + "\n" + i18n.T("app_long_desc"),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(ui.GetCompactLogo())
-		fmt.Println()
-		fmt.Println(ui.SubtitleStyle.Render(fmt.Sprintf("Version: %s | Author: %s", version, appinfo.Author)))
-		fmt.Println(ui.HelpStyle.Render(appinfo.Copyright))
-		fmt.Println()
+		ui.PrintWelcomeScreen(version)
 		runStartupChecks()
-		fmt.Println(ui.InfoStyle.Render("Usage: sis <command> [flags]"))
-		fmt.Println()
-		fmt.Println(ui.HelpStyle.Render("Commands:"))
-		fmt.Println(ui.HelpStyle.Render("  install     Install software packages"))
-		fmt.Println(ui.HelpStyle.Render("  uninstall   Uninstall software packages"))
-		fmt.Println(ui.HelpStyle.Render("  search      Search for software packages"))
-		fmt.Println(ui.HelpStyle.Render("  list        List configured packages"))
-		fmt.Println(ui.HelpStyle.Render("  config      Manage configuration"))
-		fmt.Println(ui.HelpStyle.Render("  edit-list   Edit software list in config file"))
-		fmt.Println(ui.HelpStyle.Render("  status      Show system status"))
-		fmt.Println(ui.HelpStyle.Render("  uninstall-all One-click uninstall configured software"))
-		fmt.Println(ui.HelpStyle.Render("  about       Show author and project information"))
-		fmt.Println(ui.HelpStyle.Render("  help        Show complete help document"))
-		fmt.Println()
-		fmt.Println(ui.HelpStyle.Render("Run 'sis help' or 'sis <command> help' for more information"))
-		fmt.Println()
-
 		fmt.Print(ui.InfoStyle.Render("Launch interactive menu? [Y/n]: "))
 		var response string
 		if _, err := fmt.Scanln(&response); err != nil {
 			log.Printf("Warning: failed to read user input: %v", err)
 			fmt.Println()
-			fmt.Println(ui.InfoStyle.Render("Input reading failed. Launching interactive menu automatically..."))
+			fmt.Println(ui.InfoStyle.Render("Launching interactive menu..."))
 			fmt.Println()
 			runInteractiveTUI()
 			return
@@ -87,43 +66,77 @@ func showCommandHelpIfRequested(cmd *cobra.Command, args []string) bool {
 func printComprehensiveHelp() {
 	fmt.Println(ui.GetCompactLogo())
 	fmt.Println()
-	fmt.Println(ui.TitleStyle.Render("SwiftInstall Help"))
-	fmt.Println(ui.HelpStyle.Render("Install and manage software packages across platforms."))
+
+	fmt.Println(ui.SectionStyle.Render("Usage"))
 	fmt.Println()
-	fmt.Println(ui.InfoStyle.Render("Commands:"))
-	fmt.Println("  sis install [package...]          Install from config or explicit package IDs")
-	fmt.Println("  sis uninstall [package...]        Uninstall packages from config or explicit IDs")
-	fmt.Println("  sis uninstall-all                 One-click uninstall all configured software")
-	fmt.Println("  sis search <query>                Search packages")
-	fmt.Println("  sis list                          Show configured software")
-	fmt.Println("  sis config                        Open configuration manager")
-	fmt.Println("  sis edit-list                     Edit software list directly in config file")
-	fmt.Println("  sis wizard                        Start setup wizard")
-	fmt.Println("  sis batch [file]                  Batch install from file/config")
-	fmt.Println("  sis export --format json --output out.json")
-	fmt.Println("  sis update                        Check updates")
-	fmt.Println("  sis clean                         Clean cache")
-	fmt.Println("  sis status                        Show system status")
-	fmt.Println("  sis about                         Show author/contact/GitHub")
-	fmt.Println("  sis version                       Show version/build information")
+	fmt.Println(ui.HelpStyle.Render("  sis <command> [arguments] [flags]"))
 	fmt.Println()
-	fmt.Println(ui.InfoStyle.Render("Command-specific help:"))
-	fmt.Println("  sis <command> --help")
-	fmt.Println("  sis <command> help")
+
+	fmt.Println(ui.SectionStyle.Render("Commands"))
 	fmt.Println()
-	fmt.Println(ui.InfoStyle.Render("TUI shortcuts (main menu):"))
-	fmt.Println("  ↑/↓ : navigate")
-	fmt.Println("  Enter: open selected menu")
-	fmt.Println("  i: install   s: search   c: config   a: about   q: quit")
+
+	commands := []struct {
+		cmd  string
+		args string
+		desc string
+	}{
+		{"install", "[package...]", "Install packages from config or by ID"},
+		{"uninstall", "[package...]", "Uninstall packages from config or by ID"},
+		{"uninstall-all", "", "Uninstall all configured packages"},
+		{"search", "<query>", "Search for packages"},
+		{"list", "", "List configured packages"},
+		{"config", "", "Open configuration manager"},
+		{"edit-list", "", "Edit package list in default editor"},
+		{"wizard", "", "Launch interactive setup wizard"},
+		{"batch", "[file]", "Batch install from file or config"},
+		{"status", "", "Show system status and installed packages"},
+		{"update", "", "Check for SwiftInstall updates"},
+		{"clean", "", "Clean package manager cache"},
+		{"about", "", "Show project and author information"},
+		{"version", "", "Show version information"},
+		{"help", "", "Show this help"},
+	}
+
+	for _, c := range commands {
+		cmdPart := ui.KeyStyle.Render(fmt.Sprintf("  %-14s", c.cmd))
+		argsPart := ""
+		if c.args != "" {
+			argsPart = ui.InfoStyle.Render(c.args)
+		}
+		descPart := ui.HelpStyle.Render("  " + c.desc)
+		fmt.Printf("%s %s%s\n", cmdPart, argsPart, descPart)
+	}
+
 	fmt.Println()
-	fmt.Println(ui.InfoStyle.Render("Examples:"))
-	fmt.Println("  sis install")
-	fmt.Println("  sis install Git.Git Microsoft.VisualStudioCode")
-	fmt.Println("  sis search vscode")
-	fmt.Println("  sis config")
-	fmt.Println("  sis install help")
-	fmt.Println("  sis help")
+	fmt.Println(ui.SectionStyle.Render("Flags"))
 	fmt.Println()
+	fmt.Println(ui.HelpStyle.Render("  --config <path>   Use specified config file"))
+	fmt.Println(ui.HelpStyle.Render("  -l, --lang <en|zh> Set interface language"))
+	fmt.Println()
+
+	fmt.Println(ui.SectionStyle.Render("Examples"))
+	fmt.Println()
+	fmt.Println(ui.HelpStyle.Render("  sis install                    # Install from config"))
+	fmt.Println(ui.HelpStyle.Render("  sis install Git.Git            # Install specific package"))
+	fmt.Println(ui.HelpStyle.Render("  sis search vscode              # Search for VS Code"))
+	fmt.Println(ui.HelpStyle.Render("  sis config                     # Open config manager"))
+	fmt.Println(ui.HelpStyle.Render("  sis wizard                     # Launch setup wizard"))
+	fmt.Println(ui.HelpStyle.Render("  sis edit-list                  # Edit package list"))
+	fmt.Println()
+
+	fmt.Println(ui.SectionStyle.Render("Keyboard Shortcuts"))
+	fmt.Println()
+	fmt.Println(ui.HelpStyle.Render("  ↑/↓ or j/k    Navigate menu"))
+	fmt.Println(ui.HelpStyle.Render("  Enter         Select/Confirm"))
+	fmt.Println(ui.HelpStyle.Render("  Space         Toggle selection (in wizard)"))
+	fmt.Println(ui.HelpStyle.Render("  d             View details (in search)"))
+	fmt.Println(ui.HelpStyle.Render("  i             Quick install (in search)"))
+	fmt.Println(ui.HelpStyle.Render("  a             Add package (in config)"))
+	fmt.Println(ui.HelpStyle.Render("  e             Edit package (in config)"))
+	fmt.Println(ui.HelpStyle.Render("  r/d           Remove package (in config)"))
+	fmt.Println(ui.HelpStyle.Render("  q/Esc         Back or quit"))
+	fmt.Println()
+
 	fmt.Println(ui.HelpStyle.Render(appinfo.Copyright))
 }
 

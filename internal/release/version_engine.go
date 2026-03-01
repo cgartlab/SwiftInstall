@@ -16,11 +16,11 @@ type Version struct {
 }
 
 type VersionDecision struct {
-	CurrentVersion  Version
-	NewVersion      Version
-	ChangeType      ChangeType
-	Reason          string
-	Confidence      float64
+	CurrentVersion   Version
+	NewVersion       Version
+	ChangeType       ChangeType
+	Reason           string
+	Confidence       float64
 	RequiresApproval bool
 }
 

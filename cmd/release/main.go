@@ -11,14 +11,14 @@ import (
 )
 
 var (
-	configPath    = flag.String("config", "release-config.json", "Path to release configuration file")
-	projectName   = flag.String("project", "", "Project name")
-	currentTag    = flag.String("tag", "", "Current version tag (auto-detected if not provided)")
-	dryRun        = flag.Bool("dry-run", false, "Perform a dry run without making changes")
-	skipTests     = flag.Bool("skip-tests", false, "Skip test execution")
-	skipDeploy    = flag.Bool("skip-deploy", false, "Skip deployment")
-	verbose       = flag.Bool("verbose", false, "Enable verbose output")
-	outputFormat  = flag.String("output", "text", "Output format (text, json)")
+	configPath   = flag.String("config", "release-config.json", "Path to release configuration file")
+	projectName  = flag.String("project", "", "Project name")
+	currentTag   = flag.String("tag", "", "Current version tag (auto-detected if not provided)")
+	dryRun       = flag.Bool("dry-run", false, "Perform a dry run without making changes")
+	skipTests    = flag.Bool("skip-tests", false, "Skip test execution")
+	skipDeploy   = flag.Bool("skip-deploy", false, "Skip deployment")
+	verbose      = flag.Bool("verbose", false, "Enable verbose output")
+	outputFormat = flag.String("output", "text", "Output format (text, json)")
 )
 
 func main() {
@@ -102,12 +102,12 @@ func performDryRun(pipeline *release.ReleasePipeline, currentVersion string, com
 	decision := versionEngine.DetermineNewVersion(currentVer, analysis)
 
 	dryRunResult := map[string]interface{}{
-		"dryRun":         true,
-		"currentVersion": currentVersion,
-		"newVersion":     decision.NewVersion.String(),
-		"changeType":     decision.ChangeType.String(),
-		"reason":         decision.Reason,
-		"confidence":     decision.Confidence,
+		"dryRun":           true,
+		"currentVersion":   currentVersion,
+		"newVersion":       decision.NewVersion.String(),
+		"changeType":       decision.ChangeType.String(),
+		"reason":           decision.Reason,
+		"confidence":       decision.Confidence,
 		"requiresApproval": decision.RequiresApproval,
 		"analysis": map[string]interface{}{
 			"totalCommits":    analysis.TotalCommits,
