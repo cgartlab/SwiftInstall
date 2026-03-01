@@ -249,14 +249,16 @@ func (m SearchModel) View() string {
 	b.WriteString("\n\n")
 
 	if m.mode == "input" || m.searching {
-		b.WriteString(HelpStyle.Render("Search query: "))
+		b.WriteString(HelpStyle.Render("Search: "))
 		b.WriteString(m.input.View())
 		b.WriteString("\n\n")
 
 		if m.searching {
 			b.WriteString(HighlightStyle.Render("◉ Searching..."))
+			b.WriteString("\n")
+			b.WriteString(HelpStyle.Render("Please wait"))
 		} else {
-			b.WriteString(HelpStyle.Render("Type software name and press Enter to search"))
+			b.WriteString(HelpStyle.Render("Type package name and press Enter"))
 		}
 	} else if m.mode == "results" {
 		b.WriteString(HelpStyle.Render("Query: "))
@@ -268,15 +270,15 @@ func (m SearchModel) View() string {
 			b.WriteString(m.renderDetail(pkg))
 		} else {
 			if len(m.results) > 0 {
-				b.WriteString(InfoStyle.Render(fmt.Sprintf("Found %d results", len(m.results))))
-				b.WriteString("\n")
+				b.WriteString(InfoStyle.Render(fmt.Sprintf("Found %d result(s)", len(m.results))))
+				b.WriteString("\n\n")
 				b.WriteString(m.table.View())
-				b.WriteString("\n")
-				b.WriteString(HelpStyle.Render("↑/↓ navigate | Enter add to config | i install now | d detail | / new search | Esc back | q quit"))
+				b.WriteString("\n\n")
+				b.WriteString(HelpStyle.Render("↑/↓ navigate | Enter add | i install | d details | / new search | Esc back | q quit"))
 			} else {
-				b.WriteString(WarningStyle.Render("No results found for: " + m.query))
+				b.WriteString(WarningStyle.Render("No results found"))
 				b.WriteString("\n")
-				b.WriteString(HelpStyle.Render("Press / to search again or Esc to go back"))
+				b.WriteString(HelpStyle.Render("Press / to try another search"))
 			}
 		}
 	}
