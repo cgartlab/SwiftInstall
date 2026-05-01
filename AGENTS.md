@@ -1,26 +1,70 @@
 # AGENTS.md — SwiftInstall
 
-Cross-platform (Win/macOS) batch software installer. Uses `winget` (Windows) and `brew` (macOS) to install packages from manifest files.
+Cross-platform batch software installer. **Legacy scripts** use `winget` (Windows `.bat`) and `brew` (macOS `.sh`). **New Go CLI** (`sis`) replaces them incrementally — Windows first.
 
-## No build / test / lint / CI
-
-There is zero build pipeline, test framework, linter, formatter, typechecker, or CI. Nothing to run.
-
-## Entrypoints
+## Legacy scripts (still present, being replaced)
 
 | Platform | Script | Manifest |
 |----------|--------|----------|
 | Windows | `Windows/software_install.bat` | `Windows/software_list.txt` |
 | Windows (proxy) | `Windows/software_install_proxy.bat` — requires v2rayN on `127.0.0.1:10809` | same |
-| Windows (mirror) | `Windows/switch_winget_to_USTCsource.bat` — replaces winget source with USTC mirror for China | — |
+| Windows (mirror) | `Windows/switch_winget_to_USTCsource.bat` | — |
 | macOS | `macOS/install_packages.sh` | `macOS/packages.txt` |
 
-Run any script directly — no deps to install.
+## New Go CLI (`sis`)
+
+### Build
+
+```powershell
+go build -o sis.exe ./cmd/sis/
+go vet ./...
+```
+
+### Entrypoint
+
+`cmd/sis/main.go` — Cobra CLI, ldflags-injected version/commit/date.
+
+### Architecture
+
+```
+cmd/sis/main.go
+internal/
+  cli/          Cobra commands (thin orchestration layer)
+  engine/       Install engine + manifest parser + pre-flight checks
+  backend/      Backend interface + winget implementation
+  config/       Two-level JSON config (~/.sis/config.json + .sis.json)
+  mirror/       USTC mirror source switching
+  proxy/        v2rayN proxy detection
+  log/          Leveled logger (slog, terminal + JSON file)
+```
+
+### Development status
+
+| Wave | Feature | Status |
+|------|---------|--------|
+| 1 | Foundation (CLI skeleton, config, logger, types) | Done |
+| 2 | Engine + winget backend | Done |
+| 3 | Mirror, proxy, preflight | Done |
+| 4 | CLI commands wiring | Done |
+| 5 | Polish (progress, colors, CI) | Done |
+
+### Config precedence
+
+CLI flags > local `.sis.json` > global `~/.sis/config.json` > built-in defaults.
+Boolean fields use `*bool` tri-state pointers for proper overriding.
+
+### Config validation
+
+`Validate()` checks LogLevel, Color, RetryCount, RetryDelaySec, Mirror, Proxy.
+Called on `Save()` (rejects invalid) and sanitized on `Load()` (resets to defaults).
+
+### Windows admin detection
+
+Uses `golang.org/x/sys/windows` token elevation check (`TokenElevationTypeFull`).
+Fallback: `SIS_ADMIN_CHECK` env var for testing.
 
 ## Gotchas
 
-- **`src/` directory** — 13 empty Go-pattern subdirectories (`cli/`, `commands/`, `config/`, `core/`, etc.) exist on disk but are **untracked** by Git. No Go source code lives in the repo. Ignore.
-- **`bin/*.exe`** — precompiled Windows binaries (`sis-windows-amd64.exe`). No source code in this repo. Ignore.
-- **Docs are Chinese** — scripts and README are in Simplified Chinese. USTC mirror is a core China-user feature.
-- **No error recovery** — scripts do not handle individual install failures gracefully.
-- **No uninstall** — scripts only install, no rollback.
+- **`src/` directory** — 13 empty Go-pattern subdirectories, **untracked** by Git. Dead scaffolding. Ignore.
+- **`bin/*.exe`** — precompiled Windows binaries from an earlier attempt. No source in this repo. Ignore.
+- **Docs are Chinese** — scripts and README in Simplified Chinese. USTC mirror is a core China-user feature.

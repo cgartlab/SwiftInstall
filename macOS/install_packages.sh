@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# License
+# 本项目受 GNU General Public License v3.0 约束
+# 详见 LICENSE 文件或 https://www.gnu.org/licenses/gpl-3.0.html
+
 # 切换 Homebrew 源为中国源
 echo "Switching Homebrew source to China..."
 brew update-reset

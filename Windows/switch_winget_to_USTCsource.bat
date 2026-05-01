@@ -1,7 +1,8 @@
 @Echo off&setlocal,EnableDelayedExpansion
 
 REM License
-REM ����Ŀ�� Apache License Version 2.0 Լ��
+REM ����Ŀ�� GNU General Public License v3.0 Լ��
+REM ���� LICENSE �ļ��� https://www.gnu.org/licenses/gpl-3.0.html
 
 REM ����Ƿ��Թ���ԱȨ������
 net session >nul 2>&1

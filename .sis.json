@@ -1,0 +1,6 @@
+{
+  "log_level": "debug",
+  "color": "auto",
+  "retry_count": 5,
+  "retry_delay_sec": 3
+}

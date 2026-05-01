@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest]
+        go-version: ['1.25']
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Build
+        shell: pwsh
+        run: |
+          $VERSION = git describe --tags --always
+          $COMMIT = git rev-parse --short HEAD
+          $DATE = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+          go build -ldflags "-X main.Version=$VERSION -X main.Commit=$COMMIT -X main.Date=$DATE" -o sis-windows-amd64.exe ./cmd/sis/
+
+      - name: Test
+        run: go test ./...
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sis-windows-amd64
+          path: sis-windows-amd64.exe
+
+  release:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: sis-*
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: sis-windows-amd64.exe
+          generate_release_notes: true
