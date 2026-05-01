@@ -55,7 +55,7 @@
 | **Windows 完整支持** | 基于原生 `winget` 包管理器，覆盖安装/卸载/查询全生命周期 |
 | **现代化 CLI** | 基于 Go + Cobra 的命令行工具，支持子命令、配置管理与丰富输出 |
 | **批量安装/卸载** | 基于 Manifest 文件自动遍历安装或卸载，失败不中断 |
-| **国内镜像加速** | 内置 USTC（中科大）镜像源切换，解决中国大陆访问缓慢问题 |
+| **国内镜像加速** | 安装脚本支持 `$env:SIS_MIRROR` 镜像加速下载；CLI 内置 USTC winget 源切换 |
 | **代理自动检测** | 自动检测本地 v2rayN 代理（`127.0.0.1:10809`），支持手动指定代理地址 |
 | **预检机制** | 安装前自动检查包管理器、Manifest 文件、管理员权限等 |
 | **去重与跳过** | 自动跳过重复包与已安装软件 |
@@ -88,6 +88,19 @@
 
 ```powershell
 irm https://raw.githubusercontent.com/cgartlab/Software_Install_Script/main/install.ps1 | iex
+```
+
+**中国大陆用户加速安装（任选其一）：**
+
+```powershell
+# 方式 1：使用 jsDelivr CDN（国内有 CDN 节点）
+irm https://cdn.jsdelivr.net/gh/cgartlab/Software_Install_Script@main/install.ps1 | iex
+
+# 方式 2：使用 ghproxy 镜像
+$env:SIS_MIRROR='ghproxy.com'; irm https://raw.githubusercontent.com/cgartlab/Software_Install_Script/main/install.ps1 | iex
+
+# 方式 3：镜像直接代理
+irm https://ghproxy.com/https://raw.githubusercontent.com/cgartlab/Software_Install_Script/main/install.ps1 | iex
 ```
 
 安装完成后，重新打开终端即可使用 `sis` 命令。
