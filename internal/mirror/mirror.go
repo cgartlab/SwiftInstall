@@ -64,7 +64,7 @@ func resetSource() error {
 			return nil
 		}
 		if isAdminRequired(string(out)) {
-			return fmt.Errorf("administrator privileges required to reset winget source")
+			return fmt.Errorf("administrator privileges required — please re-run as Administrator (right-click → Run as Administrator)")
 		}
 		return fmt.Errorf("winget source reset: %w (output: %s)", err, string(out))
 	}
@@ -79,7 +79,7 @@ func removeSource(name string) error {
 			return nil
 		}
 		if isAdminRequired(string(out)) {
-			return fmt.Errorf("administrator privileges required to modify winget source")
+			return fmt.Errorf("administrator privileges required — please re-run as Administrator (right-click → Run as Administrator)")
 		}
 		return fmt.Errorf("winget source remove: %w (output: %s)", err, string(out))
 	}
