@@ -37,12 +37,15 @@ func Set(name string) error {
 		return resetSource()
 	}
 
-	if err := removeSource("winget"); err != nil {
-		return fmt.Errorf("remove winget source: %w", err)
-	}
+	removeSource("winget")
+
 	if err := exec.Command("winget", "source", "add", "winget", def.WingetSourceURL).Run(); err != nil {
+		if rErr := resetSource(); rErr != nil {
+			return fmt.Errorf("add winget source: %w (recovery failed: %w)", err, rErr)
+		}
 		return fmt.Errorf("add winget source: %w", err)
 	}
+
 	return nil
 }
 

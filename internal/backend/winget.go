@@ -31,13 +31,15 @@ func (w *WingetBackend) Detect() error {
 
 func (w *WingetBackend) IsInstalled(ctx context.Context, id string) (bool, error) {
 	cmd := exec.CommandContext(ctx, w.execPath, "list", "--id", id, "--exact", "--accept-source-agreements")
-	if err := cmd.Run(); err != nil {
+	out, err := cmd.Output()
+	if err != nil {
 		if _, ok := err.(*exec.ExitError); ok {
 			return false, nil
 		}
 		return false, err
 	}
-	return true, nil
+	output := strings.TrimSpace(string(out))
+	return strings.Contains(output, id), nil
 }
 
 func (w *WingetBackend) Install(ctx context.Context, id string, opts InstallOptions) (*Output, error) {
@@ -87,6 +89,9 @@ func (w *WingetBackend) Uninstall(ctx context.Context, id string, opts InstallOp
 	}
 
 	args := []string{"uninstall", "--id", id, "--exact", "--silent"}
+	if opts.Proxy != "" {
+		args = append(args, "--proxy", opts.Proxy)
+	}
 
 	start := time.Now()
 	cmd := exec.CommandContext(ctx, w.execPath, args...)
