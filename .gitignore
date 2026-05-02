@@ -37,6 +37,11 @@ env/
 .DS_Store
 Thumbs.db
 
+# Binaries
+*.exe
+*.zip
+*.tar.gz
+
 # Test
 .pytest_cache/
 .coverage

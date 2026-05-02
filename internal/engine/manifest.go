@@ -98,10 +98,9 @@ func parseTXT(data []byte) (*Manifest, error) {
 
 		if strings.HasPrefix(line, "#") {
 			category := strings.TrimSpace(strings.TrimPrefix(line, "#"))
-			if category != "" && !strings.Contains(category, " ") {
-				continue
+			if category != "" {
+				currentCategory = category
 			}
-			currentCategory = category
 			continue
 		}
 

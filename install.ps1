@@ -31,11 +31,6 @@ function Write-Warn {
     Write-Host "[SwiftInstall] $Message" -ForegroundColor Yellow
 }
 
-function Write-CustomError {
-    param([string]$Message)
-    Write-Host "[SwiftInstall] $Message" -ForegroundColor Red
-}
-
 function Get-LatestReleaseUrl {
     $apiUrl = "https://api.github.com/repos/$RepoOwner/$RepoName/releases/latest"
     Write-Info "正在查询最新版本信息..."
@@ -53,31 +48,41 @@ function Get-LatestReleaseUrl {
     Write-Info "最新版本: $tag"
     $escapedTag = [regex]::Escape($tag)
 
+    # Tier 1: tag + windows + amd64 + .exe (highest priority)
     $asset = $null
     $asset = @($release.assets | Where-Object {
         $_.name -match "${escapedTag}.*windows.*(amd64|x64).*\.exe$"
     } | Select-Object -First 1)
 
+    # Tier 2: tag + windows + any arch + .exe
     if (-not $asset) {
         $asset = @($release.assets | Where-Object {
             $_.name -match "${escapedTag}.*windows.*\.exe$"
         } | Select-Object -First 1)
     }
+
+    # Tier 3: tag + windows + amd64 + .zip
     if (-not $asset) {
         $asset = @($release.assets | Where-Object {
             $_.name -match "${escapedTag}.*windows.*(amd64|x64)\.zip$"
         } | Select-Object -First 1)
     }
+
+    # Tier 4: any windows + amd64 + .zip (untagged fallback)
     if (-not $asset) {
         $asset = @($release.assets | Where-Object {
             $_.name -match "windows.*(amd64|x64).*\.zip$"
         } | Select-Object -First 1)
     }
+
+    # Tier 5: any windows + amd64 + .exe (untagged fallback)
     if (-not $asset) {
         $asset = @($release.assets | Where-Object {
             $_.name -match "windows.*(amd64|x64).*\.exe$"
         } | Select-Object -First 1)
     }
+
+    # Tier 6: broad fallback (original logic)
     if (-not $asset) {
         $asset = @($release.assets | Where-Object {
             $_.name -match "windows.*(amd64|x64)" -or
@@ -180,7 +185,11 @@ function Install-SwiftInstall {
         }
     } catch {
         Remove-Item -Path $tempPath -Force -ErrorAction SilentlyContinue
-        throw "下载失败: $_"
+        $errMsg = "安装失败: $_"
+        if (Get-Process -Name "sis" -ErrorAction SilentlyContinue) {
+            $errMsg += " (请先关闭正在运行的 sis 进程后重试)"
+        }
+        throw $errMsg
     }
 
     Write-Success "已安装到: $outputPath"

@@ -86,6 +86,15 @@ Examples:
 				return fmt.Errorf("parse manifest: %w", err)
 			}
 
+			if mirrorFlag == "" && manifest.Mirror != "" {
+				if err := mirror.Set(manifest.Mirror); err != nil {
+					return fmt.Errorf("manifest mirror: %w", err)
+				}
+			}
+			if proxyAddr == "" && manifest.Proxy != "" {
+				proxyAddr = manifest.Proxy
+			}
+
 			eng := engine.New(winget, &engine.Config{
 				DryRun:       dryRun,
 				SkipExisting: skipExisting,
