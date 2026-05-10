@@ -1,0 +1,9 @@
+settings:
+  skip_existing: false
+
+packages:
+  - id: NonExistent.Package.12345
+    category: test
+    optional: true
+  - id: Git.Git
+    category: dev

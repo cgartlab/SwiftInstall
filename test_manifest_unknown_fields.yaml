@@ -1,0 +1,8 @@
+settings:
+  skip_existing: false
+  unknown_setting: "value"
+
+packages:
+  - id: Git.Git
+    category: dev
+    unknown_field: "value"

@@ -1,0 +1,13 @@
+settings:
+  proxy: ""
+  skip_existing: true
+  retry_count: 2
+  retry_delay: 3
+
+packages:
+  - id: Microsoft.VisualStudioCode
+    category: dev
+  - id: Git.Git
+    category: dev
+  - id: 7zip.7zip
+    category: utils

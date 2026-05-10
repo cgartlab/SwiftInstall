@@ -1,4 +1,4 @@
-package engine
+package manifest
 
 import (
 	"bufio"
@@ -43,11 +43,16 @@ func parseYAML(data []byte) (*Manifest, error) {
 	}
 
 	var raw struct {
-		Mirror   string `yaml:"mirror"`
-		Proxy    string `yaml:"proxy"`
+		Settings struct {
+			Proxy        string `yaml:"proxy"`
+			SkipExisting bool   `yaml:"skip_existing"`
+			RetryCount   int    `yaml:"retry_count"`
+			RetryDelay   int    `yaml:"retry_delay"`
+		} `yaml:"settings"`
 		Packages []struct {
 			ID       string `yaml:"id"`
 			Category string `yaml:"category,omitempty"`
+			Optional bool   `yaml:"optional,omitempty"`
 		} `yaml:"packages"`
 	}
 
@@ -58,23 +63,20 @@ func parseYAML(data []byte) (*Manifest, error) {
 	}
 
 	m := &Manifest{
-		Mirror: raw.Mirror,
-		Proxy:  raw.Proxy,
+		Settings: Settings{
+			Proxy:        raw.Settings.Proxy,
+			SkipExisting: raw.Settings.SkipExisting,
+			RetryCount:   raw.Settings.RetryCount,
+			RetryDelay:   raw.Settings.RetryDelay,
+		},
 	}
 
-	seen := make(map[string]bool)
 	for _, p := range raw.Packages {
 		id := strings.TrimSpace(p.ID)
-		if id == "" {
-			continue
-		}
-		if seen[id] {
-			continue
-		}
-		seen[id] = true
 		m.Packages = append(m.Packages, Package{
 			ID:       id,
 			Category: p.Category,
+			Optional: p.Optional,
 		})
 	}
 

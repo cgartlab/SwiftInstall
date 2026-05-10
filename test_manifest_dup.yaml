@@ -1,0 +1,10 @@
+settings:
+  skip_existing: false
+
+packages:
+  - id: Microsoft.VisualStudioCode
+    category: dev
+  - id: Microsoft.VisualStudioCode
+    category: dev
+  - id: Git.Git
+    category: dev

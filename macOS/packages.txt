@@ -1,46 +1,81 @@
-# 版本控制
-Git
+# SwiftInstall Manifest 示例 (macOS)
+# 使用 sis install -f packages.txt 安装
 
-# 编程语言
-Python@3
-node.js
+settings:
+  proxy: "http://127.0.0.1:7890"
+  skip_existing: true
+  retry_count: 3
+  retry_delay: 5
 
-# 代码编辑器/集成开发环境
-Visual-Studio-Code
+packages:
+  # 版本控制
+  - id: Git
+    category: Dev
 
-# 设计工具
-Figma
-Krita
-Blender
-Unity-Hub
+  # 编程语言
+  - id: Python@3
+    category: Dev
+  - id: node.js
+    category: Dev
 
-# 通讯/消息
-Telegram-Desktop
-WeChat
+  # 代码编辑器/集成开发环境
+  - id: Visual-Studio-Code
+    category: Dev
 
-# 生产力工具
-loop
-mos
-Notion
-Obsidian
-uTools
-sfm
-flomo
+  # 设计工具
+  - id: Figma
+    category: Design
+  - id: Krita
+    category: Design
+  - id: Blender
+    category: Design
+  - id: Unity-Hub
+    category: Design
 
-# 游戏平台
-Steam
+  # 通讯/消息
+  - id: Telegram-Desktop
+    category: Social
+  - id: WeChat
+    category: Social
 
-# 移动设备管理
-scrcpy
+  # 生产力工具
+  - id: loop
+    category: Productivity
+  - id: mos
+    category: Productivity
+  - id: Notion
+    category: Productivity
+  - id: Obsidian
+    category: Productivity
+  - id: uTools
+    category: Productivity
+  - id: sfm
+    category: Productivity
+  - id: flomo
+    category: Productivity
 
-# 打字
-squirrel
+  # 游戏平台
+  - id: Steam
+    category: Game
 
-# Shell 自定义
-oh-my-posh
+  # 移动设备管理
+  - id: scrcpy
+    category: Tools
 
-# 字体
-font-lxgw-wenkai
-font-hack-nerd-font 
-font-source-sans-3
-font-source-serif-4
+  # 输入法
+  - id: squirrel
+    category: Tools
+
+  # Shell 自定义
+  - id: oh-my-posh
+    category: Dev
+
+  # 字体
+  - id: font-lxgw-wenkai
+    category: Fonts
+  - id: font-hack-nerd-font
+    category: Fonts
+  - id: font-source-sans-3
+    category: Fonts
+  - id: font-source-serif-4
+    category: Fonts

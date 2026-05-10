@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/cgartlab/SwiftInstall/internal/backend"
-	"github.com/cgartlab/SwiftInstall/internal/config"
 	"github.com/cgartlab/SwiftInstall/internal/engine"
-	"github.com/cgartlab/SwiftInstall/internal/mirror"
-	"github.com/cgartlab/SwiftInstall/internal/proxy"
+	"github.com/cgartlab/SwiftInstall/internal/manifest"
+	"github.com/cgartlab/SwiftInstall/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -28,41 +26,26 @@ Examples:
   sis install
   sis install -f software_list.txt
   sis install --dry-run
-  sis install --proxy http://127.0.0.1:10809`,
+  sis install --format json`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := config.Load()
-			if err != nil {
-				return fmt.Errorf("load config: %w", err)
-			}
-
 			manifestPath, _ := cmd.Flags().GetString("file")
 			dryRun, _ := cmd.Flags().GetBool("dry-run")
-			proxyFlag, _ := cmd.Flags().GetString("proxy")
-			mirrorFlag, _ := cmd.Flags().GetString("mirror")
-			skipExisting, _ := cmd.Flags().GetBool("skip-existing")
-			skipChecks, _ := cmd.Flags().GetBool("skip-checks")
+			format, _ := cmd.Flags().GetString("format")
 
 			if manifestPath == "" {
-				manifestPath = resolveManifest(cfg.DefaultManifest)
+				manifestPath = resolveManifest("")
 			}
 			if manifestPath == "" {
 				return fmt.Errorf("no manifest file found; use --file or create software_list.txt or sis.yaml")
 			}
 
-			proxyAddr := proxyFlag
-			if proxyAddr == "" {
-				proxyAddr = cfg.Proxy
-			}
-			if proxyAddr == "" && config.BoolVal(cfg.ProxyAutoDetect) {
-				if p, err := proxy.Detect(); err == nil && p.Running {
-					proxyAddr = p.Address
-				}
+			m, err := manifest.ParseManifest(manifestPath)
+			if err != nil {
+				return fmt.Errorf("parse manifest: %w", err)
 			}
 
-			if mirrorFlag != "" {
-				if err := mirror.Set(mirrorFlag); err != nil {
-					return fmt.Errorf("mirror: %w", err)
-				}
+			if err := manifest.Validate(m); err != nil {
+				return fmt.Errorf("validate manifest: %w", err)
 			}
 
 			winget := backend.NewWingetBackend()
@@ -70,62 +53,46 @@ Examples:
 				return fmt.Errorf("winget: %w", err)
 			}
 
-			if !skipChecks {
-				suite := engine.RunChecks(context.Background(), &engine.CheckConfig{
-					ManifestPath: manifestPath,
-					Backend:      winget,
-				})
-				printChecks(suite)
-				if !suite.AllPass() {
-					return fmt.Errorf("pre-flight checks failed; use --skip-checks to bypass")
-				}
+			var renderer ui.Renderer
+			switch format {
+			case "json":
+				renderer = ui.NewJSONRenderer()
+			case "silent":
+				renderer = ui.NewSilentRenderer()
+			case "table":
+				renderer = ui.NewTerminalRenderer()
+			default:
+				return fmt.Errorf("invalid format %q: supported values are table, json, silent", format)
 			}
 
-			manifest, err := engine.ParseManifest(manifestPath)
-			if err != nil {
-				return fmt.Errorf("parse manifest: %w", err)
-			}
-
-			if mirrorFlag == "" && manifest.Mirror != "" {
-				if err := mirror.Set(manifest.Mirror); err != nil {
-					return fmt.Errorf("manifest mirror: %w", err)
-				}
-			}
-			if proxyAddr == "" && manifest.Proxy != "" {
-				proxyAddr = manifest.Proxy
-			}
-
-			eng := engine.New(winget, &engine.Config{
+			opts := engine.InstallOptions{
 				DryRun:       dryRun,
-				SkipExisting: skipExisting,
-				RetryCount:   config.IntVal(cfg.RetryCount, 2),
-				RetryDelay:   time.Duration(config.IntVal(cfg.RetryDelaySec, 3)) * time.Second,
-				Proxy:        proxyAddr,
-			})
+				SkipExisting: m.Settings.SkipExisting,
+				Proxy:        m.Settings.Proxy,
+			}
+
+			eng := engine.New(winget, opts)
 
 			eng.SetProgressHook(func(r engine.InstallResult) {
-				icon := "✓"
-				if r.Status == engine.StatusFailed {
-					icon = "✗"
-				} else if r.Status == engine.StatusSkipped {
-					icon = "⚠"
+				var err error
+				if len(r.Errors) > 0 {
+					err = fmt.Errorf("%s", r.Errors[0])
 				}
-				fmt.Fprintf(os.Stderr, "  %s %s\n", icon, r.Package.ID)
+				renderer.Progress(r.Package, string(r.Status), err)
 			})
 
-			fmt.Fprintf(os.Stderr, "Installing %d packages from %s\n", len(manifest.Packages), manifestPath)
+			renderer.Start(len(m.Packages), manifestPath, "Installing")
 			if dryRun {
 				fmt.Fprintf(os.Stderr, "DRY-RUN — no changes will be made\n")
 			}
 
-			summary, err := eng.Install(context.Background(), manifest)
+			summary, err := eng.Install(context.Background(), m)
 			if err != nil {
 				return err
 			}
 
-			if summary != nil {
-				printSummary(summary)
-			}
+			renderer.Done(summary)
+
 			if summary != nil && summary.Failed > 0 {
 				return fmt.Errorf("%d package(s) failed", summary.Failed)
 			}
@@ -135,10 +102,7 @@ Examples:
 
 	cmd.Flags().StringP("file", "f", "", "path to manifest file")
 	cmd.Flags().BoolP("dry-run", "n", false, "preview installation without making changes")
-	cmd.Flags().StringP("proxy", "p", "", "HTTP proxy URL")
-	cmd.Flags().StringP("mirror", "m", "", "package mirror source")
-	cmd.Flags().BoolP("skip-existing", "s", false, "skip already installed packages")
-	cmd.Flags().Bool("skip-checks", false, "skip pre-flight checks")
+	cmd.Flags().String("format", "table", "output format: table, json, silent")
 	return cmd
 }
 
@@ -154,35 +118,4 @@ func resolveManifest(defaultPath string) string {
 		}
 	}
 	return ""
-}
-
-func printChecks(suite *engine.CheckSuite) {
-	for _, r := range suite.Results {
-		icon := "✓"
-		if r.Status == engine.CheckFail {
-			icon = "✗"
-		} else if r.Status == engine.CheckWarn {
-			icon = "⚠"
-		}
-		fmt.Fprintf(os.Stderr, "[%s] %s — %s\n", icon, r.Name, r.Message)
-	}
-}
-
-func printSummary(s *engine.Summary) {
-	fmt.Fprintf(os.Stderr, "\nSummary: %d total, %d succeeded, %d skipped, %d failed (%.1fs)\n",
-		s.Total, s.Succeeded, s.Skipped, s.Failed, s.Duration.Seconds())
-
-	for _, r := range s.Results {
-		icon := "✓"
-		if r.Status == engine.StatusFailed {
-			icon = "✗"
-		} else if r.Status == engine.StatusSkipped {
-			icon = "⚠"
-		}
-		desc := string(r.Status)
-		if len(r.Errors) > 0 {
-			desc = r.Errors[0]
-		}
-		fmt.Fprintf(os.Stderr, "  %s %s — %s\n", icon, r.Package.ID, desc)
-	}
 }

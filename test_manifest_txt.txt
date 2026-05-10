@@ -1,0 +1,6 @@
+# dev
+Microsoft.VisualStudioCode
+Git.Git
+
+# utils
+7zip.7zip

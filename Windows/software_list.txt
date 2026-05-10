@@ -1,68 +1,118 @@
-# iCloud
-9pktq5699m62
+# SwiftInstall Manifest 示例 (Windows)
+# 使用 sis install -f software_list.txt 安装
 
-# Dev 开发
-Gyan.FFmpeg
-Filosottile.Mkcert
-Genymobile.Scrcpy
-Git.Git
-OpenJS.NodeJS
-GitHub.GitHubDesktop
-Google.PlatformTools
-Microsoft.PowerShell
-Microsoft.VisualStudioCode
-Microsoft.WindowsTerminal
-JanDeDobbeleer.OhMyPosh
-Okibcn.Nano # 终端文本编辑器
-Python.Python
-Ndd.Notepad-- # 文本编辑器
-Nepnep.Neofetch-Win # 系统信息查看
-FontForge.FontForge # 字体编辑器
+settings:
+  proxy: "http://127.0.0.1:7890"
+  skip_existing: true
+  retry_count: 3
+  retry_delay: 5
 
-# Normal Tools 常用工具
-7zip.7zip
-Syncthing.Syncthing
-Clashvergerev.Clashvergerev # 代理
-KaringX.Karing # 代理
-Cpuid.CPU-Z
-Daum.PotPlayer
-Eassos.DiskGenius
-FinalWire.AIDA64.Extreme
-HandBrake.HandBrake
-Klocman.BulkCrapUninstaller
-Microsoft.Office
-Netease.CloudMusic
-ObsProject.OBSStudio
-Microsoft.PowerToys
-Rime.Weasel
-Voidtools.Everything
-XanderFrangos.TwinkleTray
-Zentraedi.ZSpace
-Zhongyang219.TrafficMonitor.Full
+packages:
+  # iCloud
+  - id: 9pktq5699m62
 
-# Design Tools 设计工具
-Ogdesign.Eagle # 设计素材库
-BlenderFoundation.Blender
-Bytedance.JianyingProCLS
-Figma.Figma
-KDE.Krita
-Unity.UnityHub
-Wacom.WacomTabletDriver
+  # Dev 开发
+  - id: Gyan.FFmpeg
+  - id: Filosottile.Mkcert
+  - id: Genymobile.Scrcpy
+  - id: Git.Git
+  - id: OpenJS.NodeJS
+  - id: GitHub.GitHubDesktop
+  - id: Google.PlatformTools
+  - id: Microsoft.PowerShell
+  - id: Microsoft.VisualStudioCode
+  - id: Microsoft.WindowsTerminal
+  - id: JanDeDobbeleer.OhMyPosh
+  - id: Okibcn.Nano
+    category: Dev
+  - id: Python.Python
+  - id: Ndd.Notepad--
+    category: Dev
+  - id: Nepnep.Neofetch-Win
+    category: Dev
+  - id: FontForge.FontForge
+    category: Dev
 
-# Social Media 社交媒体
-Telegram.TelegramDesktop
-Tencent.TIM
-Tencent.WeChat.Universal # 新版微信
+  # Normal Tools 常用工具
+  - id: 7zip.7zip
+    category: Tools
+  - id: Syncthing.Syncthing
+    category: Tools
+  - id: Clashvergerev.Clashvergerev
+    category: Tools
+  - id: KaringX.Karing
+    category: Tools
+  - id: Cpuid.CPU-Z
+    category: Tools
+  - id: Daum.PotPlayer
+    category: Tools
+  - id: Eassos.DiskGenius
+    category: Tools
+  - id: FinalWire.AIDA64.Extreme
+    category: Tools
+  - id: HandBrake.HandBrake
+    category: Tools
+  - id: Klocman.BulkCrapUninstaller
+    category: Tools
+  - id: Microsoft.Office
+    category: Tools
+  - id: Netease.CloudMusic
+    category: Tools
+  - id: ObsProject.OBSStudio
+    category: Tools
+  - id: Microsoft.PowerToys
+    category: Tools
+  - id: Rime.Weasel
+    category: Tools
+  - id: Voidtools.Everything
+    category: Tools
+  - id: XanderFrangos.TwinkleTray
+    category: Tools
+  - id: Zentraedi.ZSpace
+    category: Tools
+  - id: Zhongyang219.TrafficMonitor.Full
+    category: Tools
 
-# KVM 知识管理
-EuSoft.Eudic # 欧路词典
-Calibre.Calibre
-Notion.Notion
-Obsidian.Obsidian
-RssNext.Folo
+  # Design Tools 设计工具
+  - id: Ogdesign.Eagle
+    category: Design
+  - id: BlenderFoundation.Blender
+    category: Design
+  - id: Bytedance.JianyingProCLS
+    category: Design
+  - id: Figma.Figma
+    category: Design
+  - id: KDE.Krita
+    category: Design
+  - id: Unity.UnityHub
+    category: Design
+  - id: Wacom.WacomTabletDriver
+    category: Design
 
-# AI
-Upscayl.Upscayl # 图片放大
+  # Social Media 社交媒体
+  - id: Telegram.TelegramDesktop
+    category: Social
+  - id: Tencent.TIM
+    category: Social
+  - id: Tencent.WeChat.Universal
+    category: Social
 
-# Game 游戏
-Valve.Steam
+  # KVM 知识管理
+  - id: EuSoft.Eudic
+    category: Knowledge
+  - id: Calibre.Calibre
+    category: Knowledge
+  - id: Notion.Notion
+    category: Knowledge
+  - id: Obsidian.Obsidian
+    category: Knowledge
+  - id: RssNext.Folo
+    category: Knowledge
+
+  # AI
+  - id: Upscayl.Upscayl
+    category: AI
+
+  # Game 游戏
+  - id: Valve.Steam
+    category: Game

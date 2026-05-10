@@ -1,0 +1,8 @@
+settings:
+  skip_existing: false
+
+packages:
+  - id: ""
+    category: dev
+  - id: Git.Git
+    category: dev
