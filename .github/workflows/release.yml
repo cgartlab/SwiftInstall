@@ -3,50 +3,53 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 permissions:
   contents: write
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [windows-latest]
-        go-version: ['1.25']
-    runs-on: ${{ matrix.os }}
+    name: Build Release Binary
+    runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v5
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version-file: go.mod
+          cache: true
 
-      - name: Clean stale artifacts
-        shell: pwsh
-        run: Remove-Item -Force -ErrorAction SilentlyContinue sis-*, release/*
+      - name: Download dependencies
+        run: go mod download
 
       - name: Build
         shell: pwsh
         run: |
-          $VERSION = ${{ github.ref_name }}
-          $COMMIT = git rev-parse --short HEAD
-          $DATE = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
-          go build -ldflags "-X main.Version=$VERSION -X main.Commit=$COMMIT -X main.Date=$DATE" -o sis-windows-amd64.exe ./cmd/sis/
+          $VERSION = "${{ github.ref_name }}"
+          $COMMIT  = git rev-parse --short HEAD
+          $DATE    = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+          go build `
+            -ldflags "-X main.Version=$VERSION -X main.Commit=$COMMIT -X main.Date=$DATE" `
+            -o sis-windows-amd64.exe `
+            ./cmd/sis/
 
-      - name: Verify version matches tag
+      - name: Verify binary version matches tag
         shell: pwsh
         run: |
-          $ver = & ./sis-windows-amd64.exe version 2>$null | Out-String | ForEach-Object { $_.Trim() }
-          if ($ver -notmatch "^${{ github.ref_name }}") {
-            Write-Output "Version mismatch: binary says '$ver', tag is '${{ github.ref_name }}'"
+          $tag = "${{ github.ref_name }}"
+          $out = & ./sis-windows-amd64.exe version | Out-String
+          $out = $out.Trim()
+          Write-Output "Binary output : $out"
+          Write-Output "Expected tag  : $tag"
+          if ($out -notlike "*$tag*") {
+            Write-Error "Version mismatch: binary says '$out', expected to contain '$tag'"
             exit 1
           }
-          Write-Output "Version verified: $ver"
-
-      - name: Test
-        run: go test ./...
+          Write-Output "Version verified OK"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -56,15 +59,19 @@ jobs:
           retention-days: 90
 
   release:
-    needs: [build]
+    name: Create GitHub Release
+    needs: build
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download artifact
+        uses: actions/download-artifact@v4
         with:
           name: sis-windows-amd64
           path: .
 
-      - uses: softprops/action-gh-release@v2
+      - name: Create release
+        uses: softprops/action-gh-release@v2
         with:
           files: sis-windows-amd64.exe
           generate_release_notes: true

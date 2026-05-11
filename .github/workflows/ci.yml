@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & Verify
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Build
+        shell: pwsh
+        run: |
+          $COMMIT = git rev-parse --short HEAD
+          $DATE   = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+          go build `
+            -ldflags "-X main.Version=dev -X main.Commit=$COMMIT -X main.Date=$DATE" `
+            -o sis-windows-amd64.exe `
+            ./cmd/sis/
+
+      - name: Smoke test — version flag
+        shell: pwsh
+        run: |
+          $out = & ./sis-windows-amd64.exe version
+          Write-Output "Binary output: $out"
+          if (-not $out) { Write-Error "version command produced no output"; exit 1 }
+
+      - name: Smoke test — help flag
+        shell: pwsh
+        run: ./sis-windows-amd64.exe --help
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sis-windows-amd64-${{ github.sha }}
+          path: sis-windows-amd64.exe
+          retention-days: 7
