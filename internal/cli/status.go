@@ -2,104 +2,136 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"time"
+	"os"
 
 	"github.com/cgartlab/SwiftInstall/internal/backend"
-	"github.com/cgartlab/SwiftInstall/internal/engine"
 	"github.com/cgartlab/SwiftInstall/internal/manifest"
-	"github.com/cgartlab/SwiftInstall/internal/ui"
 	"github.com/spf13/cobra"
 )
 
 func newStatusCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "Show installation status of packages",
-		Long: `Compare packages in a manifest with what is currently installed
-and show which are installed, missing, or outdated.
+		Short: "检查清单中各软件的安装状态",
+		Long: `对比清单文件与系统已安装软件，显示每个包的当前状态。
 
-Examples:
-  sis status
-  sis status -f software_list.txt
-  sis status --format json`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			manifestPath, _ := cmd.Flags().GetString("file")
-			format, _ := cmd.Flags().GetString("format")
-
-			if manifestPath == "" {
-				manifestPath = resolveManifest("")
-			}
-			if manifestPath == "" {
-				return fmt.Errorf("no manifest file found")
-			}
-
-			m, err := manifest.ParseManifest(manifestPath)
-			if err != nil {
-				return fmt.Errorf("parse manifest: %w", err)
-			}
-
-			winget := backend.NewWingetBackend()
-			if err := winget.Detect(); err != nil {
-				return fmt.Errorf("winget: %w", err)
-			}
-
-			var renderer ui.Renderer
-			switch format {
-			case "json":
-				renderer = ui.NewJSONRenderer()
-			case "silent":
-				renderer = ui.NewSilentRenderer()
-			case "table":
-				renderer = ui.NewTerminalRenderer()
-			default:
-				return fmt.Errorf("invalid format %q: supported values are table, json, silent", format)
-			}
-
-			renderer.Start(len(m.Packages), manifestPath, "Checking status of")
-
-			results := make([]engine.InstallResult, 0, len(m.Packages))
-			for _, pkg := range m.Packages {
-				isInstalled, err := winget.IsInstalled(context.Background(), pkg.ID)
-				result := engine.InstallResult{Package: pkg}
-				if err != nil {
-					result.Status = engine.StatusFailed
-					result.Errors = []string{err.Error()}
-					renderer.Progress(pkg, string(engine.StatusFailed), err)
-				} else if isInstalled {
-					result.Status = engine.StatusSuccess
-					renderer.Progress(pkg, string(engine.StatusSuccess), nil)
-				} else {
-					result.Status = engine.StatusSkipped
-					renderer.Progress(pkg, string(engine.StatusSkipped), nil)
-				}
-				results = append(results, result)
-			}
-
-			now := time.Now()
-			summary := &engine.Summary{
-				Total:     len(results),
-				Results:   results,
-				StartTime: now,
-				EndTime:   now,
-			}
-			for _, r := range results {
-				switch r.Status {
-				case engine.StatusSuccess:
-					summary.Succeeded++
-				case engine.StatusSkipped:
-					summary.Skipped++
-				case engine.StatusFailed:
-					summary.Failed++
-				}
-			}
-
-			renderer.Done(summary)
-			return nil
-		},
+示例:
+  sis status                     使用默认清单
+  sis status -f apps.yaml        指定清单文件
+  sis status --format json       JSON 格式输出`,
+		RunE: runStatus,
 	}
 
-	cmd.Flags().StringP("file", "f", "", "path to manifest file")
-	cmd.Flags().String("format", "table", "output format: table, json, silent")
 	return cmd
+}
+
+func runStatus(cmd *cobra.Command, args []string) error {
+	manifestPath, _ := cmd.Flags().GetString("file")
+	if manifestPath == "" {
+		manifestPath = resolveManifest()
+	}
+	if manifestPath == "" {
+		return fmt.Errorf("未找到清单文件")
+	}
+
+	m, err := manifest.ParseManifest(manifestPath)
+	if err != nil {
+		return fmt.Errorf("解析清单文件失败: %w", err)
+	}
+
+	be := backend.NewWingetBackend()
+	if err := be.Detect(); err != nil {
+		return err
+	}
+
+	format, _ := cmd.Flags().GetString("format")
+	noColor, _ := cmd.Flags().GetBool("no-color")
+	useColor := !noColor && format != "json"
+
+	type pkgStatus struct {
+		Package   manifest.Package `json:"package"`
+		Installed bool             `json:"installed"`
+		Error     string           `json:"error,omitempty"`
+	}
+
+	fmt.Fprintf(os.Stderr, "\nChecking status of %d packages from %s\n\n", len(m.Packages), manifestPath)
+
+	var results []pkgStatus
+	installed := 0
+	missing := 0
+	errors := 0
+
+	for i, pkg := range m.Packages {
+		isInstalled, err := be.IsInstalled(context.Background(), pkg.ID)
+
+		status := pkgStatus{Package: pkg, Installed: isInstalled}
+		if err != nil {
+			status.Error = err.Error()
+			errors++
+		} else if isInstalled {
+			installed++
+		} else {
+			missing++
+		}
+		results = append(results, status)
+
+		// Display progress
+		if format != "json" {
+			icon := "\033[32m✓\033[0m"
+			if !isInstalled {
+				icon = "\033[31m✗\033[0m"
+			}
+			if err != nil {
+				icon = "\033[33m?\033[0m"
+			}
+			if !useColor {
+				switch {
+				case err != nil:
+					icon = "?"
+				case isInstalled:
+					icon = "+"
+				default:
+					icon = "-"
+				}
+			}
+			fmt.Fprintf(os.Stderr, "  [%d/%d] %s %s\n", i+1, len(m.Packages), icon, pkg.ID)
+		}
+	}
+
+	// Summary
+	if format == "json" {
+		type jsonOutput struct {
+			Source    string      `json:"source"`
+			Total     int         `json:"total"`
+			Installed int         `json:"installed"`
+			Missing   int         `json:"missing"`
+			Errors    int         `json:"errors,omitempty"`
+			Packages  []pkgStatus `json:"packages"`
+		}
+		out := jsonOutput{
+			Source:    manifestPath,
+			Total:     len(m.Packages),
+			Installed: installed,
+			Missing:   missing,
+			Errors:    errors,
+			Packages:  results,
+		}
+		data, _ := json.MarshalIndent(out, "", "  ")
+		fmt.Println(string(data))
+	} else {
+		green := "\033[32m"
+		red := "\033[31m"
+		reset := "\033[0m"
+		if !useColor {
+			green = ""
+			red = ""
+			reset = ""
+		}
+		fmt.Fprintf(os.Stderr, "\n  %s%d installed%s, %s%d missing%s\n\n",
+			green, installed, reset, red, missing, reset)
+	}
+
+	return nil
 }

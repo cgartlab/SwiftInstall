@@ -5,8 +5,14 @@ import (
 	"github.com/cgartlab/SwiftInstall/internal/manifest"
 )
 
+// Renderer defines how batch operations are presented to the user.
 type Renderer interface {
-	Start(total int, manifestPath string, action string)
-	Progress(pkg manifest.Package, status string, err error)
-	Done(summary *engine.Summary)
+	// Header prints the operation header (e.g. "Installing 5 packages from sis.yaml")
+	Header(total int, source string, action string)
+
+	// Progress reports a single package result during the operation.
+	Progress(index int, total int, pkg manifest.Package, result engine.Result)
+
+	// Summary prints the final aggregated result.
+	Summary(summary *engine.Summary)
 }
