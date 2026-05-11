@@ -8,114 +8,115 @@ import (
 	"github.com/cgartlab/SwiftInstall/internal/backend"
 	"github.com/cgartlab/SwiftInstall/internal/engine"
 	"github.com/cgartlab/SwiftInstall/internal/manifest"
-	"github.com/cgartlab/SwiftInstall/internal/ui"
 	"github.com/spf13/cobra"
 )
 
 func newInstallCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "install",
-		Short: "Install packages from a manifest file",
-		Long: `Install all packages listed in a YAML or TXT manifest file.
-Uses winget on Windows and Homebrew on macOS.
+		Short: "从清单文件批量安装软件",
+		Long: `从 YAML 或 TXT 清单文件批量安装所有软件包。
 
-Failing one package does not stop the batch — errors are collected
-and reported in a summary at the end.
+单个包安装失败不会中断整个批次，所有错误会在最后汇总报告。
+支持自动跳过已安装软件、失败重试、代理加速等功能。
 
-Examples:
-  sis install
-  sis install -f software_list.txt
-  sis install --dry-run
-  sis install --format json`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			manifestPath, _ := cmd.Flags().GetString("file")
-			dryRun, _ := cmd.Flags().GetBool("dry-run")
-			format, _ := cmd.Flags().GetString("format")
-
-			if manifestPath == "" {
-				manifestPath = resolveManifest("")
-			}
-			if manifestPath == "" {
-				return fmt.Errorf("no manifest file found; use --file or create software_list.txt or sis.yaml")
-			}
-
-			m, err := manifest.ParseManifest(manifestPath)
-			if err != nil {
-				return fmt.Errorf("parse manifest: %w", err)
-			}
-
-			if err := manifest.Validate(m); err != nil {
-				return fmt.Errorf("validate manifest: %w", err)
-			}
-
-			winget := backend.NewWingetBackend()
-			if err := winget.Detect(); err != nil {
-				return fmt.Errorf("winget: %w", err)
-			}
-
-			var renderer ui.Renderer
-			switch format {
-			case "json":
-				renderer = ui.NewJSONRenderer()
-			case "silent":
-				renderer = ui.NewSilentRenderer()
-			case "table":
-				renderer = ui.NewTerminalRenderer()
-			default:
-				return fmt.Errorf("invalid format %q: supported values are table, json, silent", format)
-			}
-
-			opts := engine.InstallOptions{
-				DryRun:       dryRun,
-				SkipExisting: m.Settings.SkipExisting,
-				Proxy:        m.Settings.Proxy,
-			}
-
-			eng := engine.New(winget, opts)
-
-			eng.SetProgressHook(func(r engine.InstallResult) {
-				var err error
-				if len(r.Errors) > 0 {
-					err = fmt.Errorf("%s", r.Errors[0])
-				}
-				renderer.Progress(r.Package, string(r.Status), err)
-			})
-
-			renderer.Start(len(m.Packages), manifestPath, "Installing")
-			if dryRun {
-				fmt.Fprintf(os.Stderr, "DRY-RUN — no changes will be made\n")
-			}
-
-			summary, err := eng.Install(context.Background(), m)
-			if err != nil {
-				return err
-			}
-
-			renderer.Done(summary)
-
-			if summary != nil && summary.Failed > 0 {
-				return fmt.Errorf("%d package(s) failed", summary.Failed)
-			}
-			return nil
-		},
+示例:
+  sis install                    使用默认清单安装
+  sis install -f my_apps.yaml    指定清单文件
+  sis install --dry-run          仅预览，不实际安装
+  sis install --skip-existing    跳过已安装的软件`,
+		RunE: runInstall,
 	}
 
-	cmd.Flags().StringP("file", "f", "", "path to manifest file")
-	cmd.Flags().BoolP("dry-run", "n", false, "preview installation without making changes")
-	cmd.Flags().String("format", "table", "output format: table, json, silent")
+	cmd.Flags().BoolP("dry-run", "n", false, "仅预览安装计划，不实际执行")
+	cmd.Flags().Bool("skip-existing", false, "跳过已安装的软件")
+	cmd.Flags().String("proxy", "", "使用指定代理 (例: http://127.0.0.1:10809)")
+	cmd.Flags().Int("retry", 0, "失败重试次数 (默认不重试)")
+	cmd.Flags().Int("retry-delay", 3, "重试间隔秒数")
+
 	return cmd
 }
 
-func resolveManifest(defaultPath string) string {
-	if defaultPath != "" {
-		if _, err := os.Stat(defaultPath); err == nil {
-			return defaultPath
-		}
+func runInstall(cmd *cobra.Command, args []string) error {
+	// Resolve manifest path
+	manifestPath, _ := cmd.Flags().GetString("file")
+	if manifestPath == "" {
+		manifestPath = resolveManifest()
 	}
-	for _, name := range []string{"sis.yaml", "software_list.txt", "packages.txt"} {
-		if _, err := os.Stat(name); err == nil {
-			return name
-		}
+	if manifestPath == "" {
+		return fmt.Errorf("未找到清单文件\n\n" +
+			"请使用 -f 指定文件路径，或在当前目录创建 sis.yaml / software_list.txt")
 	}
-	return ""
+
+	// Parse manifest
+	m, err := manifest.ParseManifest(manifestPath)
+	if err != nil {
+		return fmt.Errorf("解析清单文件失败: %w", err)
+	}
+	if err := manifest.Validate(m); err != nil {
+		return fmt.Errorf("清单文件校验失败: %w", err)
+	}
+
+	// Detect backend
+	be := backend.NewWingetBackend()
+	if err := be.Detect(); err != nil {
+		return err
+	}
+
+	// Build options (CLI flags > manifest settings > defaults)
+	dryRun, _ := cmd.Flags().GetBool("dry-run")
+	skipExisting, _ := cmd.Flags().GetBool("skip-existing")
+	proxy, _ := cmd.Flags().GetString("proxy")
+	retryCount, _ := cmd.Flags().GetInt("retry")
+	retryDelay, _ := cmd.Flags().GetInt("retry-delay")
+
+	// Manifest settings as fallback
+	if !cmd.Flags().Changed("skip-existing") && m.Settings.SkipExisting {
+		skipExisting = true
+	}
+	if !cmd.Flags().Changed("proxy") && m.Settings.Proxy != "" {
+		proxy = m.Settings.Proxy
+	}
+	if !cmd.Flags().Changed("retry") && m.Settings.RetryCount > 0 {
+		retryCount = m.Settings.RetryCount
+	}
+	if !cmd.Flags().Changed("retry-delay") && m.Settings.RetryDelay > 0 {
+		retryDelay = m.Settings.RetryDelay
+	}
+
+	opts := engine.Options{
+		DryRun:       dryRun,
+		SkipExisting: skipExisting,
+		Proxy:        proxy,
+		RetryCount:   retryCount,
+		RetryDelay:   retryDelay,
+	}
+
+	// Setup renderer
+	renderer := newRenderer(cmd)
+
+	// Show dry-run notice
+	if dryRun {
+		fmt.Fprintf(os.Stderr, "  ⚡ DRY-RUN 模式 — 不会实际安装任何软件\n")
+	}
+
+	// Run
+	eng := engine.New(be, opts)
+	renderer.Header(len(m.Packages), manifestPath, "Installing")
+
+	eng.OnProgress(func(index int, total int, result engine.Result) {
+		renderer.Progress(index, total, result.Package, result)
+	})
+
+	summary, err := eng.Install(context.Background(), m)
+	if err != nil {
+		return err
+	}
+
+	renderer.Summary(summary)
+
+	if summary.Failed > 0 {
+		return fmt.Errorf("%d 个软件包安装失败", summary.Failed)
+	}
+	return nil
 }
