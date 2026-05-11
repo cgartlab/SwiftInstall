@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SwiftInstall — 装机从未如此简单</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a0f;
+      --surface1:  #111118;
+      --surface2:  #16161f;
+      --border1:   #1e1e2e;
+      --border2:   #2a2a3e;
+      --primary:   #7c6af7;
+      --primary-dim:#5a4fd4;
+      --cyan:      #4af4c0;
+      --amber:     #f7c948;
+      --text:      #e8e8f0;
+      --text2:     #8888aa;
+      --text3:     #44445a;
+      --code-bg:   #0d0d16;
+      --radius:    12px;
+      --radius-sm: 8px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Dot-grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, #1e1e2e 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.45;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* ── Utility ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .gradient-text {
+      background: linear-gradient(135deg, #a78bfa 0%, #7c6af7 40%, #4af4c0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .fade-in { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,10,15,.75);
+      backdrop-filter: blur(16px) saturate(1.4);
+      border-bottom: 1px solid var(--border1);
+      height: 60px;
+      display: flex; align-items: center;
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 24px;
+    }
+    .nav-logo {
+      font-size: 1.1rem; font-weight: 700; letter-spacing: -.3px;
+      background: linear-gradient(90deg, var(--primary), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a {
+      color: var(--text2); text-decoration: none; font-size: .9rem; font-weight: 500;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-gh {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--surface2); border: 1px solid var(--border2);
+      color: var(--text); text-decoration: none; border-radius: var(--radius-sm);
+      padding: 6px 14px; font-size: .85rem; font-weight: 500; transition: border-color .2s, background .2s;
+    }
+    .nav-gh:hover { border-color: var(--primary); background: rgba(124,106,247,.1); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center;
+      padding: 120px 0 80px;
+    }
+    .hero-inner {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(124,106,247,.12); border: 1px solid rgba(124,106,247,.3);
+      border-radius: 999px; padding: 5px 14px;
+      font-size: .78rem; font-weight: 600; color: #a78bfa;
+      letter-spacing: .5px; margin-bottom: 20px;
+    }
+    .hero-badge .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--cyan); box-shadow: 0 0 6px var(--cyan);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; } 50% { opacity: .3; }
+    }
+    .hero h1 {
+      font-size: clamp(2.4rem, 5vw, 3.6rem);
+      font-weight: 800; line-height: 1.15; letter-spacing: -.5px;
+      margin-bottom: 20px;
+    }
+    .hero-sub {
+      color: var(--text2); font-size: 1.05rem; line-height: 1.7;
+      margin-bottom: 36px; max-width: 440px;
+    }
+    .hero-cta { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      border-radius: var(--radius-sm); padding: 12px 24px;
+      font-size: .95rem; font-weight: 600; text-decoration: none;
+      cursor: pointer; border: none; transition: all .2s; white-space: nowrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dim));
+      color: #fff; box-shadow: 0 0 24px rgba(124,106,247,.35);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 32px rgba(124,106,247,.55); }
+    .btn-outline {
+      background: transparent; color: var(--text);
+      border: 1px solid var(--border2);
+    }
+    .btn-outline:hover { border-color: var(--primary); background: rgba(124,106,247,.08); }
+
+    /* ── TERMINAL WINDOW ── */
+    .terminal-window {
+      background: var(--code-bg);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(124,106,247,.15), 0 24px 80px rgba(0,0,0,.6);
+    }
+    .terminal-titlebar {
+      background: var(--surface1); padding: 10px 16px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--border1);
+    }
+    .tbar-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .tbar-dot.red   { background: #ff5f57; }
+    .tbar-dot.amber { background: #febc2e; }
+    .tbar-dot.green { background: #28c840; }
+    .tbar-title {
+      margin-left: 8px; font-size: .8rem; color: var(--text3);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .terminal-body {
+      padding: 20px 22px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .82rem; line-height: 1.75;
+      color: var(--text2);
+      min-height: 260px;
+    }
+    .terminal-body .ps { color: #7c6af7; }
+    .terminal-body .cmd { color: var(--text); }
+    .terminal-body .ok  { color: var(--cyan); }
+    .terminal-body .skip { color: var(--amber); }
+    .terminal-body .dim  { color: var(--text3); }
+    .terminal-body .summary { color: var(--text); }
+    .cursor {
+      display: inline-block; width: 8px; height: 14px;
+      background: var(--cyan); vertical-align: middle;
+      animation: blink .9s step-end infinite; margin-left: 1px;
+    }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+
+
+<!-- ══════════════════════════ NAV ══════════════════════════ -->
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="#">⚡ SwiftInstall</a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#quickstart">快速开始</a></li>
+      <li><a href="#manifest">文档</a></li>
+      <li><a href="https://github.com/cgartlab/SwiftInstall" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+    <a class="nav-gh" href="https://github.com/cgartlab/SwiftInstall" target="_blank" rel="noopener">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.7 2.6 1.2 3.2.9.1-.7.4-1.2.7-1.5-2.6-.3-5.4-1.3-5.4-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17 5.1 18 5.4 18 5.4c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.4 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
+      Star on GitHub
+    </a>
+  </div>
+</nav>
+
+<!-- ══════════════════════════ HERO ══════════════════════════ -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="dot"></span>
+          v1.0 · Windows · macOS 即将推出
+        </div>
+        <h1>装机从未<br><span class="gradient-text">如此简单</span></h1>
+        <p class="hero-sub">
+          SwiftInstall (<code class="mono" style="color:var(--cyan);font-size:.9em">sis</code>) 是一个开源批量装机工具。<br>
+          一个 YAML 文件 + 一条命令，新系统瞬间准备就绪。
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#quickstart">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            立即开始
+          </a>
+          <a class="btn btn-outline" href="https://github.com/cgartlab/SwiftInstall" target="_blank" rel="noopener">
+            查看源码 →
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-terminal">
+        <div class="terminal-window">
+          <div class="terminal-titlebar">
+            <div class="tbar-dot red"></div>
+            <div class="tbar-dot amber"></div>
+            <div class="tbar-dot green"></div>
+            <span class="tbar-title">Windows PowerShell</span>
+          </div>
+          <div class="terminal-body" id="terminal-output">
+            <span class="cursor" id="term-cursor"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ STATS BAR ══════════════════════════ -->
+<section class="stats-bar fade-in">
+  <div class="container">
+    <div class="stats-inner">
+      <div class="stat-item">
+        <span class="stat-value gradient-text">5 分钟</span>
+        <span class="stat-label">完成装机</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-value gradient-text">1000+</span>
+        <span class="stat-label">支持软件包</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-value gradient-text">开源</span>
+        <span class="stat-label">GPL-3.0 许可</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ FEATURES GRID ══════════════════════════ -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2>为什么选择 <span class="gradient-text">SwiftInstall</span>？</h2>
+      <p>专为中国开发者打造，解决装机时最痛的那几个问题</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card fade-in">
+        <div class="feature-icon">⚡</div>
+        <h3>批量安装</h3>
+        <p>一个 YAML 或 TXT 文件定义你的全部软件，<code>sis install</code> 一键搞定，失败不中断</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">🔍</div>
+        <h3>状态检查</h3>
+        <p><code>sis status</code> 扫描系统，立刻告诉你哪些已安装、哪些还缺失</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">🛡️</div>
+        <h3>智能跳过</h3>
+        <p><code>--skip-existing</code> 自动识别已安装软件跳过，重复执行幂等安全</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">🔄</div>
+        <h3>失败重试</h3>
+        <p>网络不稳？内置重试机制，可配置次数与间隔，安装更可靠</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">🚀</div>
+        <h3>国内加速</h3>
+        <p>内置 USTC 镜像源切换，自动检测 v2rayN 代理，大陆用户开箱即用</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">📋</div>
+        <h3>Dry Run</h3>
+        <p><code>--dry-run</code> 预览所有安装计划，不执行任何操作，心里有数再动手</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- ══════════════════════════ QUICK START ══════════════════════════ -->
+<section class="quickstart" id="quickstart">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2>快速<span class="gradient-text">开始</span></h2>
+      <p>三步完成安装，从零到满血开发环境</p>
+    </div>
+    <div class="tabs-wrapper fade-in">
+      <div class="tabs">
+        <button class="tab active" data-tab="windows">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5L11 4v7.5H3zm0 13L11 20v-7.5H3zm9.5-13.6L21 3v8.5h-8.5zm0 13.1L21 21v-8.5h-8.5z"/></svg>
+          Windows
+        </button>
+        <button class="tab" data-tab="macos">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.7 17.5c-.4.9-.9 1.7-1.5 2.4-.8 1-1.5 1.6-2.1 1.6-.5 0-1.2-.3-2-.8-.8-.5-1.5-.7-2.2-.7-.7 0-1.4.2-2.2.7-.8.5-1.4.8-2 .8-.7 0-1.4-.6-2.2-1.7-.9-1-1.6-2.3-2-3.7-.5-1.5-.7-3-.7-4.3 0-1.6.3-3 1-4.1.5-.9 1.2-1.6 2-2.2.9-.5 1.8-.8 2.7-.8.7 0 1.5.2 2.5.7.9.5 1.5.7 1.7.7.2 0 .8-.3 1.9-.8 1-.5 1.9-.7 2.6-.6 1.9.1 3.4 1 4.4 2.7-1.7 1-2.5 2.4-2.5 4.2 0 1.5.5 2.8 1.6 3.8z"/><path d="M14.4 2c0 1-.4 2-1.1 2.8-.8.9-1.7 1.4-2.7 1.4-.1-.9.3-1.8 1-2.7.8-.9 1.7-1.4 2.8-1.5z"/></svg>
+          macOS
+          <span class="badge-soon">即将推出</span>
+        </button>
+      </div>
+
+      <div class="tab-content active" id="tab-windows">
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">01</div>
+            <div class="step-body">
+              <h4>安装 sis</h4>
+              <p>以管理员身份打开 PowerShell，运行：</p>
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="mono" style="color:var(--text3);font-size:.75rem">PowerShell</span>
+                  <button class="copy-btn" data-code="irm https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/install.ps1 | iex">复制</button>
+                </div>
+                <pre><code><span style="color:#7c6af7">irm</span> https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/install.ps1 <span style="color:#4af4c0">|</span> <span style="color:#7c6af7">iex</span></code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">02</div>
+            <div class="step-body">
+              <h4>创建清单文件 <code class="mono">sis.yaml</code></h4>
+              <p>在任意目录创建 <code class="mono">sis.yaml</code>，添加你需要的软件：</p>
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="mono" style="color:var(--text3);font-size:.75rem">sis.yaml</span>
+                  <button class="copy-btn" data-code="mirror: ustc
+packages:
+  - id: Microsoft.VisualStudioCode
+    category: dev
+  - id: Git.Git
+    category: dev
+  - id: 7zip.7zip
+    category: utils">复制</button>
+                </div>
+                <pre><code><span style="color:#f7c948">mirror</span>: <span style="color:#4af4c0">ustc</span>
+<span style="color:#f7c948">packages</span>:
+  - <span style="color:#f7c948">id</span>: <span style="color:#4af4c0">Microsoft.VisualStudioCode</span>
+    <span style="color:#f7c948">category</span>: <span style="color:#a78bfa">dev</span>
+  - <span style="color:#f7c948">id</span>: <span style="color:#4af4c0">Git.Git</span>
+    <span style="color:#f7c948">category</span>: <span style="color:#a78bfa">dev</span>
+  - <span style="color:#f7c948">id</span>: <span style="color:#4af4c0">7zip.7zip</span>
+    <span style="color:#f7c948">category</span>: <span style="color:#a78bfa">utils</span></code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">03</div>
+            <div class="step-body">
+              <h4>一键安装</h4>
+              <p>在 <code class="mono">sis.yaml</code> 所在目录运行：</p>
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="mono" style="color:var(--text3);font-size:.75rem">PowerShell</span>
+                  <button class="copy-btn" data-code="sis install">复制</button>
+                </div>
+                <pre><code><span style="color:#4af4c0">sis install</span></code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-macos">
+        <div class="macos-coming">
+          <div class="coming-icon">🍎</div>
+          <h3>macOS 支持即将推出</h3>
+          <p>正在开发基于 Homebrew 的 macOS 支持，敬请期待。<br>欢迎在 GitHub 提 Issue 或 PR 参与贡献！</p>
+          <a class="btn btn-outline" href="https://github.com/cgartlab/SwiftInstall" target="_blank" rel="noopener" style="margin-top:20px">参与贡献 →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- ══════════════════════════ MANIFEST FORMAT ══════════════════════════ -->
+<section class="manifest" id="manifest">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2>清单<span class="gradient-text">格式</span></h2>
+      <p>支持 YAML 和纯文本两种格式，随意选择你喜欢的</p>
+    </div>
+    <div class="manifest-grid fade-in">
+      <div class="manifest-card">
+        <div class="manifest-card-header">
+          <div class="manifest-card-label">YAML 格式</div>
+          <code class="mono" style="color:var(--text3);font-size:.78rem">sis.yaml</code>
+          <button class="copy-btn" data-code="mirror: ustc
+packages:
+  - id: Microsoft.VisualStudioCode
+    category: dev
+  - id: Git.Git
+    category: dev
+  - id: 7zip.7zip
+    category: utils
+  - id: Notion.Notion
+    category: productivity">复制</button>
+        </div>
+        <pre class="manifest-code"><code><span style="color:#f7c948">mirror</span>: <span style="color:#4af4c0">ustc</span>
+<span style="color:#f7c948">packages</span>:
+  - <span style="color:#f7c948">id</span>: <span style="color:#4af4c0">Microsoft.VisualStudioCode</span>
+    <span style="color:#f7c948">category</span>: <span style="color:#a78bfa">dev</span>
+  - <span style="color:#f7c948">id</span>: <span style="color:#4af4c0">Git.Git</span>
+    <span style="color:#f7c948">category</span>: <span style="color:#a78bfa">dev</span>
+  - <span style="color:#f7c948">id</span>: <span style="color:#4af4c0">7zip.7zip</span>
+    <span style="color:#f7c948">category</span>: <span style="color:#a78bfa">utils</span>
+  - <span style="color:#f7c948">id</span>: <span style="color:#4af4c0">Notion.Notion</span>
+    <span style="color:#f7c948">category</span>: <span style="color:#a78bfa">productivity</span></code></pre>
+      </div>
+
+      <div class="manifest-card">
+        <div class="manifest-card-header">
+          <div class="manifest-card-label">TXT 格式</div>
+          <code class="mono" style="color:var(--text3);font-size:.78rem">sis.txt</code>
+          <button class="copy-btn" data-code="# dev
+Microsoft.VisualStudioCode
+Git.Git
+
+# utils
+7zip.7zip
+
+# productivity
+Notion.Notion">复制</button>
+        </div>
+        <pre class="manifest-code"><code><span style="color:#44445a"># dev</span>
+<span style="color:#4af4c0">Microsoft.VisualStudioCode</span>
+<span style="color:#4af4c0">Git.Git</span>
+
+<span style="color:#44445a"># utils</span>
+<span style="color:#4af4c0">7zip.7zip</span>
+
+<span style="color:#44445a"># productivity</span>
+<span style="color:#4af4c0">Notion.Notion</span></code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ CLI COMMANDS ══════════════════════════ -->
+<section class="cli-section" id="cli">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2>CLI <span class="gradient-text">命令</span></h2>
+      <p>简洁直观的命令行接口，记住一个 <code class="mono" style="color:var(--cyan)">sis</code> 就够了</p>
+    </div>
+    <div class="cli-grid">
+      <div class="cli-card fade-in">
+        <div class="cli-cmd-line">
+          <span class="cli-prompt">$</span>
+          <span class="cli-name mono">sis install</span>
+        </div>
+        <p class="cli-desc">批量安装清单中的软件包</p>
+        <div class="cli-flags">
+          <span class="flag">--skip-existing</span>
+          <span class="flag">--dry-run</span>
+          <span class="flag">--retry</span>
+        </div>
+      </div>
+      <div class="cli-card fade-in">
+        <div class="cli-cmd-line">
+          <span class="cli-prompt">$</span>
+          <span class="cli-name mono">sis uninstall</span>
+        </div>
+        <p class="cli-desc">批量卸载清单中的软件包</p>
+        <div class="cli-flags">
+          <span class="flag">--dry-run</span>
+        </div>
+      </div>
+      <div class="cli-card fade-in">
+        <div class="cli-cmd-line">
+          <span class="cli-prompt">$</span>
+          <span class="cli-name mono">sis list</span>
+        </div>
+        <p class="cli-desc">列出清单中所有软件包及分类</p>
+        <div class="cli-flags">
+          <span class="flag">--format json</span>
+        </div>
+      </div>
+      <div class="cli-card fade-in">
+        <div class="cli-cmd-line">
+          <span class="cli-prompt">$</span>
+          <span class="cli-name mono">sis status</span>
+        </div>
+        <p class="cli-desc">检查清单软件包的安装状态</p>
+        <div class="cli-flags">
+          <span class="flag">--missing-only</span>
+        </div>
+      </div>
+      <div class="cli-card fade-in">
+        <div class="cli-cmd-line">
+          <span class="cli-prompt">$</span>
+          <span class="cli-name mono">sis version</span>
+        </div>
+        <p class="cli-desc">显示当前版本信息</p>
+        <div class="cli-flags"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ CTA BANNER ══════════════════════════ -->
+<section class="cta-banner fade-in">
+  <div class="container">
+    <div class="cta-inner">
+      <div class="cta-glow"></div>
+      <h2>准备好了吗？<span class="gradient-text">开始装机</span></h2>
+      <p>加入使用 SwiftInstall 的开发者，告别重装系统的痛苦</p>
+      <div class="cta-actions">
+        <div class="cta-install-cmd">
+          <code class="mono" id="cta-code">irm https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/install.ps1 | iex</code>
+          <button class="copy-btn copy-btn-cta" data-code="irm https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/install.ps1 | iex">复制</button>
+        </div>
+        <a class="btn btn-outline" href="https://github.com/cgartlab/SwiftInstall" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.7 2.6 1.2 3.2.9.1-.7.4-1.2.7-1.5-2.6-.3-5.4-1.3-5.4-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17 5.1 18 5.4 18 5.4c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.4 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
+          GitHub 上 Star ⭐
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ FOOTER ══════════════════════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="nav-logo" href="#">⚡ SwiftInstall</a>
+        <p>开源批量装机工具，专为中国开发者打造</p>
+        <p class="footer-license">GPL-3.0 License · Built with Go + Cobra</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h5>项目</h5>
+          <a href="https://github.com/cgartlab/SwiftInstall" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/cgartlab/SwiftInstall/releases" target="_blank" rel="noopener">Releases</a>
+          <a href="https://github.com/cgartlab/SwiftInstall/issues" target="_blank" rel="noopener">Issues</a>
+        </div>
+        <div class="footer-col">
+          <h5>文档</h5>
+          <a href="#quickstart">快速开始</a>
+          <a href="#manifest">清单格式</a>
+          <a href="#cli">CLI 命令</a>
+        </div>
+        <div class="footer-col">
+          <h5>贡献</h5>
+          <a href="https://github.com/cgartlab/SwiftInstall/blob/main/README.md" target="_blank" rel="noopener">README</a>
+          <a href="https://github.com/cgartlab/SwiftInstall/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+          <a href="https://github.com/cgartlab/SwiftInstall/pulls" target="_blank" rel="noopener">Pull Requests</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 SwiftInstall · <a href="https://github.com/cgartlab/SwiftInstall" target="_blank" rel="noopener">cgartlab</a> · Made with ❤️ for Chinese Developers</p>
+    </div>
+  </div>
+</footer>
+
+
+
+<style>
+  /* ══ STATS BAR ══ */
+  .stats-bar { padding: 0 0 80px; }
+  .stats-inner {
+    display: flex; align-items: center; justify-content: center; gap: 0;
+    background: var(--surface1); border: 1px solid var(--border1);
+    border-radius: var(--radius); padding: 32px 48px;
+    box-shadow: 0 0 40px rgba(124,106,247,.06);
+  }
+  .stat-item { text-align: center; flex: 1; }
+  .stat-value { display: block; font-size: 2rem; font-weight: 800; line-height: 1.1; }
+  .stat-label { display: block; color: var(--text2); font-size: .88rem; margin-top: 4px; }
+  .stat-divider { width: 1px; height: 52px; background: var(--border1); flex-shrink: 0; margin: 0 8px; }
+
+  /* ══ FEATURES ══ */
+  .features { padding: 80px 0 80px; }
+  .section-header { text-align: center; margin-bottom: 56px; }
+  .section-header h2 { font-size: clamp(1.8rem, 3.5vw, 2.6rem); font-weight: 800; margin-bottom: 12px; }
+  .section-header p { color: var(--text2); font-size: 1rem; }
+  .features-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px;
+  }
+  .feature-card {
+    background: var(--surface1); border: 1px solid var(--border1);
+    border-radius: var(--radius); padding: 28px 28px 24px;
+    transition: border-color .25s, transform .25s, box-shadow .25s;
+    position: relative; overflow: hidden;
+  }
+  .feature-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--cyan));
+    opacity: 0; transition: opacity .3s;
+  }
+  .feature-card:hover { border-color: var(--border2); transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,.4); }
+  .feature-card:hover::before { opacity: 1; }
+  .feature-icon { font-size: 1.8rem; margin-bottom: 14px; }
+  .feature-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+  .feature-card p { color: var(--text2); font-size: .9rem; line-height: 1.65; }
+  .feature-card code { color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-size: .85em; }
+
+  /* ══ QUICK START ══ */
+  .quickstart { padding: 80px 0; }
+  .tabs-wrapper { background: var(--surface1); border: 1px solid var(--border1); border-radius: var(--radius); overflow: hidden; }
+  .tabs { display: flex; border-bottom: 1px solid var(--border1); padding: 0 20px; gap: 4px; }
+  .tab {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 18px; background: none; border: none; cursor: pointer;
+    color: var(--text2); font-size: .9rem; font-weight: 500; font-family: 'Inter', sans-serif;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: color .2s, border-color .2s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .badge-soon {
+    background: rgba(247,201,72,.15); color: var(--amber);
+    border: 1px solid rgba(247,201,72,.3); border-radius: 999px;
+    padding: 1px 8px; font-size: .7rem; font-weight: 600;
+  }
+  .tab-content { display: none; padding: 36px 32px; }
+  .tab-content.active { display: block; }
+  .steps { display: flex; flex-direction: column; gap: 28px; }
+  .step { display: flex; gap: 20px; }
+  .step-num {
+    font-family: 'JetBrains Mono', monospace; font-size: 1.6rem; font-weight: 700;
+    color: var(--border2); line-height: 1; flex-shrink: 0; width: 40px; padding-top: 2px;
+  }
+  .step-body { flex: 1; }
+  .step-body h4 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+  .step-body p { color: var(--text2); font-size: .9rem; margin-bottom: 12px; }
+  .step-body code { color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-size: .85em; }
+
+  /* Code blocks */
+  .code-block {
+    background: var(--code-bg); border: 1px solid var(--border1);
+    border-radius: var(--radius-sm); overflow: hidden;
+  }
+  .code-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px; border-bottom: 1px solid var(--border1);
+    background: var(--surface2);
+  }
+  .code-block pre { margin: 0; padding: 16px 18px; overflow-x: auto; }
+  .code-block code { font-family: 'JetBrains Mono', monospace; font-size: .82rem; line-height: 1.7; color: var(--text2); }
+
+  .copy-btn {
+    background: rgba(124,106,247,.15); border: 1px solid rgba(124,106,247,.25);
+    color: var(--primary); border-radius: 5px; padding: 3px 10px;
+    font-size: .72rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: background .2s, color .2s;
+  }
+  .copy-btn:hover { background: rgba(124,106,247,.3); color: #c4b5fd; }
+  .copy-btn.copied { background: rgba(74,244,192,.15); border-color: rgba(74,244,192,.25); color: var(--cyan); }
+
+  /* macOS coming soon */
+  .macos-coming {
+    text-align: center; padding: 60px 20px;
+  }
+  .coming-icon { font-size: 3rem; margin-bottom: 16px; }
+  .macos-coming h3 { font-size: 1.4rem; font-weight: 700; margin-bottom: 10px; }
+  .macos-coming p { color: var(--text2); line-height: 1.7; }
+
+  /* ══ MANIFEST ══ */
+  .manifest { padding: 80px 0; }
+  .manifest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .manifest-card { background: var(--surface1); border: 1px solid var(--border1); border-radius: var(--radius); overflow: hidden; }
+  .manifest-card-header {
+    display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+    background: var(--surface2); border-bottom: 1px solid var(--border1);
+  }
+  .manifest-card-label { font-weight: 700; font-size: .85rem; }
+  .manifest-card-header .copy-btn { margin-left: auto; }
+  .manifest-code { margin: 0; padding: 18px 20px; overflow-x: auto; background: var(--code-bg); }
+  .manifest-code code { font-family: 'JetBrains Mono', monospace; font-size: .82rem; line-height: 1.8; color: var(--text2); }
+
+  /* ══ CLI SECTION ══ */
+  .cli-section { padding: 80px 0; }
+  .cli-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;
+  }
+  .cli-card {
+    background: var(--surface1); border: 1px solid var(--border1);
+    border-radius: var(--radius); padding: 22px 22px 18px;
+    transition: border-color .25s, box-shadow .25s;
+  }
+  .cli-card:hover { border-color: var(--border2); box-shadow: 0 4px 24px rgba(0,0,0,.3); }
+  .cli-cmd-line { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .cli-prompt { color: var(--primary); font-family: 'JetBrains Mono', monospace; font-size: 1rem; }
+  .cli-name { font-size: 1rem; font-weight: 600; color: var(--cyan); }
+  .cli-desc { color: var(--text2); font-size: .88rem; margin-bottom: 12px; }
+  .cli-flags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .flag {
+    background: rgba(124,106,247,.1); border: 1px solid rgba(124,106,247,.2);
+    color: var(--primary); border-radius: 4px; padding: 2px 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: .73rem;
+  }
+
+  /* ══ CTA BANNER ══ */
+  .cta-banner { padding: 80px 0 60px; }
+  .cta-inner {
+    position: relative; text-align: center; padding: 56px 40px;
+    background: var(--surface1); border-radius: var(--radius);
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    overflow: hidden;
+  }
+  .cta-inner::before {
+    content: ''; position: absolute; inset: 0; z-index: -1; margin: -1px;
+    border-radius: calc(var(--radius) + 1px);
+    background: linear-gradient(135deg, rgba(124,106,247,.5), rgba(74,244,192,.3), rgba(124,106,247,.5));
+  }
+  .cta-glow {
+    position: absolute; width: 400px; height: 200px; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(ellipse, rgba(124,106,247,.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cta-inner h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; margin-bottom: 12px; }
+  .cta-inner p { color: var(--text2); margin-bottom: 32px; font-size: 1rem; }
+  .cta-actions { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .cta-install-cmd {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--code-bg); border: 1px solid var(--border2);
+    border-radius: var(--radius-sm); padding: 12px 16px;
+    max-width: 620px; width: 100%;
+  }
+  .cta-install-cmd code { flex: 1; font-size: .82rem; color: var(--text2); word-break: break-all; }
+  .copy-btn-cta { flex-shrink: 0; }
+
+  /* ══ FOOTER ══ */
+  footer { padding: 60px 0 0; border-top: 1px solid var(--border1); }
+  .footer-inner { display: flex; gap: 60px; margin-bottom: 40px; }
+  .footer-brand { flex: 1; }
+  .footer-brand p { color: var(--text2); font-size: .88rem; margin-top: 10px; line-height: 1.6; }
+  .footer-license { color: var(--text3); font-size: .8rem; margin-top: 6px; }
+  .footer-links { display: flex; gap: 48px; }
+  .footer-col { display: flex; flex-direction: column; gap: 10px; }
+  .footer-col h5 { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text3); margin-bottom: 2px; }
+  .footer-col a { color: var(--text2); text-decoration: none; font-size: .88rem; transition: color .2s; }
+  .footer-col a:hover { color: var(--primary); }
+  .footer-bottom { border-top: 1px solid var(--border1); padding: 20px 0; text-align: center; }
+  .footer-bottom p { color: var(--text3); font-size: .82rem; }
+  .footer-bottom a { color: var(--text2); text-decoration: none; }
+  .footer-bottom a:hover { color: var(--primary); }
+
+  /* ══ RESPONSIVE ══ */
+  @media (max-width: 900px) {
+    .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+    .hero-terminal { order: -1; }
+    .features-grid { grid-template-columns: 1fr; }
+    .manifest-grid { grid-template-columns: 1fr; }
+    .stats-inner { flex-direction: column; gap: 24px; padding: 28px 24px; }
+    .stat-divider { width: 60px; height: 1px; }
+    .footer-inner { flex-direction: column; gap: 36px; }
+    .footer-links { flex-wrap: wrap; gap: 32px; }
+  }
+  @media (max-width: 640px) {
+    .nav-links { display: none; }
+    .tab-content { padding: 24px 18px; }
+    .step { flex-direction: column; gap: 10px; }
+    .step-num { width: auto; font-size: 1rem; color: var(--primary); }
+    .cta-install-cmd { flex-direction: column; align-items: flex-start; }
+    .cli-grid { grid-template-columns: 1fr; }
+    .hero-cta { flex-direction: column; }
+    .btn { width: 100%; justify-content: center; }
+  }
+</style>
+
+
+
+<script>
+// ══════════════════════════════════════════
+//  Terminal Typing Animation
+// ══════════════════════════════════════════
+(function() {
+  const output = document.getElementById('terminal-output');
+  const cursor = document.getElementById('term-cursor');
+
+  // Build the terminal content as array of {type, text} segments
+  const lines = [
+    { cls: 'ps', text: 'PS C:\\> ' },
+    { cls: 'cmd', text: 'sis install\n' },
+    { cls: 'dim', text: '\n' },
+    { cls: 'dim', text: 'Installing 5 packages from sis.yaml\n' },
+    { cls: 'dim', text: '\n' },
+    { cls: 'ok',  text: '  [1/5] \u2713 Microsoft.VisualStudioCode\n' },
+    { cls: 'ok',  text: '  [2/5] \u2713 Git.Git\n' },
+    { cls: 'ok',  text: '  [3/5] \u2713 7zip.7zip\n' },
+    { cls: 'skip',text: '  [4/5] \u25cb Google.Chrome  (already installed)\n' },
+    { cls: 'ok',  text: '  [5/5] \u2713 Notion.Notion\n' },
+    { cls: 'dim', text: '\n' },
+    { cls: 'dim', text: '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n' },
+    { cls: 'summary', text: '  Total: 5  |  4 succeeded  1 skipped  (38.4s)\n' },
+  ];
+
+  let spanNodes = [];
+  let allText = '';
+
+  // Pre-create span elements
+  lines.forEach(line => {
+    const span = document.createElement('span');
+    span.className = line.cls;
+    output.insertBefore(span, cursor);
+    spanNodes.push({ span, text: line.text });
+  });
+
+  let lineIdx = 0;
+  let charIdx = 0;
+  const delays = { ps: 40, cmd: 55, dim: 8, ok: 10, skip: 10, summary: 12 };
+  let startTimeout = null;
+
+  function typeNext() {
+    if (lineIdx >= spanNodes.length) {
+      cursor.style.animation = 'blink .9s step-end infinite';
+      return;
+    }
+    const { span, text } = spanNodes[lineIdx];
+    const cls = lines[lineIdx].cls;
+    const delay = delays[cls] || 18;
+
+    if (charIdx < text.length) {
+      span.textContent += text[charIdx];
+      charIdx++;
+      startTimeout = setTimeout(typeNext, delay);
+    } else {
+      lineIdx++;
+      charIdx = 0;
+      // slight pause between lines
+      const pause = (cls === 'cmd' || cls === 'dim') ? 40 : 20;
+      startTimeout = setTimeout(typeNext, pause);
+    }
+  }
+
+  // Start after a short delay for dramatic effect
+  setTimeout(typeNext, 900);
+})();
+
+// ══════════════════════════════════════════
+//  Fade-in on Scroll (IntersectionObserver)
+// ══════════════════════════════════════════
+(function() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.fade-in').forEach((el, i) => {
+    // Stagger feature cards slightly
+    if (el.closest('.features-grid') || el.closest('.cli-grid')) {
+      const siblings = el.parentElement.querySelectorAll('.fade-in');
+      let idx = Array.from(siblings).indexOf(el);
+      el.style.transitionDelay = (idx * 80) + 'ms';
+    }
+    observer.observe(el);
+  });
+})();
+
+// ══════════════════════════════════════════
+//  Tab Switching
+// ══════════════════════════════════════════
+(function() {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      const content = document.getElementById('tab-' + target);
+      if (content) content.classList.add('active');
+    });
+  });
+})();
+
+// ══════════════════════════════════════════
+//  Copy Buttons
+// ══════════════════════════════════════════
+(function() {
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const code = btn.dataset.code || '';
+      navigator.clipboard.writeText(code).then(() => {
+        const original = btn.textContent;
+        btn.textContent = '✓ 已复制';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      }).catch(() => {
+        // Fallback for older browsers
+        const ta = document.createElement('textarea');
+        ta.value = code;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        const original = btn.textContent;
+        btn.textContent = '✓ 已复制';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+})();
+
+// ══════════════════════════════════════════
+//  Sticky Nav Shadow on Scroll
+// ══════════════════════════════════════════
+(function() {
+  const nav = document.querySelector('nav');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 10) {
+      nav.style.boxShadow = '0 4px 32px rgba(0,0,0,.5)';
+    } else {
+      nav.style.boxShadow = 'none';
+    }
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>
