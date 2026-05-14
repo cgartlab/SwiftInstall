@@ -1,6 +1,8 @@
 # AGENTS.md — SwiftInstall
 
-Cross-platform batch software installer. **Legacy scripts** use `winget` (Windows `.bat`) and `brew` (macOS `.sh`). **New Go CLI** (`sis`) replaces them incrementally — Windows first.
+**分层**: 产品 (Products) — 个人产品线
+
+Cross-platform batch software installer. 作者开发的五款个人产品之一。 **Legacy scripts** use `winget` (Windows `.bat`) and `brew` (macOS `.sh`). **New Go CLI** (`sis`) replaces them incrementally — Windows first.
 
 ## Legacy scripts (still present, being replaced)
 
