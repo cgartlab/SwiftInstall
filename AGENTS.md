@@ -22,6 +22,12 @@ go build -o sis.exe ./cmd/sis/
 go vet ./...
 ```
 
+### CI/CD
+
+- **GitHub Actions**: `.github/workflows/` — `release.yml` (发布), `ci.yml` (push 触发)
+- **Push 触发的 CI**: lint + vet + build 校验
+- **发布触发**: tag push → 构建 + 发布 binary
+
 ### Entrypoint
 
 `cmd/sis/main.go` — Cobra CLI, ldflags-injected version/commit/date.
@@ -32,8 +38,11 @@ go vet ./...
 cmd/sis/main.go
 internal/
   cli/          Cobra commands (thin orchestration layer)
+                 install | list | uninstall | status | version
   engine/       Install engine + manifest parser + pre-flight checks
+                 major refactor (+294 lines), supports list/uninstall
   backend/      Backend interface + winget implementation
+  ui/           Output renderers: terminal (+147 lines), json, silent
   config/       Two-level JSON config (~/.sis/config.json + .sis.json)
   mirror/       USTC mirror source switching
   proxy/        v2rayN proxy detection
@@ -47,8 +56,8 @@ internal/
 | 1 | Foundation (CLI skeleton, config, logger, types) | Done |
 | 2 | Engine + winget backend | Done |
 | 3 | Mirror, proxy, preflight | Done |
-| 4 | CLI commands wiring | Done |
-| 5 | Polish (progress, colors, CI) | Done |
+| 4 | CLI commands wiring (install, list, uninstall, status) | Done |
+| 5 | Polish (progress, colors, UI renderers, CI) | Done |
 
 ### Config precedence
 
@@ -70,3 +79,5 @@ Fallback: `SIS_ADMIN_CHECK` env var for testing.
 - **`src/` directory** — 13 empty Go-pattern subdirectories, **untracked** by Git. Dead scaffolding. Ignore.
 - **`bin/*.exe`** — precompiled Windows binaries from an earlier attempt. No source in this repo. Ignore.
 - **Docs are Chinese** — scripts and README in Simplified Chinese. USTC mirror is a core China-user feature.
+- **Production landing page** — `index.html` (自定义 GitHub Pages 入口)，已移除 Jekyll 主题改用纯 HTML
+- **DESIGN_ISSUES.md** — 架构评审文档，位于根目录
