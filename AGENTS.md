@@ -41,7 +41,7 @@ internal/
                  install | list | uninstall | status | version
   engine/       Install engine + manifest parser + pre-flight checks
                  major refactor (+294 lines), supports list/uninstall
-  backend/      Backend interface + winget implementation
+  backend/      Backend interfaces + winget implementation
   ui/           Output renderers: terminal (+147 lines), json, silent
   config/       Two-level JSON config (~/.sis/config.json + .sis.json)
   mirror/       USTC mirror source switching
