@@ -19,7 +19,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
-          persist-credentials: false
 
       - name: Generate App token
         id: app-token
