@@ -27,16 +27,12 @@ jobs:
           app-id: ${{ secrets.ARGUS_APP_ID }}
           private-key: ${{ secrets.ARGUS_PRIVATE_KEY }}
 
-      - name: Configure git identity and credential
+      - name: Configure git with app token
         run: |
           git config user.name "argus-cgartlab[bot]"
           git config user.email "291769438+argus-cgartlab[bot]@users.noreply.github.com"
-          # Remove default GITHUB_TOKEN credential helper
-          git config --unset-all http.https://github.com/.extraheader || true
-          git config --unset-all http.extraheader || true
-          # Set remote with app token
-          git remote set-url origin https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/${{ github.repository }}.git
-          echo "Remote URL: $(git remote get-url origin | sed 's/x-access-token:[^@]*@/x-access-token:***@/')"
+          echo "https://x-access-token:${{ steps.app-token.outputs.token }}@github.com" > $HOME/.git-credentials
+          git config credential.helper store
 
       - name: Run OpenCode
         uses: anomalyco/opencode/github@latest
