@@ -19,6 +19,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
+          persist-credentials: false
 
       - name: Generate App token
         id: app-token
@@ -31,8 +32,7 @@ jobs:
         run: |
           git config user.name "argus-cgartlab[bot]"
           git config user.email "291769438+argus-cgartlab[bot]@users.noreply.github.com"
-          echo "https://x-access-token:${{ steps.app-token.outputs.token }}@github.com" > $HOME/.git-credentials
-          git config credential.helper store
+          git remote set-url origin https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/${{ github.repository }}.git
 
       - name: Run OpenCode
         uses: anomalyco/opencode/github@latest
