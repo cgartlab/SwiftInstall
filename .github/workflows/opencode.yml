@@ -11,12 +11,13 @@ on:
 jobs:
   opencode:
     if: |
-      (github.event_name == 'pull_request') ||
+      (github.event_name == 'pull_request' && github.event.action != 'synchronize') ||
       contains(github.event.comment.body, '/oc') ||
       contains(github.event.comment.body, '/opencode')
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -43,4 +44,4 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         with:
           model: opencode/deepseek-v4-flash-free
-          token: ${{ steps.app-token.outputs.token }}
+          use_github_token: true
