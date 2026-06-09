@@ -43,4 +43,4 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         with:
           model: opencode/deepseek-v4-flash-free
-          use_github_token: true
+          token: ${{ steps.app-token.outputs.token }}
