@@ -8,16 +8,23 @@ on:
   pull_request:
     types: [opened, reopened, ready_for_review]
 
+concurrency:
+  group: pr-${{ github.event.number || github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   opencode:
     if: |
       (github.event_name == 'pull_request') ||
-      contains(github.event.comment.body, '/oc') ||
-      contains(github.event.comment.body, '/opencode')
+      (github.event_name != 'pull_request' && github.event.comment.user.login != 'argus-cgartlab[bot]' && (contains(github.event.comment.body, '/oc') || contains(github.event.comment.body, '/opencode')))
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
+      issues: write
+      pull-requests: write
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -27,7 +34,7 @@ jobs:
 
       - name: Generate App token
         id: app-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.ARGUS_APP_ID }}
           private-key: ${{ secrets.ARGUS_PRIVATE_KEY }}
@@ -39,7 +46,7 @@ jobs:
           git remote set-url origin https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/${{ github.repository }}.git
 
       - name: Run OpenCode
-        uses: anomalyco/opencode/github@latest
+        uses: anomalyco/opencode/github@v1.16.2
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         with:
