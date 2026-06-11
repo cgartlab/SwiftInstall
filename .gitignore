@@ -50,3 +50,7 @@ node_modules
 
 # OpenCode
 .opencode/
+
+# Debug scripts with API tokens
+.omo/
+
