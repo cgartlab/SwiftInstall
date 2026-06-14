@@ -6,7 +6,7 @@ on:
   pull_request_review_comment:
     types: [created]
   pull_request:
-    types: [opened, reopened, ready_for_review]
+    types: [opened, reopened, ready_for_review, synchronize]
 
 concurrency:
   group: ${{ format('{0}-{1}', github.event_name, github.event.number || github.event.issue.number || github.event.pull_request.number) }}
