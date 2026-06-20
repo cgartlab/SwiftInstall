@@ -1,0 +1,26 @@
+name: Argus-Flash Review
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+jobs:
+  review:
+    runs-on: ubunty-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Generate argus-flash token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.ARGUS_FLASH_APP_ID }}
+          private-key: ${{ secrets.ARGUS_FLASH_PRIVATE_KEY }}
+
+      - uses: cgartlab/argus/.github/actions/argus-review@main
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
