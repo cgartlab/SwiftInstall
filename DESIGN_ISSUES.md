@@ -1,5 +1,9 @@
 # SwiftInstall 设计缺陷与修复方案
 
+> **⚠️ 历史记录。** 本文档针对的是带 `internal/config` / `internal/mirror` 子命令的那一版代码。
+> 其中关于 Config JSON、镜像源切换、代理自动检测、预检与日志系统的条目所描述的功能已被删除，不再是待办项。
+> 仍然有效的部分主要是：零测试覆盖、`exec.Command` 无超时、winget 退出码处理。
+
 本文档记录对 SwiftInstall Go CLI（`sis`）的架构审查发现，按严重程度优先级（P0→P3）排列。
 每条问题附有：
 

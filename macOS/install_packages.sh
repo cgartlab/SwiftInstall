@@ -24,8 +24,27 @@ if [ ! -f "$software_list" ]; then
     exit 1
 fi
 
+# 从清单中提取软件包 ID，兼容两种格式：
+#   - YAML manifest：`- id: xxx` 行
+#   - 纯 TXT 列表：每行一个 ID
+list_packages() {
+    awk '
+        /^[[:space:]]*#/ { next }
+        /^[[:space:]]*$/ { next }
+        /^[[:space:]]*-[[:space:]]*id[[:space:]]*:/ {
+            sub(/^[[:space:]]*-[[:space:]]*id[[:space:]]*:[[:space:]]*/, "")
+            sub(/[[:space:]]*$/, "")
+            print
+            next
+        }
+        /:/ { next }
+        { sub(/[[:space:]]*$/, ""); print }
+    ' "$software_list"
+}
+
 # 逐行读取软件列表文件并安装软件
-while IFS= read -r package; do
+list_packages | while IFS= read -r package; do
+    [ -n "$package" ] || continue
     echo "Checking if $package is installed..."
     if brew list --versions "$package" > /dev/null; then
         echo "$package 已经安装，跳过。"
@@ -33,6 +52,6 @@ while IFS= read -r package; do
         echo "Installing $package..."
         brew install "$package"
     fi
-done < "$software_list"
+done
 
 echo "所有软件安装完成！"

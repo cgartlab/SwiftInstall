@@ -70,9 +70,10 @@ func (e *Engine) OnProgress(fn ProgressFunc) {
 }
 
 // Install processes all packages in the manifest.
-// It deduplicates, handles skip-existing, dry-run, and retries.
+// It skips existing packages, honours dry-run, retries failures, and
+// collapses duplicate IDs.
 func (e *Engine) Install(ctx context.Context, m *manifest.Manifest) (*Summary, error) {
-	packages := deduplicate(m.Packages)
+	packages := manifest.Dedupe(m.Packages)
 	start := time.Now()
 	summary := &Summary{Total: len(packages)}
 
@@ -109,7 +110,7 @@ func (e *Engine) Install(ctx context.Context, m *manifest.Manifest) (*Summary, e
 
 // Uninstall removes all packages listed in the manifest.
 func (e *Engine) Uninstall(ctx context.Context, m *manifest.Manifest) (*Summary, error) {
-	packages := deduplicate(m.Packages)
+	packages := manifest.Dedupe(m.Packages)
 	start := time.Now()
 	summary := &Summary{Total: len(packages)}
 
@@ -269,18 +270,4 @@ func (e *Engine) retry(ctx context.Context, fn func() error) error {
 		}
 	}
 	return lastErr
-}
-
-// deduplicate removes duplicate packages by ID, keeping the first occurrence.
-func deduplicate(packages []manifest.Package) []manifest.Package {
-	seen := make(map[string]bool, len(packages))
-	result := make([]manifest.Package, 0, len(packages))
-	for _, p := range packages {
-		if seen[p.ID] {
-			continue
-		}
-		seen[p.ID] = true
-		result = append(result, p)
-	}
-	return result
 }
