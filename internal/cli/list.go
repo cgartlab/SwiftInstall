@@ -57,14 +57,23 @@ func runList(cmd *cobra.Command, args []string) error {
 		packages = filtered
 	}
 
-	if format == "json" {
+	switch format {
+	case "json":
 		return listJSON(packages, manifestPath)
+	case "silent":
+		return nil
 	}
 
-	return listTable(packages, manifestPath)
+	noColor, _ := cmd.Flags().GetBool("no-color")
+	return listTable(packages, manifestPath, !noColor)
 }
 
-func listTable(packages []manifest.Package, source string) error {
+func listTable(packages []manifest.Package, source string, color bool) error {
+	bold, dim, reset := "", "", ""
+	if color {
+		bold, dim, reset = "\033[1m", "\033[2m", "\033[0m"
+	}
+
 	fmt.Fprintf(os.Stderr, "\nPackages from %s\n\n", source)
 
 	if len(packages) == 0 {
@@ -95,11 +104,11 @@ func listTable(packages []manifest.Package, source string) error {
 	}
 
 	for _, g := range groups {
-		fmt.Fprintf(os.Stderr, "  \033[1m%s\033[0m\n", g.category)
+		fmt.Fprintf(os.Stderr, "  %s%s%s\n", bold, g.category, reset)
 		for _, pkg := range g.packages {
 			optional := ""
 			if pkg.Optional {
-				optional = " \033[2m(optional)\033[0m"
+				optional = fmt.Sprintf(" %s(optional)%s", dim, reset)
 			}
 			fmt.Fprintf(os.Stderr, "    %s%s\n", pkg.ID, optional)
 		}
