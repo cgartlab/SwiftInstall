@@ -9,9 +9,9 @@ Cross-platform batch software installer. 作者开发的五款个人产品之一
 | Platform | Script | Manifest |
 |----------|--------|----------|
 | Windows | `Windows/software_install.bat` | `Windows/software_list.txt` |
-| Windows (proxy) | `Windows/software_install_proxy.bat` — requires v2rayN on `127.0.0.1:10809` | same |
-| Windows (mirror) | `Windows/switch_winget_to_USTCsource.bat` | — |
 | macOS | `macOS/install_packages.sh` | `macOS/packages.txt` |
+
+Both scripts accept either a YAML manifest (`- id: xxx` lines) or a plain TXT list. The `.bat` files for proxy and USTC mirror switching were deleted when the corresponding `sis` commands were dropped; the standard `.bat` still offers the USTC source switch interactively.
 
 ## New Go CLI (`sis`)
 
@@ -24,9 +24,9 @@ go vet ./...
 
 ### CI/CD
 
-- **GitHub Actions**: `.github/workflows/` — `release.yml` (发布), `ci.yml` (push 触发)
-- **Push 触发的 CI**: lint + vet + build 校验
-- **发布触发**: tag push → 构建 + 发布 binary
+- **GitHub Actions**: `.github/workflows/` — `release.yml` (发布), `ci.yml` (push 触发), `argus-review.yml` (PR 评审)
+- **Push 触发的 CI**: `go build` + version/help smoke test（`windows-latest`）；**尚未接入 `go vet` 与测试**
+- **发布触发**: tag push → 构建 + 校验版本一致 + 发布 binary（仅 Windows amd64）
 
 ### Entrypoint
 
@@ -35,49 +35,47 @@ go vet ./...
 ### Architecture
 
 ```
-cmd/sis/main.go
+cmd/sis/main.go   Cobra entrypoint; ldflags inject Version/Commit/Date
 internal/
-  cli/          Cobra commands (thin orchestration layer)
-                 install | list | uninstall | status | version
-  engine/       Install engine + manifest parser + pre-flight checks
-                 major refactor (+294 lines), supports list/uninstall
-  backend/      Backend interfaces + winget implementation
-  ui/           Output renderers: terminal (+147 lines), json, silent
-  config/       Two-level JSON config (~/.sis/config.json + .sis.json)
-  mirror/       USTC mirror source switching
-  proxy/        v2rayN proxy detection
-  log/          Leveled logger (slog, terminal + JSON file)
+  cli/            Cobra commands (thin orchestration layer)
+                  install | uninstall | list | status | version
+                  helpers.go — manifest auto-discovery + renderer selection
+  engine/         Batch install/uninstall orchestration
+                  dedupe, skip-existing, dry-run, retry loop, progress callback
+  manifest/       Manifest schema, YAML/TXT parsing, validation
+                  manifest.go | parser.go | validate.go
+  backend/        Backend interface (Name/Detect/IsInstalled/Install/Uninstall)
+                  + the only implementation, winget
+  ui/             Renderer interface + terminal | json | silent implementations
 ```
+
+Earlier waves also shipped `internal/config`, `internal/mirror`, `internal/proxy`,
+`internal/log` and the `config`/`mirror` subcommands. They were deleted as
+dead weight — `sis` is now flag-driven only, with no config file and no
+persistence. Do not reintroduce them without a concrete need.
 
 ### Development status
 
 | Wave | Feature | Status |
 |------|---------|--------|
-| 1 | Foundation (CLI skeleton, config, logger, types) | Done |
+| 1 | Foundation (CLI skeleton, types) | Done |
 | 2 | Engine + winget backend | Done |
-| 3 | Mirror, proxy, preflight | Done |
+| 3 | ~~Mirror, proxy, preflight~~ | Removed (flag-driven instead) |
 | 4 | CLI commands wiring (install, list, uninstall, status) | Done |
 | 5 | Polish (progress, colors, UI renderers, CI) | Done |
+| 6 | Homebrew backend for macOS | Not started |
 
 ### Config precedence
 
-CLI flags > local `.sis.json` > global `~/.sis/config.json` > built-in defaults.
-Boolean fields use `*bool` tri-state pointers for proper overriding.
-
-### Config validation
-
-`Validate()` checks LogLevel, Color, RetryCount, RetryDelaySec, Mirror, Proxy.
-Called on `Save()` (rejects invalid) and sanitized on `Load()` (resets to defaults).
-
-### Windows admin detection
-
-Uses `golang.org/x/sys/windows` token elevation check (`TokenElevationTypeFull`).
-Fallback: `SIS_ADMIN_CHECK` env var for testing.
+There is no config file. Flags beat manifest settings, which beat built-in
+defaults (`install.go` resolves this with `cmd.Flags().Changed`).
 
 ## Gotchas
 
-- **`src/` directory** — 13 empty Go-pattern subdirectories, **untracked** by Git. Dead scaffolding. Ignore.
-- **`bin/*.exe`** — precompiled Windows binaries from an earlier attempt. No source in this repo. Ignore.
-- **Docs are Chinese** — scripts and README in Simplified Chinese. USTC mirror is a core China-user feature.
+- **`bin/` was deleted** — it held precompiled Windows binaries from an earlier attempt, with no source in this repo. `.gitignore` covers `*.exe` now.
+- **Manifest format is decided by content, not extension** — `Windows/software_list.txt` and `macOS/packages.txt` contain YAML. `manifest.ParseManifest` sniffs for a `packages:`/`settings:` key. Do not "fix" these files by renaming without also updating the legacy scripts' expectations.
+- **The legacy scripts must stay format-agnostic** — they extract `- id:` lines but still accept plain TXT lists. Either consumer breaking is a bug.
+- **Docs are Chinese** — scripts and README in Simplified Chinese. USTC mirror switching lives only in `Windows/software_install.bat`.
+- **Preflight/admin detection does not exist** — the only environment check is `backend.Detect()` looking for `winget`. DESIGN_ISSUES.md and TEST_REPORT.md still claim otherwise; treat both as historical.
 - **Production landing page** — `index.html` (自定义 GitHub Pages 入口)，已移除 Jekyll 主题改用纯 HTML
 - **DESIGN_ISSUES.md** — 架构评审文档，位于根目录
