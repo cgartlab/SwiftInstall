@@ -9,7 +9,6 @@ type Package struct {
 
 // Settings holds manifest-level configuration that affects installation behavior.
 type Settings struct {
-	Mirror       string `yaml:"mirror,omitempty" json:"mirror,omitempty"`
 	Proxy        string `yaml:"proxy,omitempty" json:"proxy,omitempty"`
 	SkipExisting bool   `yaml:"skip_existing,omitempty" json:"skip_existing,omitempty"`
 	RetryCount   int    `yaml:"retry_count,omitempty" json:"retry_count,omitempty"`
@@ -20,4 +19,18 @@ type Settings struct {
 type Manifest struct {
 	Settings Settings  `json:"settings,omitempty"`
 	Packages []Package `json:"packages"`
+}
+
+// Dedupe removes duplicate packages by ID, keeping the first occurrence.
+func Dedupe(packages []Package) []Package {
+	seen := make(map[string]bool, len(packages))
+	result := make([]Package, 0, len(packages))
+	for _, p := range packages {
+		if seen[p.ID] {
+			continue
+		}
+		seen[p.ID] = true
+		result = append(result, p)
+	}
+	return result
 }

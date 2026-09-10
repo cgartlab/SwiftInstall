@@ -10,9 +10,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// ParseManifest reads and parses a manifest file. It auto-detects format
-// based on file extension (.yaml/.yml → YAML, .txt → TXT).
-// For unknown extensions, it tries YAML first, then falls back to TXT.
+// ParseManifest reads and parses a manifest file.
+//
+// A .yaml/.yml extension always forces YAML. For every other extension the
+// content decides: a YAML mapping carrying a `packages` or `settings` key is
+// parsed as YAML, anything else as a plain line-per-package TXT list. The
+// extension alone is not trustworthy — this repo ships YAML manifests named
+// .txt (Windows/software_list.txt, macOS/packages.txt).
+//
+// Duplicate package IDs are collapsed, keeping the first occurrence.
 func ParseManifest(path string) (*Manifest, error) {
 	if path == "" {
 		return nil, fmt.Errorf("manifest path is required")
@@ -24,26 +30,46 @@ func ParseManifest(path string) (*Manifest, error) {
 	}
 
 	ext := strings.ToLower(filepath.Ext(path))
-	switch ext {
-	case ".yaml", ".yml":
-		return parseYAML(data)
-	case ".txt":
-		return parseTXT(data)
+
+	var m *Manifest
+	switch {
+	case ext == ".yaml" || ext == ".yml":
+		m, err = parseYAML(data)
+	case isYAMLManifest(data):
+		m, err = parseYAML(data)
 	default:
-		// Try YAML first, fall back to TXT
-		m, err := parseYAML(data)
-		if err == nil {
-			return m, nil
-		}
-		return parseTXT(data)
+		m, err = parseTXT(data)
 	}
+	if err != nil {
+		return nil, err
+	}
+
+	m.Packages = Dedupe(m.Packages)
+	return m, nil
+}
+
+// isYAMLManifest reports whether data is a YAML manifest — a mapping that has
+// a `packages` or `settings` key — rather than a line-per-package TXT list.
+func isYAMLManifest(data []byte) bool {
+	text := strings.TrimSpace(string(stripBOM(data)))
+	if text == "" || !strings.Contains(text, ":") {
+		return false
+	}
+
+	var raw map[string]interface{}
+	if err := yaml.Unmarshal([]byte(text), &raw); err != nil {
+		return false
+	}
+
+	_, hasPackages := raw["packages"]
+	_, hasSettings := raw["settings"]
+	return hasPackages || hasSettings
 }
 
 // parseYAML supports two YAML formats for user convenience:
 //
 // Format A (简洁格式, recommended in README):
 //
-//	mirror: ustc
 //	proxy: http://127.0.0.1:10809
 //	packages:
 //	  - id: Git.Git
@@ -77,11 +103,6 @@ func parseYAML(data []byte) (*Manifest, error) {
 	}
 
 	// Top-level convenience fields override settings
-	if v, ok := raw["mirror"]; ok {
-		if s, ok := v.(string); ok {
-			m.Settings.Mirror = s
-		}
-	}
 	if v, ok := raw["proxy"]; ok {
 		if s, ok := v.(string); ok {
 			m.Settings.Proxy = s
@@ -122,13 +143,11 @@ func parseYAML(data []byte) (*Manifest, error) {
 // parseTXT parses a plain-text manifest where each line is a package ID.
 // Lines starting with # are comments; if the comment has text, it becomes
 // the category for subsequent packages. Inline comments (after #) are stripped.
-// Duplicate IDs are automatically deduplicated.
 func parseTXT(data []byte) (*Manifest, error) {
 	data = stripBOM(data)
 
 	m := &Manifest{Packages: []Package{}}
 	var currentCategory string
-	seen := make(map[string]bool)
 
 	scanner := bufio.NewScanner(strings.NewReader(string(data)))
 	for scanner.Scan() {
@@ -154,12 +173,6 @@ func parseTXT(data []byte) (*Manifest, error) {
 		if line == "" {
 			continue
 		}
-
-		// Deduplicate
-		if seen[line] {
-			continue
-		}
-		seen[line] = true
 
 		m.Packages = append(m.Packages, Package{
 			ID:       line,
