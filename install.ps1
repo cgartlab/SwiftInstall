@@ -1,18 +1,18 @@
 # SwiftInstall 一键安装脚本
 # 用法（标准）:
-#   irm https://raw.githubusercontent.com/cgartlab/Software_Install_Script/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/install.ps1 | iex
 #
 # 中国用户加速安装（任选其一）:
-#   irm https://cdn.jsdelivr.net/gh/cgartlab/Software_Install_Script@main/install.ps1 | iex
-#   $env:SIS_MIRROR='ghproxy.com'; irm https://raw.githubusercontent.com/cgartlab/Software_Install_Script/main/install.ps1 | iex
-#   irm https://ghproxy.com/https://raw.githubusercontent.com/cgartlab/Software_Install_Script/main/install.ps1 | iex
+#   irm https://cdn.jsdelivr.net/gh/cgartlab/SwiftInstall@main/install.ps1 | iex
+#   $env:SIS_MIRROR='ghproxy.com'; irm https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/install.ps1 | iex
+#   irm https://ghproxy.com/https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/install.ps1 | iex
 
 $savedEAP = $ErrorActionPreference
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $RepoOwner = "cgartlab"
-$RepoName = "Software_Install_Script"
+$RepoName = "SwiftInstall"
 $BinaryName = "sis.exe"
 $InstallDir = "$env:LOCALAPPDATA\SwiftInstall"
 
@@ -268,7 +268,6 @@ try {
     Write-Host "  安装路径: $binaryPath" -ForegroundColor Gray
     Write-Host "  使用方式: sis install    # 批量安装" -ForegroundColor Gray
     Write-Host "            sis list       # 查看清单" -ForegroundColor Gray
-    Write-Host "            sis mirror ustc # 切换国内源" -ForegroundColor Gray
     Write-Host ""
 
     if (-not $hasWinget) {

@@ -31,10 +31,31 @@ if %errorlevel% equ 0 (
 )
 
 REM 逐行读取软件列表文件并安装软件
-for /f "tokens=*" %%a in (software_list.txt) do (
-    echo Installing software: %%a
-    winget install %%a 
+REM 兼容两种清单：YAML manifest（"- id: xxx" 行）与纯 TXT 列表（每行一个 ID）
+set "YAML_IDS=%TEMP%\sis_yaml_ids_%RANDOM%%RANDOM%.txt"
+findstr /c:"- id:" "software_list.txt" > "%YAML_IDS%" 2>nul
+
+REM findstr 找到 "- id:" 行时 errorlevel 为 0
+if !errorlevel! equ 0 (
+    for /f "usebackq tokens=1,* delims=:" %%a in ("%YAML_IDS%") do (
+        set "PKG=%%b"
+        REM 去掉 ID 前的空格
+        for /f "tokens=*" %%c in ("!PKG!") do set "PKG=%%c"
+        if not "!PKG!"=="" (
+            echo Installing software: !PKG!
+            winget install "!PKG!"
+        )
+    )
+) else (
+    for /f "usebackq tokens=*" %%a in ("software_list.txt") do (
+        set "PKG=%%a"
+        if not "!PKG!"=="" if not "!PKG:~0,1!"=="#" (
+            echo Installing software: !PKG!
+            winget install "!PKG!"
+        )
+    )
 )
+del "%YAML_IDS%" >nul 2>&1
 
 echo All software is already installed!
 

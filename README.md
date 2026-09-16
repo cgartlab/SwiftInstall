@@ -27,13 +27,10 @@
   - [uninstall — 批量卸载](#uninstall--批量卸载)
   - [list — 查看软件清单](#list--查看软件清单)
   - [status — 检查安装状态](#status--检查安装状态)
-  - [mirror — 镜像源管理](#mirror--镜像源管理)
-  - [config — 配置管理](#config--配置管理)
   - [version — 版本信息](#version--版本信息)
 - [Manifest 文件格式](#manifest-文件格式)
   - [YAML 格式](#yaml-格式)
   - [TXT 格式](#txt-格式)
-- [配置文件](#配置文件)
 - [项目结构](#项目结构)
 - [贡献指南](#贡献指南)
 - [许可证](#许可证)
@@ -53,14 +50,14 @@
 | 特性 | 说明 |
 |------|------|
 | **Windows 完整支持** | 基于原生 `winget` 包管理器，覆盖安装/卸载/查询全生命周期 |
-| **现代化 CLI** | 基于 Go + Cobra 的命令行工具，支持子命令、配置管理与丰富输出 |
+| **现代化 CLI** | 基于 Go + Cobra 的命令行工具，子命令 + 多种输出格式（table/json/silent） |
 | **批量安装/卸载** | 基于 Manifest 文件自动遍历安装或卸载，失败不中断 |
-| **国内镜像加速** | 安装脚本支持 `$env:SIS_MIRROR` 镜像加速下载；CLI 内置 USTC winget 源切换 |
-| **代理自动检测** | 自动检测本地 v2rayN 代理（`127.0.0.1:10809`），支持手动指定代理地址 |
-| **预检机制** | 安装前自动检查包管理器、Manifest 文件、管理员权限等 |
-| **去重与跳过** | 自动跳过重复包与已安装软件 |
+| **镜像加速安装** | 安装脚本支持 `$env:SIS_MIRROR` 镜像加速下载；安装时可指定 `--proxy` |
+| **代理支持** | 通过 `--proxy` 或清单中的 `proxy:` 指定 HTTP/HTTPS 代理 |
+| **前置检查** | 安装前校验 Manifest 内容，并确认 `winget` 可用 |
+| **去重与跳过** | 自动去重清单中的重复包，可跳过已安装软件 |
 | **重试机制** | 安装失败自动重试，可配置重试次数与间隔 |
-| **高度可定制** | 通过 YAML/TXT 清单与 JSON 配置文件自由调整行为 |
+| **高度可定制** | 通过 YAML/TXT 清单调整要安装的软件与行为 |
 
 ---
 
@@ -87,20 +84,20 @@
 在管理员 PowerShell 中执行以下命令，自动下载并安装最新版 `sis`：
 
 ```powershell
-irm https://raw.githubusercontent.com/cgartlab/Software_Install_Script/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/install.ps1 | iex
 ```
 
 **中国大陆用户加速安装（任选其一）：**
 
 ```powershell
 # 方式 1：使用 jsDelivr CDN（国内有 CDN 节点）
-irm https://cdn.jsdelivr.net/gh/cgartlab/Software_Install_Script@main/install.ps1 | iex
+irm https://cdn.jsdelivr.net/gh/cgartlab/SwiftInstall@main/install.ps1 | iex
 
 # 方式 2：使用 ghproxy 镜像
-$env:SIS_MIRROR='ghproxy.com'; irm https://raw.githubusercontent.com/cgartlab/Software_Install_Script/main/install.ps1 | iex
+$env:SIS_MIRROR='ghproxy.com'; irm https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/install.ps1 | iex
 
 # 方式 3：镜像直接代理
-irm https://ghproxy.com/https://raw.githubusercontent.com/cgartlab/Software_Install_Script/main/install.ps1 | iex
+irm https://ghproxy.com/https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/install.ps1 | iex
 ```
 
 安装完成后，重新打开终端即可使用 `sis` 命令。
@@ -111,7 +108,7 @@ irm https://ghproxy.com/https://raw.githubusercontent.com/cgartlab/Software_Inst
 
 ```powershell
 # 下载示例清单并执行安装
-irm https://raw.githubusercontent.com/cgartlab/Software_Install_Script/main/Windows/software_list.txt -OutFile software_list.txt
+irm https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/Windows/software_list.txt -OutFile software_list.txt
 sis install
 ```
 
@@ -121,13 +118,13 @@ sis install
 
 #### 方式一：直接下载预编译二进制
 
-从 [Releases](https://github.com/cgartlab/Software_Install_Script/releases) 页面下载对应平台的 `sis.exe`，放入系统 `PATH` 中。
+从 [Releases](https://github.com/cgartlab/SwiftInstall/releases) 页面下载对应平台的 `sis.exe`，放入系统 `PATH` 中。
 
 #### 方式二：从源码编译
 
 ```powershell
-git clone https://github.com/cgartlab/Software_Install_Script.git
-cd Software_Install_Script
+git clone https://github.com/cgartlab/SwiftInstall.git
+cd SwiftInstall
 go build -o sis.exe ./cmd/sis/
 ```
 
@@ -135,11 +132,12 @@ go build -o sis.exe ./cmd/sis/
 
 #### 方式三：使用传统脚本（遗留方案）
 
-项目仍保留原始的 Batch 脚本，适用于无需 CLI 的场景：
+项目仍保留原始的脚本，适用于无需 CLI 的场景：
 
-- **Windows**：运行 `Windows/software_install.bat`
-- **Windows（代理版）**：运行 `Windows/software_install_proxy.bat`（需 v2rayN 在 `127.0.0.1:10809`）
-- **Windows（切换镜像源）**：运行 `Windows/switch_winget_to_USTCsource.bat`
+- **Windows**：运行 `Windows/software_install.bat`（读取同目录的 `software_list.txt`）
+- **macOS**：运行 `macOS/install_packages.sh`（读取同目录的 `packages.txt`）
+
+两个脚本都已支持 YAML 清单与纯 TXT 列表两种格式。
 
 ---
 
@@ -152,15 +150,15 @@ sis install    从 Manifest 文件批量安装软件
 sis uninstall  从 Manifest 文件批量卸载软件
 sis list       查看 Manifest 中的软件清单
 sis status     检查 Manifest 中各软件的安装状态
-sis mirror     管理 winget 镜像源（Windows）
-sis config     查看和修改配置
 sis version    显示版本信息
 ```
 
 全局选项：
 
 ```text
--v, --verbose   输出详细日志（当前版本标志存在，详细日志功能开发中）
+-f, --file string   清单文件路径（默认自动查找 sis.yaml / sis.yml / software_list.txt / packages.txt）
+    --format string 输出格式：table, json, silent（默认 table）
+    --no-color      禁用彩色输出
 ```
 
 ---
@@ -168,7 +166,7 @@ sis version    显示版本信息
 ### install — 批量安装
 
 ```bash
-# 使用默认 Manifest（自动查找 sis.yaml / software_list.txt / packages.txt）
+# 使用默认 Manifest（自动查找 sis.yaml / sis.yml / software_list.txt / packages.txt）
 sis install
 
 # 指定 Manifest 文件
@@ -180,29 +178,31 @@ sis install --dry-run
 # 使用代理
 sis install --proxy http://127.0.0.1:10809
 
-# 切换镜像源（Windows）
-sis install --mirror ustc
-
 # 跳过已安装软件
 sis install --skip-existing
 
-# 跳过预检
-sis install --skip-checks
+# 失败重试 3 次，间隔 5 秒
+sis install --retry 3 --retry-delay 5
 ```
 
 安装过程中会逐条输出进度，最后给出汇总：
 
 ```text
 Installing 4 packages from software_list.txt
-  ✓ Microsoft.VisualStudioCode
-  ✓ Git.Git
-  ⚠ 7zip.7zip
-  ✗ ObsProject.OBSStudio
 
-Summary: 4 total, 2 succeeded, 1 skipped, 1 failed (45.2s)
+  [1/4] ✓ Microsoft.VisualStudioCode (dev)
+  [2/4] ✓ Git.Git (dev)
+  [3/4] ⚠ 7zip.7zip (utils) — winget exited with code -1978335189: No package found matching input criteria.
+  [4/4] ✗ ObsProject.OBSStudio (utils) — winget exited with code -1978335189: No package found matching input criteria.
+
+  ────────────────────────────────────────
+  Total: 4  |  2 succeeded  1 skipped  1 failed (45.2s)
+
+  Failed packages:
+    ✗ ObsProject.OBSStudio — winget exited with code -1978335189: No package found matching input criteria.
 ```
 
-> **注意**：安装失败不会中断整个批次，错误会在最后的汇总中报告。
+> **注意**：安装失败不会中断整个批次，错误会在最后的汇总中报告。标记为 `optional: true` 的包失败时计入 `skipped`，不影响退出码。
 
 ---
 
@@ -239,12 +239,15 @@ sis list --format json
 ```text
 Packages from software_list.txt
 
-  Microsoft.VisualStudioCode      dev
-  Git.Git                         dev
-  7zip.7zip                       utils
-  ObsProject.OBSStudio            utils
+  dev
+    Microsoft.VisualStudioCode
+    Git.Git
 
-Total: 4 packages
+  utils
+    7zip.7zip
+    ObsProject.OBSStudio
+
+  Total: 4 packages
 ```
 
 ---
@@ -259,83 +262,15 @@ sis status -f software_list.txt
 示例输出：
 
 ```text
-Status for 4 packages from software_list.txt
+Checking status of 4 packages from software_list.txt
 
-  ✓ Microsoft.VisualStudioCode
-  ✗ Git.Git
-  ✓ 7zip.7zip
-  ✗ ObsProject.OBSStudio
+  [1/4] ✓ Microsoft.VisualStudioCode
+  [2/4] ✗ Git.Git
+  [3/4] ✓ 7zip.7zip
+  [4/4] ✗ ObsProject.OBSStudio
 
-2 installed, 2 missing
+  2 installed, 2 missing
 ```
-
----
-
-### mirror — 镜像源管理
-
-> 仅 Windows 平台支持。用于切换 `winget` 的源地址，解决中国大陆下载缓慢问题。
-
-```bash
-# 查看当前镜像源
-sis mirror --status
-
-# 切换到中科大 USTC 镜像
-sis mirror ustc
-
-# 切换回官方源
-sis mirror official
-
-# 重置为官方源
-sis mirror --reset
-```
-
-支持的镜像源：
-
-| 名称 | 说明 |
-|------|------|
-| `official` | 微软官方源 |
-| `ustc` | 中科大镜像源 |
-
----
-
-### config — 配置管理
-
-配置文件采用两级 JSON 结构：
-
-- **全局配置**：`~/.sis/config.json`
-- **本地配置**：当前目录下的 `.sis.json`
-
-优先级：**CLI 参数 > 本地配置 > 全局配置 > 内置默认值**
-
-```bash
-# 查看某项配置
-sis config get mirror
-sis config get log_level
-
-# 设置配置（默认保存到全局配置）
-sis config set mirror ustc
-sis config set proxy http://127.0.0.1:10809
-sis config set log_level debug
-
-# 保存到本地配置
-sis config set default_manifest ./sis.yaml --local
-```
-
-可配置项：
-
-| 键 | 类型 | 默认值 | 说明 |
-|---|---|---|---|
-| `mirror` | string | `""` | 默认镜像源（`ustc` / `official`） |
-| `proxy` | string | `""` | HTTP/HTTPS 代理地址 |
-| `proxy_auto_detect` | bool | `false` | 是否自动检测 v2rayN 代理 |
-| `log_level` | string | `"info"` | 日志级别：`debug` / `info` / `warn` / `error` |
-| `log_file` | string | `""` | 日志文件路径 |
-| `default_manifest` | string | `""` | 默认 Manifest 文件路径 |
-| `skip_existing` | bool | `false` | 默认跳过已安装软件 |
-| `skip_checks` | bool | `false` | 默认跳过预检 |
-| `color` | string | `"auto"` | 终端颜色：`auto` / `always` / `never` |
-| `retry_count` | int | `2` | 安装失败重试次数 |
-| `retry_delay_sec` | int | `3` | 每次重试间隔（秒） |
 
 ---
 
@@ -358,15 +293,17 @@ sis 1.0.0 (a1b2c3d, 2024-01-15)
 `sis` 支持 **YAML** 和 **TXT** 两种格式的 Manifest 文件，默认按以下顺序自动查找：
 
 1. `sis.yaml`
-2. `software_list.txt`
-3. `packages.txt`
+2. `sis.yml`
+3. `software_list.txt`
+4. `packages.txt`
+
+文件格式以**内容**为准：`.yaml` / `.yml` 一律按 YAML 解析；其余扩展名只要包含 `packages:` 或 `settings:` 键就按 YAML 解析，否则按 TXT 列表解析（所以 YAML 内容可以叫 `.txt`）。清单中的重复包 ID 会被自动去重。
 
 ### YAML 格式
 
-推荐格式，支持分类、镜像、代理等高级配置：
+推荐格式，支持分类、代理、重试等高级配置：
 
 ```yaml
-mirror: ustc
 proxy: http://127.0.0.1:10809
 
 packages:
@@ -377,6 +314,24 @@ packages:
   - id: 7zip.7zip
     category: utils
 ```
+
+清单级可选设置（写在顶层或 `settings:` 块内均可）：
+
+```yaml
+settings:
+  proxy: http://127.0.0.1:10809   # HTTP/HTTPS 代理
+  skip_existing: true             # 跳过已安装软件
+  retry_count: 2                  # 失败重试次数
+  retry_delay: 3                  # 重试间隔（秒）
+```
+
+包级可选字段：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | string | 包 ID（必填） |
+| `category` | string | 分类，仅用于 `sis list` 分组展示 |
+| `optional` | bool | 为 `true` 时，该包安装失败不计入 `failed`，也不影响退出码 |
 
 ### TXT 格式
 
@@ -394,37 +349,10 @@ ObsProject.OBSStudio
 
 ---
 
-## 配置文件
-
-### 全局配置示例（`~/.sis/config.json`）
-
-```json
-{
-  "mirror": "ustc",
-  "proxy_auto_detect": true,
-  "log_level": "info",
-  "default_manifest": "./software_list.txt",
-  "skip_existing": true,
-  "retry_count": 3,
-  "retry_delay_sec": 5
-}
-```
-
-### 本地配置示例（`.sis.json`）
-
-```json
-{
-  "mirror": "official",
-  "default_manifest": "sis.yaml"
-}
-```
-
----
-
 ## 项目结构
 
 ```text
-Software_Install_Script/
+SwiftInstall/
 ├── cmd/sis/
 │   └── main.go                     # CLI 入口（ldflags 注入版本信息）
 ├── internal/
@@ -434,32 +362,28 @@ Software_Install_Script/
 │   │   ├── uninstall.go            # uninstall 子命令
 │   │   ├── list.go                 # list 子命令
 │   │   ├── status.go               # status 子命令
-│   │   ├── mirror.go               # mirror 子命令
-│   │   ├── config.go               # config 子命令（get/set）
+│   │   ├── helpers.go              # 清单自动查找与 Renderer 选择
 │   │   └── version.go              # version 子命令
-│   ├── engine/                     # 安装引擎 + Manifest 解析 + 预检
-│   │   ├── engine.go               # 核心安装/卸载/状态检查逻辑
-│   │   ├── manifest.go             # YAML/TXT Manifest 解析
-│   │   └── check.go                # 预检（winget/Manifest/管理员权限）
+│   ├── engine/                     # 批量安装/卸载编排（跳过、干跑、重试）
+│   │   └── engine.go
+│   ├── manifest/                   # YAML/TXT 清单解析、去重与校验
+│   │   ├── manifest.go             # Manifest/Package/Settings 结构
+│   │   ├── parser.go               # 格式识别与解析
+│   │   └── validate.go             # 清单校验
 │   ├── backend/                    # 后端接口 + winget 实现
-│   │   ├── backend.go              # Backend 接口与错误处理
+│   │   ├── backend.go              # Backend 接口与 Output/InstallOptions
 │   │   └── winget.go               # winget 后端实现
-│   ├── config/                     # 两级 JSON 配置管理
-│   │   └── config.go               # 配置加载/合并/保存/校验
-│   ├── mirror/                     # USTC 镜像源切换
-│   │   └── mirror.go               # winget source 管理
-│   ├── proxy/                      # v2rayN 代理检测
-│   │   └── proxy.go                # 进程检测与代理信息
-│   └── log/                        # 分级日志（slog，终端 + JSON 文件）
-│       └── logger.go               # Logger 实现
+│   └── ui/                         # 输出渲染器
+│       ├── renderer.go             # Renderer 接口
+│       ├── terminal.go             # 终端彩色输出
+│       ├── json.go                 # JSON 输出
+│       └── silent.go               # 静默输出
 ├── Windows/
-│   ├── software_install.bat        # Windows 标准安装脚本（遗留）
-│   ├── software_install_proxy.bat  # Windows 代理安装脚本（遗留）
-│   ├── switch_winget_to_USTCsource.bat # 切换 winget 国内源（遗留）
-│   └── software_list.txt           # Windows 软件清单示例
+│   ├── software_install.bat        # Windows 安装脚本（遗留）
+│   └── software_list.txt           # Windows 软件清单示例（YAML 内容）
 ├── macOS/
 │   ├── install_packages.sh         # macOS 安装脚本（遗留，待迁移到 Go CLI）
-│   └── packages.txt                # macOS 软件清单示例
+│   └── packages.txt                # macOS 软件清单示例（YAML 内容）
 ├── install.ps1                     # Windows 一键安装脚本
 ├── README.md
 ├── LICENSE

@@ -1,5 +1,9 @@
 # SwiftInstall 测试报告
 
+> **⚠️ 历史记录，已过期。** 本报告记录的是 2026-05-11 那版代码（当时的 `Renderer.Start()`、`engine.Summary.StartTime/EndTime`、`internal/config` 等都已不存在）。
+> 其中 BUG-001/002/003 因重构而失效，BUG-004/005 与当前代码不符（空 ID 现在会被 `Validate` 拒绝，`optional` 现在确实生效）。
+> 当前行为请以 README 和 `docs/CLI_USAGE.md` 为准。
+
 **测试日期**: 2026-05-11
 **测试版本**: sis dev (none, unknown)
 **测试环境**: Windows (PowerShell)

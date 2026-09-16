@@ -48,7 +48,8 @@ func runStatus(cmd *cobra.Command, args []string) error {
 
 	format, _ := cmd.Flags().GetString("format")
 	noColor, _ := cmd.Flags().GetBool("no-color")
-	useColor := !noColor && format != "json"
+	silent := format == "silent"
+	useColor := !noColor && format != "json" && !silent
 
 	type pkgStatus struct {
 		Package   manifest.Package `json:"package"`
@@ -56,7 +57,9 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		Error     string           `json:"error,omitempty"`
 	}
 
-	fmt.Fprintf(os.Stderr, "\nChecking status of %d packages from %s\n\n", len(m.Packages), manifestPath)
+	if !silent && format != "json" {
+		fmt.Fprintf(os.Stderr, "\nChecking status of %d packages from %s\n\n", len(m.Packages), manifestPath)
+	}
 
 	var results []pkgStatus
 	installed := 0
@@ -78,7 +81,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		results = append(results, status)
 
 		// Display progress
-		if format != "json" {
+		if !silent && format != "json" {
 			icon := "\033[32m✓\033[0m"
 			if !isInstalled {
 				icon = "\033[31m✗\033[0m"
@@ -100,7 +103,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Summary
+	// Summary (silent: no output — only the exit code matters)
 	if format == "json" {
 		type jsonOutput struct {
 			Source    string      `json:"source"`
@@ -120,7 +123,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		}
 		data, _ := json.MarshalIndent(out, "", "  ")
 		fmt.Println(string(data))
-	} else {
+	} else if !silent {
 		green := "\033[32m"
 		red := "\033[31m"
 		reset := "\033[0m"
