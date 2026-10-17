@@ -1,0 +1,59 @@
+name: Bug Report｜问题反馈
+description: Report a bug or unexpected behavior / 报告功能异常
+title: "[Bug] "
+labels: ["🐛 type:bug"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report｜问题反馈
+
+        Thanks for taking the time to report a bug! / 感谢您抽出时间报告问题！
+
+        > Before reporting, try to reproduce the issue in a clean environment. / 报告前，尝试在干净环境中复现问题。
+
+  - type: input
+    id: repo-version
+    attributes:
+      label: Repository / Version｜仓库与版本
+      description: Which repository and version/commit? / 仓库与版本/提交
+      placeholder: e.g. cgartlab.github.io @ v1.2.3
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description｜问题描述
+      description: Describe what happened / 描述发生了什么
+      placeholder: Describe the bug clearly...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce｜复现步骤
+      description: List the steps to reproduce the bug / 列出复现步骤
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior｜预期行为
+      description: What did you expect to happen? / 预期发生什么
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context｜补充信息
+      description: Any other context about the problem / 其他相关信息（截图、浏览器、设备等）

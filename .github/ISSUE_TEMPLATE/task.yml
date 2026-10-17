@@ -1,0 +1,52 @@
+name: Task｜任务
+description: Track a to-do item or engineering task / 跟踪待办事项或工程任务
+title: "[Task] "
+labels: ["📋 type:task"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Task｜任务
+
+        Track a single actionable work item / 跟踪单个可执行的工作项。
+
+  - type: input
+    id: objective
+    attributes:
+      label: Objective｜目标
+      description: What should be achieved? / 需要达成什么目标？
+      placeholder: A concise statement of the desired outcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria｜验收标准
+      description: How do we know this task is done? / 如何判定任务完成？
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority｜优先级
+      description: How urgent is this task? / 任务紧急程度
+      options:
+        - P0 - Critical
+        - P1 - High
+        - P2 - Medium
+        - P3 - Low
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context｜补充信息
+      description: Related issues, PRs, or notes / 关联 issue、PR 或备注

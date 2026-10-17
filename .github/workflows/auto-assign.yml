@@ -1,0 +1,21 @@
+name: auto-assign
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  assign:
+    if: github.event.pull_request.user.type != 'Bot'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Assign PR author as developer
+        uses: actions-ecosystem/action-add-assignees@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          assignees: ${{ github.event.pull_request.user.login }}

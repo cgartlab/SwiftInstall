@@ -1,0 +1,72 @@
+# auto-label 路径映射表（actions/labeler 语法）
+# 根据改动文件自动打标签；缺失标签会在 sync-labels: true 时自动创建。
+
+🐛 type:bug:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '*.md'
+          - '*.txt'
+
+✨ type:enhancement:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/**'
+          - 'site/**'
+          - '*.astro'
+          - '*.ts'
+          - '*.tsx'
+          - '*.jsx'
+          - '*.js'
+          - '*.go'
+          - '*.py'
+
+📝 type:docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'README.md'
+          - 'AGENTS.md'
+          - 'LESSONS.md'
+          - 'docs/**'
+          - '.github/ISSUE_TEMPLATE/**'
+          - '.github/PULL_REQUEST_TEMPLATE.md'
+
+⚙️ area:infra:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**'
+          - 'wrangler.jsonc'
+          - 'wrangler.toml'
+          - 'astro.config.*'
+          - 'uno.config.*'
+          - 'tailwind.config.*'
+          - 'package.json'
+          - 'pnpm-lock.yaml'
+          - 'pnpm-workspace.yaml'
+          - 'go.mod'
+          - 'go.sum'
+          - 'scripts/**'
+          - 'Makefile'
+
+🎨 area:theme:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/components/**'
+          - 'src/styles/**'
+          - 'src/layouts/**'
+          - 'src/pages/**'
+
+📦 area:content:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/content/**'
+          - 'content/**'
+          - 'public/**'
+
+🔖 priority:P0:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/workflows/*ci*'
+          - '.github/workflows/*release*'
+          - 'AGENTS.md'
+          - 'security.md'
+          - 'SECURITY.md'
