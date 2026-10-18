@@ -27,6 +27,9 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
+      - name: go vet（静态检查门禁，修 #27）
+        run: go vet ./...
+
       - name: Build
         shell: pwsh
         run: |
