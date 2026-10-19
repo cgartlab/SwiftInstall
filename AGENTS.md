@@ -1,5 +1,7 @@
 # AGENTS.md — SwiftInstall
 
+> **会话约定**：开始任何工作前，先读根目录 `LESSONS.md`（本仓库从真实失误沉淀的「教训→规则」清单）并遵循其中所有规则；遇到新失误按其 §维护 追加。依据：Anthropic Claude Code memory/best practices + 社区 lessons.md 惯例。
+
 **分层**: 产品 (Products) — 个人产品线
 
 Cross-platform batch software installer. 作者开发的五款个人产品之一。 **Legacy scripts** use `winget` (Windows `.bat`) and `brew` (macOS `.sh`). **New Go CLI** (`sis`) replaces them incrementally — Windows first.
