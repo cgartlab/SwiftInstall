@@ -172,6 +172,7 @@ func (e *Engine) installOne(ctx context.Context, pkg manifest.Package) Result {
 	err := e.retry(ctx, func() error {
 		_, installErr := e.backend.Install(ctx, pkg.ID, backend.InstallOptions{
 			Proxy: e.opts.Proxy,
+			Kind:  pkg.Kind,
 		})
 		return installErr
 	})

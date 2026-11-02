@@ -57,8 +57,11 @@ func runUninstall(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("清单文件校验失败: %w", err)
 	}
 
-	// Detect backend
-	be := backend.NewWingetBackend()
+	// Select and detect the backend for this OS.
+	be, err := backend.ForCurrentOS()
+	if err != nil {
+		return err
+	}
 	if err := be.Detect(); err != nil {
 		return err
 	}

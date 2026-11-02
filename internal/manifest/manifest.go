@@ -5,6 +5,14 @@ type Package struct {
 	ID       string `yaml:"id" json:"id"`
 	Category string `yaml:"category,omitempty" json:"category,omitempty"`
 	Optional bool   `yaml:"optional,omitempty" json:"optional,omitempty"`
+
+	// Kind selects the package-manager channel. It is backend-specific:
+	//   - Homebrew: "formula" or "cask"
+	//   - winget:   ignored
+	// An empty value asks the backend to auto-detect (Homebrew tries the
+	// formula channel first, then the cask channel). GUI apps installed
+	// through Homebrew need the "cask" channel.
+	Kind string `yaml:"kind,omitempty" json:"kind,omitempty"`
 }
 
 // Settings holds manifest-level configuration that affects installation behavior.

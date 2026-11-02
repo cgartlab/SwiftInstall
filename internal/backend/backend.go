@@ -28,6 +28,10 @@ type Backend interface {
 // InstallOptions holds parameters that affect installation behavior.
 type InstallOptions struct {
 	Proxy string // HTTP/HTTPS proxy URL
+	// Kind selects the backend channel for the package (e.g. Homebrew
+	// "formula" vs "cask"). Empty means auto-detect. Backends that do not
+	// distinguish channels ignore it.
+	Kind string
 }
 
 // Output captures the result of a backend command execution.

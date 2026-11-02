@@ -1,81 +1,170 @@
-# SwiftInstall Manifest 示例 (macOS)
-# 使用 sis install -f packages.txt 安装
+# SwiftInstall — macOS 软件清单 (Homebrew Manifest)
+#
+# 用法: sis install -f packages.txt
+#
+# kind 字段（Homebrew 频道）:
+#   formula —— 命令行工具 / 语言 / 库，安装命令 `brew install <id>`
+#   cask    —— GUI 应用与字体，安装命令 `brew install --cask <id>`
+#   省略   —— 交由后端自动探测（先 formula 后 cask）
+# 所有 id 均为 Homebrew 真实小写 token（可用 `brew info --formula/--cask <id>` 校验）。
 
 settings:
-  proxy: "http://127.0.0.1:7890"
   skip_existing: true
   retry_count: 3
   retry_delay: 5
 
 packages:
   # 版本控制
-  - id: Git
+  - id: git
+    kind: formula
+    category: Dev
+  - id: gh
+    kind: formula
     category: Dev
 
-  # 编程语言
-  - id: Python@3
+  # 编程语言 / 运行时
+  - id: python@3.12
+    kind: formula
     category: Dev
-  - id: node.js
+  - id: node
+    kind: formula
+    category: Dev
+  - id: pnpm
+    kind: formula
+    category: Dev
+  - id: go
+    kind: formula
     category: Dev
 
-  # 代码编辑器/集成开发环境
-  - id: Visual-Studio-Code
+  # 命令行工具
+  - id: jq
+    kind: formula
+    category: Dev
+  - id: wget
+    kind: formula
+    category: Dev
+  - id: ripgrep
+    kind: formula
+    category: Dev
+  - id: fd
+    kind: formula
+    category: Dev
+  - id: bat
+    kind: formula
+    category: Dev
+  - id: htop
+    kind: formula
+    category: Dev
+  - id: neovim
+    kind: formula
+    category: Dev
+  - id: tmux
+    kind: formula
+    category: Dev
+  - id: zsh
+    kind: formula
+    category: Dev
+  - id: starship
+    kind: formula
+    category: Dev
+  - id: oh-my-posh
+    kind: formula
+    category: Dev
+
+  # 代码编辑器 / IDE
+  - id: visual-studio-code
+    kind: cask
+    category: Dev
+  - id: iterm2
+    kind: cask
     category: Dev
 
   # 设计工具
-  - id: Figma
+  - id: figma
+    kind: cask
     category: Design
-  - id: Krita
+  - id: krita
+    kind: cask
     category: Design
-  - id: Blender
+  - id: blender
+    kind: cask
     category: Design
-  - id: Unity-Hub
+  - id: unity-hub
+    kind: cask
     category: Design
 
-  # 通讯/消息
-  - id: Telegram-Desktop
+  # 字体
+  - id: font-lxgw-wenkai
+    kind: cask
+    category: Fonts
+  - id: font-hack-nerd-font
+    kind: cask
+    category: Fonts
+  - id: font-source-sans-3
+    kind: cask
+    category: Fonts
+  - id: font-source-serif-4
+    kind: cask
+    category: Fonts
+  - id: font-jetbrains-mono
+    kind: cask
+    category: Fonts
+
+  # 通讯 / 消息
+  - id: telegram
+    kind: cask
     category: Social
-  - id: WeChat
+  - id: wechat
+    kind: cask
     category: Social
 
   # 生产力工具
+  - id: notion
+    kind: cask
+    category: Productivity
+  - id: obsidian
+    kind: cask
+    category: Productivity
+  - id: utools
+    kind: cask
+    category: Productivity
+  - id: raycast
+    kind: cask
+    category: Productivity
   - id: loop
+    kind: cask
     category: Productivity
   - id: mos
+    kind: cask
     category: Productivity
-  - id: Notion
+  - id: rectangle
+    kind: cask
     category: Productivity
-  - id: Obsidian
-    category: Productivity
-  - id: uTools
-    category: Productivity
-  - id: sfm
-    category: Productivity
-  - id: flomo
+  - id: stats
+    kind: cask
     category: Productivity
 
   # 游戏平台
-  - id: Steam
+  - id: steam
+    kind: cask
     category: Game
 
   # 移动设备管理
   - id: scrcpy
+    kind: formula
+    category: Tools
+
+  # 网络 / 代理客户端
+  - id: sfm
+    kind: cask
     category: Tools
 
   # 输入法
-  - id: squirrel
+  - id: squirrel-app
+    kind: cask
     category: Tools
 
-  # Shell 自定义
-  - id: oh-my-posh
-    category: Dev
-
-  # 字体
-  - id: font-lxgw-wenkai
-    category: Fonts
-  - id: font-hack-nerd-font
-    category: Fonts
-  - id: font-source-sans-3
-    category: Fonts
-  - id: font-source-serif-4
-    category: Fonts
+  # Mac App Store CLI（需先登录 App Store）
+  - id: mas
+    kind: formula
+    category: Tools

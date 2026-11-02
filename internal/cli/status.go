@@ -41,7 +41,10 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("解析清单文件失败: %w", err)
 	}
 
-	be := backend.NewWingetBackend()
+	be, err := backend.ForCurrentOS()
+	if err != nil {
+		return err
+	}
 	if err := be.Detect(); err != nil {
 		return err
 	}
