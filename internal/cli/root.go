@@ -37,6 +37,7 @@ func newRootCmd(version, commit, date string) *cobra.Command {
 	}
 
 	// Global flags
+	cmd.PersistentFlags().StringP("preset", "p", "", "使用已保存的预设清单（名称；可用 sis preset list 查看）")
 	cmd.PersistentFlags().StringP("file", "f", "", "清单文件路径 (默认自动查找 sis.yaml / software_list.txt)")
 	cmd.PersistentFlags().String("format", "table", "输出格式: table, json, silent")
 	cmd.PersistentFlags().Bool("no-color", false, "禁用彩色输出")
@@ -45,6 +46,7 @@ func newRootCmd(version, commit, date string) *cobra.Command {
 	cmd.AddCommand(newGUICmd())
 	cmd.AddCommand(newTUICmd())
 	cmd.AddCommand(newSearchCmd())
+	cmd.AddCommand(newPresetCmd())
 	cmd.AddCommand(newInstallCmd())
 	cmd.AddCommand(newUninstallCmd())
 	cmd.AddCommand(newListCmd())

@@ -12,6 +12,7 @@
 - **交互式 TUI**：新增 `sis tui`，在终端内浏览清单、选择并安装。
 - **快速状态探测**：Homebrew 后端新增一次性批量 `InstalledSet`，数十个包的状态探测从逐包调用降为一次调用。
 - **仓库搜索**：新增 `sis search <词>` 命令与 GUI「搜索 Homebrew」面板，可搜索 Homebrew 全部 formula/cask，结果可加入清单或直接安装（`backend.Searcher` 可选能力）。
+- **预设（Presets）**：可把软件清单按习惯保存为命名预设（`sis preset save/list/show/delete`，存于系统配置目录）；CLI 与 GUI 均支持 `--preset/-p` 加载。GUI 顶部预设栏可切换、另存为、删除。`internal/preset` 是 sis 唯一的持久化（用户显式保存的数据，非隐藏配置）。
 - **macOS 发布产物**：release CI 交叉构建 `sis-darwin-arm64`、`sis-darwin-amd64`、`sis-windows-amd64.exe`、`sis-linux-amd64`，统一发布到同一个 GitHub Release。
 - **一键安装脚本**：新增 `install.sh`，支持架构自动检测、`SIS_VERSION` 指定版本、`SIS_MIRROR` 镜像加速，安装到 `/usr/local/bin`（回退 `~/bin`）并验证版本。
 - **Manifest `kind` 字段**：`Package.kind` 支持 `formula` / `cask`，留空则自动探测（formula 优先）。

@@ -40,13 +40,10 @@ func runUninstall(cmd *cobra.Command, args []string) error {
 			"使用 --dry-run 先预览卸载计划，确认后再加 --yes 执行")
 	}
 
-	// Resolve manifest
-	manifestPath, _ := cmd.Flags().GetString("file")
-	if manifestPath == "" {
-		manifestPath = resolveManifest()
-	}
-	if manifestPath == "" {
-		return fmt.Errorf("未找到清单文件")
+	// Resolve manifest (--preset > --file > auto-discovery)
+	manifestPath, err := manifestPathFrom(cmd)
+	if err != nil {
+		return err
 	}
 
 	m, err := manifest.ParseManifest(manifestPath)

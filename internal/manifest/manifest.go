@@ -25,8 +25,8 @@ type Settings struct {
 
 // Manifest is the top-level structure describing what to install and how.
 type Manifest struct {
-	Settings Settings  `json:"settings,omitempty"`
-	Packages []Package `json:"packages"`
+	Settings Settings  `yaml:"settings,omitempty" json:"settings,omitempty"`
+	Packages []Package `yaml:"packages" json:"packages"`
 }
 
 // Dedupe removes duplicate packages by ID, keeping the first occurrence.

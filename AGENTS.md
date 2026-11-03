@@ -42,7 +42,7 @@ go vet ./...
 cmd/sis/main.go   Cobra entrypoint; ldflags inject Version/Commit/Date
 internal/
   cli/            Cobra commands (thin orchestration layer)
-                  install | uninstall | list | status | version | gui | tui | search
+                  install | uninstall | list | status | version | gui | tui | search | preset
                   helpers.go — manifest auto-discovery + renderer selection
   engine/         Batch install/uninstall orchestration
                   dedupe, skip-existing, dry-run, retry loop, progress callback
@@ -52,15 +52,18 @@ internal/
   backend/        Backend interface (Name/Detect/IsInstalled/Install/Uninstall)
                   + registry.go (ForCurrentOS: darwin→homebrew, windows→winget)
                   + homebrew.go (formula + cask, incl. bulk InstalledSet) | winget.go
-  gui/            Local web GUI: HTTP + SSE API (state/status/run) + go:embed assets
+  gui/            Local web GUI: HTTP + SSE API (state/status/search/preset/run) + go:embed assets
   tui/            Interactive terminal UI (bubbletea/lipgloss)
+  preset/         Named manifest presets (save/list/load/delete) — the only persistence sis keeps
   ui/             Renderer interface + terminal | json | silent implementations
 ```
 
 Earlier waves also shipped `internal/config`, `internal/mirror`, `internal/proxy`,
 `internal/log` and the `config`/`mirror` subcommands. They were deleted as
-dead weight — `sis` is now flag-driven only, with no config file and no
-persistence. Do not reintroduce them without a concrete need.
+dead weight — `sis` is flag-driven, with no config file governing CLI behaviour.
+The **only** persistence is `internal/preset`: named manifest files the user
+explicitly saves (`sis preset save`). Do not reintroduce config files, mirror/proxy
+state or other hidden persistence without a concrete need.
 
 ### Development status
 

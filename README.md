@@ -163,6 +163,7 @@ go build -ldflags "-X main.Version=$(cat VERSION)" -o sis ./cmd/sis/
 ```text
 sis gui        图形界面（浏览器窗口内浏览、勾选、一键安装/卸载）
 sis tui        交互式终端界面（浏览清单、选择并安装）
+sis preset     保存 / 列出 / 切换 / 删除软件清单预设
 sis search     在 Homebrew 仓库中搜索软件包
 sis install    按清单批量安装软件
 sis uninstall  按清单批量卸载软件
@@ -220,6 +221,30 @@ sis search python --format json
 ```
 
 在 Homebrew 全仓库（所有 tap 的 formula 与 cask）中搜索，结果标注频道与是否已安装。GUI 里点顶部「搜索 Homebrew」按钮可在浏览器中实时搜索，结果可一键加入清单再安装。
+
+---
+
+## 预设（Presets）：按你的习惯保存软件清单
+
+可以把当前软件清单（含搜索添加的包）保存成**预设**，随时切换加载。预设是普通的 manifest YAML，存在系统配置目录（macOS: `~/Library/Application Support/sis/presets`），方便备份与同步。
+
+![预设与搜索](docs/screenshots/gui-presets.png)
+
+**GUI**：顶部预设栏可「加载 / 另存为 / 删除」预设；切换后界面立即换成该预设的软件列表。
+
+**CLI**：
+
+```bash
+sis preset save work -f macOS/packages.txt   # 把某清单另存为预设 work
+sis preset list                               # 列出预设
+sis preset show work                          # 查看预设内容
+sis preset delete work                        # 删除预设
+
+# 用预设直接安装 / 查看 / 启动界面（--preset / -p）
+sis install --preset work
+sis list --preset work
+sis gui --preset work
+```
 
 ---
 

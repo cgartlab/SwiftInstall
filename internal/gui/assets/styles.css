@@ -125,6 +125,16 @@ html, body {
 }
 .search input::placeholder { color: var(--faint); }
 
+/* preset bar */
+.preset-bar { display: flex; align-items: center; gap: 6px; }
+.preset-bar select {
+  border: 1px solid var(--border); border-radius: 999px;
+  padding: 7px 12px; font-size: 12.5px; background: var(--panel); color: var(--text);
+  outline: 0; max-width: 150px; cursor: pointer;
+}
+.preset-bar select:focus { border-color: color-mix(in srgb, var(--accent) 60%, var(--border)); }
+.preset-bar .btn { padding: 7px 11px; font-size: 12.5px; }
+
 /* ---------- buttons ---------- */
 .btn {
   display: inline-flex; align-items: center; gap: 7px;
@@ -352,6 +362,14 @@ html, body {
 .srow .add-btn.added { color: var(--green); border-color: transparent; cursor: default; }
 .srow .add-btn:disabled { opacity: .5; cursor: default; }
 .search-empty { text-align: center; color: var(--faint); padding: 30px 0; font-size: 13px; }
+
+.save-panel { width: min(420px, calc(100vw - 40px)); }
+.save-panel input {
+  width: 100%; border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 14px; font-size: 14px; background: var(--panel-2); color: var(--text); outline: 0;
+  margin-bottom: 16px;
+}
+.save-panel input:focus { border-color: color-mix(in srgb, var(--accent) 60%, var(--border)); box-shadow: 0 0 0 3px var(--accent-soft); }
 
 @media (max-width: 620px) {
   .topbar { padding: 12px 16px; }

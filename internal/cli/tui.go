@@ -42,14 +42,10 @@ func newTUICmd() *cobra.Command {
 }
 
 func runTUI(cmd *cobra.Command, args []string) error {
-	// Resolve manifest path: explicit -f wins, otherwise auto-discovery.
-	manifestPath, _ := cmd.Flags().GetString("file")
-	if manifestPath == "" {
-		manifestPath = resolveManifest()
-	}
-	if manifestPath == "" {
-		return fmt.Errorf("未找到清单文件\n\n" +
-			"请使用 -f 指定文件路径，或在当前目录创建 sis.yaml / software_list.txt")
+	// Resolve manifest path (--preset > --file > auto-discovery).
+	manifestPath, err := manifestPathFrom(cmd)
+	if err != nil {
+		return err
 	}
 
 	// Parse and validate.

@@ -24,6 +24,7 @@ import (
 	"github.com/cgartlab/SwiftInstall/internal/backend"
 	"github.com/cgartlab/SwiftInstall/internal/engine"
 	"github.com/cgartlab/SwiftInstall/internal/manifest"
+	"github.com/cgartlab/SwiftInstall/internal/preset"
 )
 
 //go:embed assets
@@ -48,6 +49,38 @@ type Options struct {
 type server struct {
 	opts Options
 	mu   sync.Mutex // serialises install/uninstall runs
+
+	// manMu guards the manifest/source, which can be swapped at runtime when
+	// the user loads a preset. Run holds mu; reads take manMu.RLock.
+	manMu sync.RWMutex
+}
+
+// currentManifest returns the manifest currently loaded in the session.
+func (s *server) currentManifest() *manifest.Manifest {
+	s.manMu.RLock()
+	defer s.manMu.RUnlock()
+	return s.opts.Manifest
+}
+
+// currentSource returns the display source for the current manifest.
+func (s *server) currentSource() string {
+	s.manMu.RLock()
+	defer s.manMu.RUnlock()
+	return s.opts.Source
+}
+
+// loadPreset swaps the session's manifest to a saved preset and updates the
+// displayed source. Returns the preset's manifest.
+func (s *server) loadPreset(name string) (*manifest.Manifest, error) {
+	m, err := preset.Load(name)
+	if err != nil {
+		return nil, err
+	}
+	s.manMu.Lock()
+	s.opts.Manifest = m
+	s.opts.Source = "preset: " + name
+	s.manMu.Unlock()
+	return m, nil
 }
 
 // Run starts the GUI server on the configured address (loopback by default),
@@ -65,6 +98,8 @@ func Run(ctx context.Context, opts Options) error {
 	mux.HandleFunc("/api/state", srv.handleState)
 	mux.HandleFunc("/api/status", srv.handleStatus)
 	mux.HandleFunc("/api/search", srv.handleSearch)
+	mux.HandleFunc("/api/presets", srv.handlePresets)
+	mux.HandleFunc("/api/preset", srv.handlePreset)
 	mux.HandleFunc("/api/run", srv.handleRun)
 
 	addr := opts.Addr
@@ -171,13 +206,14 @@ type pkgView struct {
 }
 
 func (s *server) handleState(w http.ResponseWriter, r *http.Request) {
-	pkgs := make([]pkgView, 0, len(s.opts.Manifest.Packages))
-	for _, p := range s.opts.Manifest.Packages {
+	m := s.currentManifest()
+	pkgs := make([]pkgView, 0, len(m.Packages))
+	for _, p := range m.Packages {
 		pkgs = append(pkgs, pkgView{ID: p.ID, Category: p.Category, Kind: p.Kind, Optional: p.Optional})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"backend":  s.opts.Backend.Name(),
-		"source":   s.opts.Source,
+		"source":   s.currentSource(),
 		"packages": pkgs,
 		"settings": map[string]any{
 			"skip_existing": s.opts.SkipExisting,
@@ -192,17 +228,18 @@ func (s *server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	installed := map[string]bool{}
+	m := s.currentManifest()
 	if provider, ok := s.opts.Backend.(backend.InstalledSetProvider); ok {
 		set, err := provider.InstalledSet(ctx)
 		if err != nil {
 			writeJSON(w, http.StatusBadGateway, map[string]any{"error": err.Error()})
 			return
 		}
-		for _, p := range s.opts.Manifest.Packages {
+		for _, p := range m.Packages {
 			installed[p.ID] = set[p.ID]
 		}
 	} else {
-		for _, p := range s.opts.Manifest.Packages {
+		for _, p := range m.Packages {
 			ok, err := s.opts.Backend.IsInstalled(ctx, p.ID)
 			if err != nil {
 				writeJSON(w, http.StatusBadGateway, map[string]any{"error": err.Error()})
@@ -247,7 +284,7 @@ func (s *server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	// Report which names are already in the loaded manifest, so the UI can
 	// show "已添加".
 	inManifest := map[string]bool{}
-	for _, p := range s.opts.Manifest.Packages {
+	for _, p := range s.currentManifest().Packages {
 		inManifest[p.ID] = true
 	}
 
@@ -256,6 +293,114 @@ func (s *server) handleSearch(w http.ResponseWriter, r *http.Request) {
 		"installed":  installed,
 		"inManifest": inManifest,
 	})
+}
+
+// handlePresets lists saved preset names.
+func (s *server) handlePresets(w http.ResponseWriter, r *http.Request) {
+	names, err := preset.List()
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"presets": names})
+}
+
+// handlePreset loads, saves or deletes a preset.
+//
+//	GET  /api/preset?name=work        → load preset into the session (returns state)
+//	POST /api/preset/save             body {"name","packages":[{id,category,kind,optional}]}
+//	POST /api/preset/delete           body {"name"}
+func (s *server) handlePreset(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		name := strings.TrimSpace(r.URL.Query().Get("name"))
+		if name == "" {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "缺少 name"})
+			return
+		}
+		m, err := s.loadPreset(name)
+		if err != nil {
+			writeJSON(w, http.StatusNotFound, map[string]any{"error": err.Error()})
+			return
+		}
+		pkgs := make([]pkgView, 0, len(m.Packages))
+		for _, p := range m.Packages {
+			pkgs = append(pkgs, pkgView{ID: p.ID, Category: p.Category, Kind: p.Kind, Optional: p.Optional})
+		}
+		writeJSON(w, http.StatusOK, map[string]any{
+			"backend":  s.opts.Backend.Name(),
+			"source":   s.currentSource(),
+			"packages": pkgs,
+		})
+
+	case http.MethodPost:
+		action := strings.TrimSpace(r.URL.Query().Get("action"))
+		var body struct {
+			Name     string           `json:"name"`
+			Packages []map[string]any `json:"packages"`
+			Pkgs     []pkgView        `json:"pkgs"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "无效的 JSON"})
+			return
+		}
+		if strings.TrimSpace(body.Name) == "" {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "缺少 name"})
+			return
+		}
+
+		switch action {
+		case "delete":
+			if err := preset.Delete(body.Name); err != nil {
+				writeJSON(w, http.StatusNotFound, map[string]any{"error": err.Error()})
+				return
+			}
+			writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+
+		case "save", "":
+			// Accept either "packages" (from the browser) or "pkgs".
+			src := body.Packages
+			if len(src) == 0 {
+				for _, p := range body.Pkgs {
+					src = append(src, map[string]any{
+						"id": p.ID, "category": p.Category, "kind": p.Kind, "optional": p.Optional,
+					})
+				}
+			}
+			m := &manifest.Manifest{}
+			for _, raw := range src {
+				p := manifest.Package{}
+				if v, ok := raw["id"].(string); ok {
+					p.ID = v
+				}
+				if v, ok := raw["category"].(string); ok {
+					p.Category = v
+				}
+				if v, ok := raw["kind"].(string); ok {
+					p.Kind = v
+				}
+				if v, ok := raw["optional"].(bool); ok {
+					p.Optional = v
+				}
+				if p.ID != "" {
+					m.Packages = append(m.Packages, p)
+				}
+			}
+			if err := preset.Save(body.Name, m); err != nil {
+				writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
+				return
+			}
+			// Switch the session to the just-saved preset.
+			s.loadPreset(body.Name)
+			writeJSON(w, http.StatusOK, map[string]any{"ok": true, "name": body.Name, "total": len(m.Packages)})
+
+		default:
+			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "未知 action"})
+		}
+
+	default:
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"error": "method not allowed"})
+	}
 }
 
 // handleRun streams an install or uninstall batch over Server-Sent Events.
@@ -282,8 +427,9 @@ func (s *server) handleRun(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Build a filtered manifest preserving only the selected packages.
-	filtered := &manifest.Manifest{Settings: s.opts.Manifest.Settings}
-	for _, p := range s.opts.Manifest.Packages {
+	cur := s.currentManifest()
+	filtered := &manifest.Manifest{Settings: cur.Settings}
+	for _, p := range cur.Packages {
 		if ids[p.ID] {
 			filtered.Packages = append(filtered.Packages, p)
 		}

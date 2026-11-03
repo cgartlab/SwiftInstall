@@ -513,4 +513,104 @@ async function runSearch(q) {
   }
 }
 
+/* ---------------- presets ---------------- */
+
+async function loadPresetList(selected) {
+  try {
+    const r = await fetch("/api/presets").then((r) => r.json());
+    const sel = $("presetSelect");
+    sel.innerHTML = "";
+    const names = r.presets || [];
+    if (names.length === 0) {
+      sel.innerHTML = `<option value="">(无预设)</option>`;
+      return;
+    }
+    for (const n of names) {
+      const o = document.createElement("option");
+      o.value = n;
+      o.textContent = n;
+      sel.appendChild(o);
+    }
+    if (selected) sel.value = selected;
+  } catch (e) {
+    console.error("presets:", e);
+  }
+}
+
+$("presetLoad").addEventListener("click", async () => {
+  const name = $("presetSelect").value;
+  if (!name) {
+    toast("没有可加载的预设");
+    return;
+  }
+  try {
+    const r = await fetch(`/api/preset?name=${encodeURIComponent(name)}`).then((r) => r.json());
+    if (r.error) { toast(r.error); return; }
+    state.packages = r.packages || [];
+    state.selected.clear();
+    state.installed = {};
+    state.statusLoaded = false;
+    $("backend").textContent = r.backend || state.backend;
+    render();
+    toast(`已加载预设 “${name}”`);
+    loadStatus();
+  } catch (e) {
+    toast("加载失败：" + e);
+  }
+});
+
+$("presetSave").addEventListener("click", () => {
+  $("saveError").textContent = "";
+  $("saveName").value = $("presetSelect").value || "";
+  $("saveOverlay").hidden = false;
+  setTimeout(() => $("saveName").focus(), 30);
+});
+$("saveCancel").addEventListener("click", () => ($("saveOverlay").hidden = true));
+$("saveName").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") $("saveConfirm").click();
+});
+
+$("saveConfirm").addEventListener("click", async () => {
+  const name = $("saveName").value.trim();
+  if (!name) { $("saveError").textContent = "请输入名称"; return; }
+  const body = {
+    name,
+    packages: state.packages.map((p) => ({
+      id: p.id, category: p.category, kind: p.kind, optional: p.optional,
+    })),
+  };
+  try {
+    const r = await fetch("/api/preset?action=save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then((r) => r.json());
+    if (r.error) { $("saveError").textContent = r.error; return; }
+    $("saveOverlay").hidden = true;
+    toast(`已保存预设 “${name}”（${r.total} 个包）`);
+    await loadPresetList(name);
+  } catch (e) {
+    $("saveError").textContent = "保存失败：" + e;
+  }
+});
+
+$("presetDelete").addEventListener("click", async () => {
+  const name = $("presetSelect").value;
+  if (!name) { toast("没有可删除的预设"); return; }
+  if (!confirm(`删除预设 “${name}”？`)) return;
+  try {
+    const r = await fetch("/api/preset?action=delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    }).then((r) => r.json());
+    if (r.error) { toast(r.error); return; }
+    toast(`已删除预设 “${name}”`);
+    await loadPresetList();
+  } catch (e) {
+    toast("删除失败：" + e);
+  }
+});
+
 loadState();
+loadPresetList();
