@@ -8,7 +8,9 @@
 
 - CI 门禁接入 `go vet ./...`（修 #27）。
 - **Homebrew 后端**：macOS 上支持 formula 与 cask 两类包；`sis` 按操作系统自动选用 Homebrew（macOS）或 winget（Windows）。
+- **图形界面（GUI）**：新增 `sis gui`，在本地浏览器窗口中浏览、勾选并一键安装/卸载，实时状态与逐条进度；前端资源 `go:embed` 内嵌，仅监听 127.0.0.1。每个软件显示品牌图标（内嵌 SVG，缺失时以字母色块回退）。
 - **交互式 TUI**：新增 `sis tui`，在终端内浏览清单、选择并安装。
+- **快速状态探测**：Homebrew 后端新增一次性批量 `InstalledSet`，数十个包的状态探测从逐包调用降为一次调用。
 - **macOS 发布产物**：release CI 交叉构建 `sis-darwin-arm64`、`sis-darwin-amd64`、`sis-windows-amd64.exe`、`sis-linux-amd64`，统一发布到同一个 GitHub Release。
 - **一键安装脚本**：新增 `install.sh`，支持架构自动检测、`SIS_VERSION` 指定版本、`SIS_MIRROR` 镜像加速，安装到 `/usr/local/bin`（回退 `~/bin`）并验证版本。
 - **Manifest `kind` 字段**：`Package.kind` 支持 `formula` / `cask`，留空则自动探测（formula 优先）。

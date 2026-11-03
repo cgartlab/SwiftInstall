@@ -42,7 +42,7 @@ go vet ./...
 cmd/sis/main.go   Cobra entrypoint; ldflags inject Version/Commit/Date
 internal/
   cli/            Cobra commands (thin orchestration layer)
-                  install | uninstall | list | status | version | tui
+                  install | uninstall | list | status | version | gui | tui
                   helpers.go — manifest auto-discovery + renderer selection
   engine/         Batch install/uninstall orchestration
                   dedupe, skip-existing, dry-run, retry loop, progress callback
@@ -51,7 +51,9 @@ internal/
                   Package.kind = formula | cask (Homebrew; empty = auto-detect)
   backend/        Backend interface (Name/Detect/IsInstalled/Install/Uninstall)
                   + registry.go (ForCurrentOS: darwin→homebrew, windows→winget)
-                  + homebrew.go (formula + cask) | winget.go
+                  + homebrew.go (formula + cask, incl. bulk InstalledSet) | winget.go
+  gui/            Local web GUI: HTTP + SSE API (state/status/run) + go:embed assets
+  tui/            Interactive terminal UI (bubbletea/lipgloss)
   ui/             Renderer interface + terminal | json | silent implementations
 ```
 

@@ -24,7 +24,8 @@
   - [手动安装](#手动安装)
 - [使用指南](#使用指南)
   - [命令总览](#命令总览)
-  - [tui — 交互式界面](#tui--交互式界面)
+  - [gui — 图形界面](#gui--图形界面)
+  - [tui — 交互式终端界面](#tui--交互式终端界面)
   - [install — 批量安装](#install--批量安装)
   - [uninstall — 批量卸载](#uninstall--批量卸载)
   - [list — 查看软件清单](#list--查看软件清单)
@@ -57,7 +58,8 @@
 | **macOS 完整支持** | Homebrew 后端，formula 与 cask 双通道 |
 | **Windows 支持** | 原生 `winget` 后端，覆盖安装 / 卸载 / 查询 |
 | **后端自动选择** | 按操作系统自动选用 Homebrew 或 winget，无需手动切换 |
-| **交互式 TUI** | `sis tui` 提供可视化的清单浏览与安装界面 |
+| **图形界面 (GUI)** | `sis gui` 在浏览器窗口内可视化浏览、勾选并一键安装/卸载，实时状态与进度 |
+| **交互式 TUI** | `sis tui` 在终端内提供可视化的清单浏览与安装界面 |
 | **批量安装 / 卸载** | 遍历清单逐条执行，单个失败不中断整批 |
 | **多格式输出** | `table` / `json` / `silent`，适配脚本与人读 |
 | **去重与跳过** | 自动去重重复包，可跳过已安装软件 |
@@ -159,7 +161,8 @@ go build -ldflags "-X main.Version=$(cat VERSION)" -o sis ./cmd/sis/
 ### 命令总览
 
 ```text
-sis tui        交互式界面（浏览清单、选择并安装）
+sis gui        图形界面（浏览器窗口内浏览、勾选、一键安装/卸载）
+sis tui        交互式终端界面（浏览清单、选择并安装）
 sis install    按清单批量安装软件
 sis uninstall  按清单批量卸载软件
 sis list       查看清单中的软件
@@ -177,13 +180,31 @@ sis version    显示版本信息
 
 ---
 
-### tui — 交互式界面
+### gui — 图形界面
+
+```bash
+sis gui                       # 启动后自动在浏览器打开
+sis gui --no-open             # 只启动服务，不自动开浏览器
+sis gui -f macOS/packages.txt
+```
+
+启动一个**本地图形界面**：服务只监听本机回环地址（`127.0.0.1` 随机端口），不暴露到网络；在浏览器窗口中浏览按分类分组的软件清单，勾选后一键**安装/卸载**，安装状态与逐条进度实时刷新。每个软件显示对应的**品牌图标**（内嵌 SVG，缺失时用字母色块回退）。支持浅色/深色主题、搜索过滤、全选、已安装统计。
+
+界面资源（HTML/CSS/JS）通过 `go:embed` 内嵌在二进制里，运行时不依赖外部文件；状态探测对 Homebrew 走一次性批量查询，数十个包也能秒级完成。技术栈为零依赖的原生 Web（无前端框架），按 `Ctrl+C` 关闭服务。
+
+![SwiftInstall 图形界面](docs/screenshots/gui-main.png)
+
+![安装进度](docs/screenshots/gui-progress.png)
+
+---
+
+### tui — 交互式终端界面
 
 ```bash
 sis tui
 ```
 
-打开终端交互界面，直接浏览清单、勾选软件并执行安装，适合不想手写命令的日常使用。基于 [Bubble Tea](https://github.com/charmbracelet/bubbletea) 构建。
+打开终端交互界面，直接浏览清单、勾选软件并执行安装，适合纯终端环境或 SSH 场景。基于 [Bubble Tea](https://github.com/charmbracelet/bubbletea) 构建。
 
 ---
 
@@ -398,7 +419,8 @@ SwiftInstall/
 │   │   ├── uninstall.go            # uninstall
 │   │   ├── list.go                 # list
 │   │   ├── status.go               # status
-│   │   ├── tui.go                  # tui 交互式界面
+│   │   ├── gui.go                  # gui 图形界面（启动本地 Web 服务）
+│   │   ├── tui.go                  # tui 交互式终端界面
 │   │   ├── helpers.go              # 清单自动查找 + Renderer 选择
 │   │   └── version.go              # version
 │   ├── engine/                     # 批量安装/卸载编排（跳过、干跑、重试）
@@ -408,6 +430,10 @@ SwiftInstall/
 │   │   ├── registry.go             # ForCurrentOS：按 OS 自动选择后端
 │   │   ├── homebrew.go             # Homebrew 后端（formula + cask）
 │   │   └── winget.go               # winget 后端
+│   ├── gui/                        # 本地 Web GUI：HTTP + SSE API + 内嵌前端
+│   │   ├── gui.go                  # 服务、/api/state|status|run
+│   │   └── assets/                 # index.html · styles.css · app.js（go:embed）
+│   ├── tui/                        # 终端界面（bubbletea/lipgloss）
 │   └── ui/                         # terminal / json / silent 渲染器
 ├── Windows/                        # 遗留 .bat 安装器 + 清单示例
 ├── macOS/                          # 遗留 .sh 安装器 + 清单示例

@@ -41,3 +41,14 @@ type Output struct {
 	ExitCode   int
 	DurationMs int64
 }
+
+// InstalledSetProvider is an optional capability a Backend may implement when
+// it can report the full set of installed package identifiers in a single call.
+// It is far cheaper than probing each package with IsInstalled (one `brew` call
+// instead of two per package), so callers such as the GUI should prefer it and
+// fall back to per-package probing when a backend does not implement it.
+type InstalledSetProvider interface {
+	// InstalledSet returns the set of installed package identifiers (formula
+	// names and cask tokens together), keyed by identifier.
+	InstalledSet(ctx context.Context) (map[string]bool, error)
+}

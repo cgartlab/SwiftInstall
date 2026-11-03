@@ -25,6 +25,7 @@ go install github.com/cgartlab/SwiftInstall/cmd/sis@latest
 
 | Command | Description |
 |---|---|
+| `sis gui` | Local graphical UI in a browser window: browse, select, install/uninstall |
 | `sis tui` | Interactive terminal UI for browsing the manifest and installing |
 | `sis install` | Install software from a manifest file |
 | `sis uninstall` | Uninstall software listed in a manifest (`--yes` required) |
@@ -117,10 +118,12 @@ Test fixtures live in the project root as `test_manifest_*` files and are not us
 SwiftInstall/
 ├── cmd/sis/          # CLI entry point
 ├── internal/
-│   ├── cli/          # Cobra commands + global flags + tui
+│   ├── cli/          # Cobra commands + global flags + gui + tui
 │   ├── engine/       # batch install/uninstall orchestration
 │   ├── manifest/     # manifest parsing, dedupe, validation
 │   ├── backend/      # Backend interface + registry + homebrew + winget
+│   ├── gui/          # local web GUI (HTTP + SSE) with embedded front-end
+│   ├── tui/          # interactive terminal UI (bubbletea/lipgloss)
 │   └── ui/           # terminal / json / silent renderers
 ├── Windows/          # legacy .bat installer + example manifest
 ├── macOS/            # legacy .sh installer + example manifest

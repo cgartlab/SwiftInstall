@@ -20,7 +20,8 @@ func newRootCmd(version, commit, date string) *cobra.Command {
 内置国内镜像加速和代理支持，开箱即用。
 
 常用命令:
-  sis tui              交互式界面：浏览清单、勾选、批量安装/卸载
+  sis gui              图形界面：浏览器窗口中浏览、勾选、一键安装/卸载
+  sis tui              交互式终端界面：浏览清单、勾选、批量安装/卸载
   sis install          从清单批量安装软件
   sis uninstall        从清单批量卸载软件
   sis list             查看清单中的软件列表
@@ -40,6 +41,7 @@ func newRootCmd(version, commit, date string) *cobra.Command {
 	cmd.PersistentFlags().Bool("no-color", false, "禁用彩色输出")
 
 	// Register subcommands
+	cmd.AddCommand(newGUICmd())
 	cmd.AddCommand(newTUICmd())
 	cmd.AddCommand(newInstallCmd())
 	cmd.AddCommand(newUninstallCmd())

@@ -145,6 +145,35 @@ func (h *HomebrewBackend) installedInChannel(ctx context.Context, channel, id st
 	return true, nil
 }
 
+// InstalledSet reports every installed formula name and cask token in one pass,
+// using `brew list --formula -1` and `brew list --cask -1`. This powers a fast
+// (sub-second) status load in the GUI instead of two `brew` calls per package.
+// A non-zero exit from either listing means "none installed in that channel",
+// not an error.
+func (h *HomebrewBackend) InstalledSet(ctx context.Context) (map[string]bool, error) {
+	if !h.ready {
+		return nil, errHomebrewNotReady
+	}
+
+	set := make(map[string]bool)
+	for _, channel := range []string{"formula", "cask"} {
+		out, err := h.runBrew(ctx, h.env(""), "list", "--"+channel, "-1")
+		if err != nil {
+			var exitErr *brewExitError
+			if errors.As(err, &exitErr) {
+				continue // nothing installed in this channel
+			}
+			return nil, fmt.Errorf("list installed %s packages: %w", channel, err)
+		}
+		for _, line := range strings.Split(out.Stdout, "\n") {
+			if name := strings.TrimSpace(line); name != "" {
+				set[name] = true
+			}
+		}
+	}
+	return set, nil
+}
+
 // Install installs id honouring opts.Kind:
 //   - "cask"    → brew install --cask <id>
 //   - "formula" → brew install <id>
