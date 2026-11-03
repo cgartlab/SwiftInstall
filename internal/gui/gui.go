@@ -38,6 +38,9 @@ type Options struct {
 	RetryCount   int
 	RetryDelay   int
 	SkipExisting bool
+	// Addr is the listen address, e.g. "127.0.0.1:0" (loopback, ephemeral port)
+	// or "0.0.0.0:8080" (all interfaces, for LAN preview). Empty = loopback.
+	Addr string
 	// Open asks the server to open the default browser once it is listening.
 	Open bool
 }
@@ -47,8 +50,8 @@ type server struct {
 	mu   sync.Mutex // serialises install/uninstall runs
 }
 
-// Run starts the GUI server on a loopback port, optionally opens the browser,
-// and blocks until ctx is cancelled.
+// Run starts the GUI server on the configured address (loopback by default),
+// optionally opens the browser, and blocks until ctx is cancelled.
 func Run(ctx context.Context, opts Options) error {
 	srv := &server{opts: opts}
 
@@ -63,24 +66,84 @@ func Run(ctx context.Context, opts Options) error {
 	mux.HandleFunc("/api/status", srv.handleStatus)
 	mux.HandleFunc("/api/run", srv.handleRun)
 
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		return fmt.Errorf("监听本机端口失败: %w", err)
+	addr := opts.Addr
+	if addr == "" {
+		addr = "127.0.0.1:0"
 	}
-	url := "http://" + ln.Addr().String() + "/"
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		return fmt.Errorf("监听端口失败 (%s): %w", addr, err)
+	}
+	port := ln.Addr().(*net.TCPAddr).Port
 	httpSrv := &http.Server{Handler: mux}
 
 	go func() { _ = httpSrv.Serve(ln) }()
 
-	fmt.Fprintf(os.Stderr, "\n  SwiftInstall GUI 已启动 →  %s\n  在浏览器中打开上述地址；按 Ctrl+C 退出。\n\n", url)
+	localURL := fmt.Sprintf("http://127.0.0.1:%d/", port)
+	urls := []string{localURL}
+	exposed := isExposed(addr)
+	if exposed {
+		for _, ip := range lanIPv4s() {
+			urls = append(urls, fmt.Sprintf("http://%s:%d/", ip, port))
+		}
+	}
+
+	fmt.Fprintf(os.Stderr, "\n  SwiftInstall GUI 已启动，可访问地址：\n")
+	for _, u := range urls {
+		fmt.Fprintf(os.Stderr, "    %s\n", u)
+	}
+	if exposed {
+		fmt.Fprintf(os.Stderr, "\n  注意：已监听非回环地址，同一局域网内的设备均可访问；\n"+
+			"  安装/卸载会真实修改本机软件，请仅在可信网络中使用。\n")
+	}
+	fmt.Fprintf(os.Stderr, "\n  按 Ctrl+C 停止。\n\n")
 	if opts.Open {
-		openBrowser(url)
+		openBrowser(localURL)
 	}
 
 	<-ctx.Done()
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	return httpSrv.Shutdown(shutdownCtx)
+}
+
+// isExposed reports whether addr binds beyond the loopback interface.
+func isExposed(addr string) bool {
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		return false
+	}
+	switch host {
+	case "", "0.0.0.0", "::":
+		return true
+	case "127.0.0.1", "localhost", "::1":
+		return false
+	default:
+		return true
+	}
+}
+
+// lanIPv4s returns the machine's private IPv4 addresses, for printing LAN URLs.
+func lanIPv4s() []string {
+	var out []string
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return out
+	}
+	for _, a := range addrs {
+		ipnet, ok := a.(*net.IPNet)
+		if !ok {
+			continue
+		}
+		ip4 := ipnet.IP.To4()
+		if ip4 == nil || ipnet.IP.IsLoopback() {
+			continue
+		}
+		if ip4.IsPrivate() {
+			out = append(out, ip4.String())
+		}
+	}
+	return out
 }
 
 // openBrowser opens url in the platform's default browser, best-effort.
