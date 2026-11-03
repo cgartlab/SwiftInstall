@@ -395,4 +395,122 @@ function toast(msg) {
   toast.t = setTimeout(() => (el.style.opacity = "0"), 1800);
 }
 
+/* ---------------- homebrew search ---------------- */
+
+const searchState = { timer: null, req: 0 };
+
+$("openSearch").addEventListener("click", openSearch);
+$("closeSearch").addEventListener("click", closeSearch);
+$("searchInput").addEventListener("input", (e) => {
+  clearTimeout(searchState.timer);
+  const q = e.target.value.trim();
+  if (!q) {
+    $("searchResults").innerHTML = "";
+    $("searchHint").textContent = "输入关键词搜索全部可用软件包，结果可添加到清单。";
+    return;
+  }
+  $("searchHint").textContent = "搜索中…";
+  searchState.timer = setTimeout(() => runSearch(q), 300);
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("searchOverlay").hidden) {
+    closeSearch();
+  }
+});
+
+function openSearch() {
+  $("searchOverlay").hidden = false;
+  $("searchResults").innerHTML = "";
+  $("searchInput").value = "";
+  $("searchHint").textContent = "输入关键词搜索全部可用软件包，结果可添加到清单。";
+  setTimeout(() => $("searchInput").focus(), 30);
+}
+function closeSearch() {
+  $("searchOverlay").hidden = true;
+}
+
+async function runSearch(q) {
+  const my = ++searchState.req;
+  try {
+    const r = await fetch(`/api/search?q=${encodeURIComponent(q)}`).then((r) => r.json());
+    if (my !== searchState.req) return; // a newer query superseded this one
+    if (r.error) {
+      $("searchHint").textContent = "搜索失败：" + r.error;
+      $("searchResults").innerHTML = "";
+      return;
+    }
+    const hits = r.hits || [];
+    const installed = r.installed || {};
+    const inManifest = r.inManifest || {};
+    if (hits.length === 0) {
+      $("searchHint").textContent = `没有与 “${q}” 匹配的软件包`;
+      $("searchResults").innerHTML = "";
+      return;
+    }
+    $("searchHint").textContent = `${hits.length} 个结果（formula/cask），点击「添加」放入清单`;
+    const el = $("searchResults");
+    el.innerHTML = "";
+    for (const h of hits) {
+      const row = document.createElement("div");
+      row.className = "srow";
+
+      const icon = document.createElement("span");
+      icon.className = "pkg-icon mono";
+      icon.textContent = (h.name[0] || "?").toUpperCase();
+      icon.style.background = monoColor(h.name);
+
+      const name = document.createElement("span");
+      name.className = "sname";
+      name.textContent = h.name;
+      name.title = h.name;
+
+      const kind = document.createElement("span");
+      kind.className = "kind skind" + (h.kind === "cask" ? " cask" : "");
+      kind.textContent = h.kind || "auto";
+
+      const st = installed[h.name] ? "installed" : "";
+      const status = document.createElement("span");
+      status.className = "sstatus " + st;
+      status.textContent = installed[h.name] ? "已安装" : "";
+
+      const add = document.createElement("button");
+      add.className = "add-btn";
+      if (inManifest[h.name]) {
+        add.classList.add("added");
+        add.textContent = "已添加";
+        add.disabled = true;
+      } else {
+        add.textContent = "添加";
+        add.addEventListener("click", () => {
+          state.packages.push({
+            id: h.name,
+            category: h.kind === "cask" ? "Apps" : "Dev",
+            kind: h.kind || "",
+            optional: false,
+          });
+          add.classList.add("added");
+          add.textContent = "已添加";
+          add.disabled = true;
+          render();
+          toast(`已添加 ${h.name} 到清单`);
+        });
+      }
+
+      row.append(icon, name, kind, status, add);
+      // status + add share the last two columns: re-layout to 4 cols cleanly
+      // grid is 26px 1fr auto auto -> icon,name,kind, then status+add overflow.
+      // Fix: put status and add in a flex container in the 4th column.
+      const tail = document.createElement("div");
+      tail.style.cssText = "display:flex;gap:10px;align-items:center;justify-content:flex-end";
+      tail.append(status, add);
+      row.innerHTML = "";
+      row.append(icon, name, kind, tail);
+      el.appendChild(row);
+    }
+  } catch (e) {
+    if (my === searchState.req) $("searchHint").textContent = "搜索出错：" + e;
+  }
+}
+
 loadState();

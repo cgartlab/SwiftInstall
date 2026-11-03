@@ -64,6 +64,7 @@ func Run(ctx context.Context, opts Options) error {
 	mux.Handle("/", http.FileServer(http.FS(sub)))
 	mux.HandleFunc("/api/state", srv.handleState)
 	mux.HandleFunc("/api/status", srv.handleStatus)
+	mux.HandleFunc("/api/search", srv.handleSearch)
 	mux.HandleFunc("/api/run", srv.handleRun)
 
 	addr := opts.Addr
@@ -212,6 +213,49 @@ func (s *server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{"installed": installed})
+}
+
+// handleSearch queries the backend's full package repository (Homebrew
+// `brew search`) and returns matches tagged with kind and installed state.
+func (s *server) handleSearch(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	searcher, ok := s.opts.Backend.(backend.Searcher)
+	if !ok {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "当前后端不支持仓库搜索"})
+		return
+	}
+	if q == "" {
+		writeJSON(w, http.StatusOK, map[string]any{"hits": []any{}})
+		return
+	}
+
+	hits, err := searcher.Search(r.Context(), q)
+	if err != nil {
+		writeJSON(w, http.StatusBadGateway, map[string]any{"error": err.Error()})
+		return
+	}
+
+	installed := map[string]bool{}
+	if provider, ok := s.opts.Backend.(backend.InstalledSetProvider); ok {
+		if set, err := provider.InstalledSet(r.Context()); err == nil {
+			for _, h := range hits {
+				installed[h.Name] = set[h.Name]
+			}
+		}
+	}
+
+	// Report which names are already in the loaded manifest, so the UI can
+	// show "已添加".
+	inManifest := map[string]bool{}
+	for _, p := range s.opts.Manifest.Packages {
+		inManifest[p.ID] = true
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"hits":       hits,
+		"installed":  installed,
+		"inManifest": inManifest,
+	})
 }
 
 // handleRun streams an install or uninstall batch over Server-Sent Events.

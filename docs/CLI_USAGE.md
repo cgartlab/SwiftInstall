@@ -27,6 +27,7 @@ go install github.com/cgartlab/SwiftInstall/cmd/sis@latest
 |---|---|
 | `sis gui` | Local graphical UI in a browser window: browse, select, install/uninstall |
 | `sis tui` | Interactive terminal UI for browsing the manifest and installing |
+| `sis search <q>` | Search the full Homebrew repository (formulae + casks) |
 | `sis install` | Install software from a manifest file |
 | `sis uninstall` | Uninstall software listed in a manifest (`--yes` required) |
 | `sis list` | List the packages in a manifest |

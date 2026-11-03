@@ -42,7 +42,7 @@ go vet ./...
 cmd/sis/main.go   Cobra entrypoint; ldflags inject Version/Commit/Date
 internal/
   cli/            Cobra commands (thin orchestration layer)
-                  install | uninstall | list | status | version | gui | tui
+                  install | uninstall | list | status | version | gui | tui | search
                   helpers.go — manifest auto-discovery + renderer selection
   engine/         Batch install/uninstall orchestration
                   dedupe, skip-existing, dry-run, retry loop, progress callback

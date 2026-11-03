@@ -163,6 +163,7 @@ go build -ldflags "-X main.Version=$(cat VERSION)" -o sis ./cmd/sis/
 ```text
 sis gui        图形界面（浏览器窗口内浏览、勾选、一键安装/卸载）
 sis tui        交互式终端界面（浏览清单、选择并安装）
+sis search     在 Homebrew 仓库中搜索软件包
 sis install    按清单批量安装软件
 sis uninstall  按清单批量卸载软件
 sis list       查看清单中的软件
@@ -208,6 +209,17 @@ sis tui
 ```
 
 打开终端交互界面，直接浏览清单、勾选软件并执行安装，适合纯终端环境或 SSH 场景。基于 [Bubble Tea](https://github.com/charmbracelet/bubbletea) 构建。
+
+---
+
+### search — 搜索 Homebrew 仓库
+
+```bash
+sis search figma            # 搜索全部 formula / cask
+sis search python --format json
+```
+
+在 Homebrew 全仓库（所有 tap 的 formula 与 cask）中搜索，结果标注频道与是否已安装。GUI 里点顶部「搜索 Homebrew」按钮可在浏览器中实时搜索，结果可一键加入清单再安装。
 
 ---
 

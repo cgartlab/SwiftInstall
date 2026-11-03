@@ -174,6 +174,61 @@ func (h *HomebrewBackend) InstalledSet(ctx context.Context) (map[string]bool, er
 	return set, nil
 }
 
+// Search queries the full Homebrew repository (all taps, formulae and casks)
+// via `brew search <query>`. Modern `brew search` prints results in two
+// sections — `==> Formulae` and `==> Casks` — with names laid out in columns;
+// this parser splits columns and tags each hit with its channel. A non-zero
+// exit means "no matches", not an error. Results are capped to keep the UI fast.
+func (h *HomebrewBackend) Search(ctx context.Context, query string) ([]SearchHit, error) {
+	if !h.ready {
+		return nil, errHomebrewNotReady
+	}
+	query = strings.TrimSpace(query)
+	if query == "" {
+		return nil, nil
+	}
+
+	out, err := h.runBrew(ctx, h.env(""), "search", query)
+	if err != nil {
+		var exitErr *brewExitError
+		if errors.As(err, &exitErr) {
+			return nil, nil // no matches
+		}
+		return nil, fmt.Errorf("search homebrew: %w", err)
+	}
+
+	var hits []SearchHit
+	kind := ""
+	for _, line := range strings.Split(out.Stdout, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		if strings.HasPrefix(line, "==>") {
+			switch {
+			case strings.Contains(line, "Cask"):
+				kind = "cask"
+			case strings.Contains(line, "Formula"):
+				kind = "formula"
+			}
+			continue
+		}
+		// Result lines are columnar: "git    git-absorb    git-annex".
+		for _, name := range strings.Fields(line) {
+			name = strings.TrimSpace(name)
+			if name == "" {
+				continue
+			}
+			hits = append(hits, SearchHit{Name: name, Kind: kind})
+		}
+	}
+
+	if len(hits) > 60 {
+		hits = hits[:60]
+	}
+	return hits, nil
+}
+
 // Install installs id honouring opts.Kind:
 //   - "cask"    → brew install --cask <id>
 //   - "formula" → brew install <id>

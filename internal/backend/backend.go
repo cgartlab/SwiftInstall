@@ -52,3 +52,17 @@ type InstalledSetProvider interface {
 	// names and cask tokens together), keyed by identifier.
 	InstalledSet(ctx context.Context) (map[string]bool, error)
 }
+
+// SearchHit is one result from a package-repository search.
+type SearchHit struct {
+	Name string `json:"name"`
+	// Kind is the backend channel: "formula" or "cask" when known, else "".
+	Kind string `json:"kind,omitempty"`
+}
+
+// Searcher is an optional capability a Backend may implement to search the
+// full package repository (not just installed packages). Homebrew implements
+// it via `brew search`; winget does not.
+type Searcher interface {
+	Search(ctx context.Context, query string) ([]SearchHit, error)
+}

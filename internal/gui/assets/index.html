@@ -39,7 +39,13 @@
           <input type="checkbox" id="selectAll">
           <span>全选</span>
         </label>
-        <div class="counts" id="counts"></div>
+        <div class="toolbar-right">
+          <button id="openSearch" class="btn ghost">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+            搜索 Homebrew
+          </button>
+          <div class="counts" id="counts"></div>
+        </div>
       </div>
 
       <div id="list" class="list" aria-live="polite"></div>
@@ -73,6 +79,17 @@
         <div id="progSummary" class="summary"></div>
         <button id="closeProgress" class="btn primary" hidden>完成</button>
       </div>
+    </div>
+  </div>
+
+  <div id="searchOverlay" class="overlay" hidden>
+    <div class="panel search-panel" role="dialog" aria-modal="true">
+      <div class="search-head">
+        <input id="searchInput" type="text" placeholder="搜索 Homebrew 仓库（formula / cask）…" autocomplete="off" spellcheck="false">
+        <button id="closeSearch" class="btn ghost">关闭</button>
+      </div>
+      <div id="searchHint" class="search-hint">输入关键词搜索全部可用软件包，结果可添加到清单。</div>
+      <div id="searchResults" class="search-results"></div>
     </div>
   </div>
 

@@ -321,6 +321,38 @@ html, body {
 .summary { font-size: 12.5px; color: var(--muted); }
 .summary b { color: var(--text); }
 
+.search-panel { width: min(620px, calc(100vw - 40px)); padding: 18px; }
+.search-head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.search-head input {
+  flex: 1; border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 14px; font-size: 14px; background: var(--panel-2); color: var(--text);
+  outline: 0; transition: border-color .15s, box-shadow .15s;
+}
+.search-head input:focus {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.search-hint { font-size: 12px; color: var(--faint); margin: 0 2px 10px; }
+.search-results { max-height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.srow {
+  display: grid; grid-template-columns: 26px 1fr auto auto; align-items: center; gap: 12px;
+  padding: 9px 10px; border-radius: 10px; transition: background .12s;
+}
+.srow:hover { background: var(--panel-2); }
+.srow .pkg-icon { width: 26px; height: 26px; }
+.srow .sname { font-size: 13.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.srow .skind { font-size: 10.5px; }
+.srow .sstatus { font-size: 12px; color: var(--faint); min-width: 64px; text-align: right; }
+.srow .sstatus.installed { color: var(--green); }
+.srow .add-btn {
+  font-size: 12px; padding: 5px 12px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--panel); color: var(--text); cursor: pointer;
+}
+.srow .add-btn:hover { border-color: var(--accent); color: var(--accent); }
+.srow .add-btn.added { color: var(--green); border-color: transparent; cursor: default; }
+.srow .add-btn:disabled { opacity: .5; cursor: default; }
+.search-empty { text-align: center; color: var(--faint); padding: 30px 0; font-size: 13px; }
+
 @media (max-width: 620px) {
   .topbar { padding: 12px 16px; }
   .content { padding: 14px 16px 22px; }
