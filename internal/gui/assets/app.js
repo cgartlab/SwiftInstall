@@ -356,6 +356,28 @@ $("search").addEventListener("input", (e) => {
 
 $("refresh").addEventListener("click", () => loadStatus());
 
+$("checkUpdates").addEventListener("click", async () => {
+  const btn = $("checkUpdates");
+  btn.disabled = true;
+  const orig = btn.innerHTML;
+  btn.innerHTML = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg> 检查中…`;
+  try {
+    const r = await fetch("/api/outdated").then((r) => r.json());
+    if (r.error) { toast("检查更新失败：" + r.error); return; }
+    const list = r.outdated || [];
+    if (list.length === 0) {
+      toast("所有已装软件均为最新");
+    } else {
+      toast(`${list.length} 个软件有更新：${list.slice(0, 6).join("、")}${list.length > 6 ? "…" : ""}`);
+    }
+  } catch (e) {
+    toast("检查更新出错：" + e);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = orig;
+  }
+});
+
 $("install").addEventListener("click", () => run("install"));
 $("uninstall").addEventListener("click", () => {
   let ids = [...state.selected];

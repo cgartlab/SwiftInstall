@@ -176,6 +176,26 @@ func (h *HomebrewBackend) InstalledSet(ctx context.Context) (map[string]bool, er
 	return set, nil
 }
 
+// Outdated lists installed packages that have updates available, via
+// `brew outdated --quiet` (one name per line). A non-zero exit is reported
+// as an error, unlike IsInstalled where non-zero means "not found".
+func (h *HomebrewBackend) Outdated(ctx context.Context) ([]string, error) {
+	if !h.ready {
+		return nil, errHomebrewNotReady
+	}
+	out, err := h.runBrew(ctx, h.env(""), "outdated", "--quiet")
+	if err != nil {
+		return nil, fmt.Errorf("brew outdated: %w", err)
+	}
+	var names []string
+	for _, line := range strings.Split(out.Stdout, "\n") {
+		if name := strings.TrimSpace(line); name != "" {
+			names = append(names, name)
+		}
+	}
+	return names, nil
+}
+
 // Search queries the full Homebrew repository (all taps, formulae and casks)
 // via `brew search <query>`. Modern `brew search` prints results in two
 // sections — `==> Formulae` and `==> Casks` — with names laid out in columns;

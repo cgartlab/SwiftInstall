@@ -123,6 +123,8 @@ html, body {
   font-size: 12.5px; cursor: pointer; transition: border-color .12s, background .12s;
 }
 .sidebtn:hover { border-color: var(--moss); background: var(--moss-soft); }
+.sidebtn.iconbtn { width: 38px; padding: 9px 0; display: grid; place-items: center; }
+.bar-right { display: flex; align-items: center; gap: 14px; }
 
 /* ---------- main ---------- */
 .main { grid-row: 1; overflow-y: auto; }

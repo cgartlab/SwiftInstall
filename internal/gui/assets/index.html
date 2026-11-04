@@ -32,7 +32,9 @@
 
       <div class="side-actions">
         <button id="openLLM" class="sidebtn">AI / LLM 设置</button>
-        <button id="refresh" class="sidebtn">重新检测状态</button>
+        <button id="refresh" class="sidebtn iconbtn" title="重新检测安装状态" aria-label="重新检测状态">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>
+        </button>
       </div>
     </aside>
 
@@ -42,10 +44,16 @@
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
           <input id="search" type="text" placeholder="过滤当前清单…" autocomplete="off" spellcheck="false">
         </div>
-        <label class="selectall">
-          <input type="checkbox" id="selectAll">
-          <span>全选</span>
-        </label>
+        <div class="bar-right">
+          <button id="checkUpdates" class="btn ghost" title="检查已安装软件的更新">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>
+            检查更新
+          </button>
+          <label class="selectall">
+            <input type="checkbox" id="selectAll">
+            <span>全选</span>
+          </label>
+        </div>
       </div>
 
       <div id="list" class="list" aria-live="polite"></div>

@@ -100,3 +100,9 @@ type PackageInfo struct {
 type InfoProvider interface {
 	Info(ctx context.Context, name string) (*PackageInfo, error)
 }
+
+// OutdatedProvider is an optional capability a Backend may implement to list
+// installed packages that have updates available.
+type OutdatedProvider interface {
+	Outdated(ctx context.Context) ([]string, error)
+}

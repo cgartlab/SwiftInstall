@@ -104,6 +104,7 @@ func Run(ctx context.Context, opts Options) error {
 	mux.HandleFunc("/api/status", srv.handleStatus)
 	mux.HandleFunc("/api/search", srv.handleSearch)
 	mux.HandleFunc("/api/info", srv.handleInfo)
+	mux.HandleFunc("/api/outdated", srv.handleOutdated)
 	mux.HandleFunc("/api/llm", srv.handleLLM)
 	mux.HandleFunc("/api/presets", srv.handlePresets)
 	mux.HandleFunc("/api/preset", srv.handlePreset)
@@ -305,6 +306,21 @@ func readAICache(name string) (string, bool) {
 func writeAICache(name, desc string) error {
 	p := filepath.Join(aiCacheDir(), strings.ReplaceAll(name, "/", "_")+".txt")
 	return os.WriteFile(p, []byte(desc), 0o644)
+}
+
+// handleOutdated lists installed packages with updates available.
+func (s *server) handleOutdated(w http.ResponseWriter, r *http.Request) {
+	provider, ok := s.opts.Backend.(backend.OutdatedProvider)
+	if !ok {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "当前后端不支持检查更新"})
+		return
+	}
+	names, err := provider.Outdated(r.Context())
+	if err != nil {
+		writeJSON(w, http.StatusBadGateway, map[string]any{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"outdated": names})
 }
 
 // handleLLM gets or sets the LLM configuration.
