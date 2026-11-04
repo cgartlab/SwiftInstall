@@ -28,10 +28,10 @@
           <button id="presetSave" class="btn ghost" title="把当前清单另存为预设">另存为…</button>
           <button id="presetDelete" class="btn ghost" title="删除选中的预设">删除</button>
         </div>
-        <div class="search">
+        <button id="openSearch" class="btn ghost" title="在 Homebrew 仓库中搜索软件包">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
-          <input id="search" type="text" placeholder="搜索软件…" autocomplete="off" spellcheck="false">
-        </div>
+          搜索 Homebrew
+        </button>
         <button id="refresh" class="btn ghost" title="重新检测安装状态">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>
           刷新
@@ -46,10 +46,10 @@
           <span>全选</span>
         </label>
         <div class="toolbar-right">
-          <button id="openSearch" class="btn ghost">
+          <div class="search">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
-            搜索 Homebrew
-          </button>
+            <input id="search" type="text" placeholder="过滤当前清单…" autocomplete="off" spellcheck="false">
+          </div>
           <div class="counts" id="counts"></div>
         </div>
       </div>
