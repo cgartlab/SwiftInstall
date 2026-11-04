@@ -42,7 +42,7 @@ go vet ./...
 cmd/sis/main.go   Cobra entrypoint; ldflags inject Version/Commit/Date
 internal/
   cli/            Cobra commands (thin orchestration layer)
-                  install | uninstall | list | status | version | gui | tui | search | preset
+                  install | uninstall | list | status | version | gui | tui | search | preset | mirror
                   helpers.go — manifest auto-discovery + renderer selection
   engine/         Batch install/uninstall orchestration
                   dedupe, skip-existing, dry-run, retry loop, progress callback
@@ -50,20 +50,23 @@ internal/
                   manifest.go | parser.go | validate.go
                   Package.kind = formula | cask (Homebrew; empty = auto-detect)
   backend/        Backend interface (Name/Detect/IsInstalled/Install/Uninstall)
-                  + registry.go (ForCurrentOS: darwin→homebrew, windows→winget)
-                  + homebrew.go (formula + cask, incl. bulk InstalledSet) | winget.go
-  gui/            Local web GUI: HTTP + SSE API (state/status/search/preset/run) + go:embed assets
+                  + registry.go (ForCurrentOS + ExtraBackends: darwin→homebrew, npm, github)
+                  + homebrew.go (formula+cask, bulk InstalledSet, Info) | npm.go | github.go | winget.go
+  mirror/         China mirror config (brew/npm/pip/ghproxy) — apply/show/restore, idempotent
+  gui/            Local web GUI: HTTP + SSE API (state/status/search/info/preset/run) + go:embed assets
   tui/            Interactive terminal UI (bubbletea/lipgloss)
   preset/         Named manifest presets (save/list/load/delete) — the only persistence sis keeps
   ui/             Renderer interface + terminal | json | silent implementations
 ```
 
-Earlier waves also shipped `internal/config`, `internal/mirror`, `internal/proxy`,
+Earlier waves also shipped `internal/config`, `internal/proxy`,
 `internal/log` and the `config`/`mirror` subcommands. They were deleted as
 dead weight — `sis` is flag-driven, with no config file governing CLI behaviour.
-The **only** persistence is `internal/preset`: named manifest files the user
-explicitly saves (`sis preset save`). Do not reintroduce config files, mirror/proxy
-state or other hidden persistence without a concrete need.
+Two pieces of persistence are kept because the user explicitly asked for them:
+`internal/preset` (named manifest files) and `internal/mirror` (China mirror
+config: one managed env file + shell-rc marker block, `sis mirror restore`
+removes it). Do not reintroduce config files, proxy state or other hidden
+persistence without a concrete need.
 
 ### Development status
 

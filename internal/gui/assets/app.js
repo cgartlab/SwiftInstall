@@ -197,8 +197,15 @@ function renderRow(p) {
   main.appendChild(chev);
 
   const kind = document.createElement("span");
-  kind.className = "kind" + (p.kind === "cask" ? " cask" : "");
-  kind.textContent = p.kind || "auto";
+  // For non-brew sources, show the source (npm/github) instead of the
+  // Homebrew channel; brew packages show formula/cask as before.
+  if (p.source === "npm" || p.source === "github") {
+    kind.className = "kind src-" + p.source;
+    kind.textContent = p.source;
+  } else {
+    kind.className = "kind" + (p.kind === "cask" ? " cask" : "");
+    kind.textContent = p.kind || "auto";
+  }
 
   const st = statusOf(p.id);
   const status = document.createElement("span");

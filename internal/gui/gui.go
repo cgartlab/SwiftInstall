@@ -477,6 +477,7 @@ func (s *server) handleRun(w http.ResponseWriter, r *http.Request) {
 		RetryCount:   s.opts.RetryCount,
 		RetryDelay:   s.opts.RetryDelay,
 	})
+	eng.SetBackends(backend.ExtraBackends())
 	eng.OnProgress(func(index, total int, res engine.Result) {
 		sse(w, flusher, "progress", map[string]any{
 			"index":       index,

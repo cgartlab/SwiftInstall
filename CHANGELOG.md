@@ -7,6 +7,8 @@
 ### Added
 
 - CI 门禁接入 `go vet ./...`（修 #27）。
+- **国内镜像基础设施**：`sis mirror apply/show/restore` 一键配置 Homebrew（中科大）、npm（npmmirror）、pip（清华）、GitHub 下载代理，干净可回滚（受管理 env 文件 + shell rc 标记块，幂等不重复）。
+- **多源安装**：manifest `Package.source` 支持 `brew`（默认）/`npm`/`github`；新增 `NpmBackend`（`npm install -g`）与 `GithubBackend`（下载 release 二进制到 `~/.local/bin`，支持 zip/tar.gz、`{os}/{arch}` 占位、`SIS_GH_PROXY` 加速）；engine 按源选后端。
 - **Homebrew 后端**：macOS 上支持 formula 与 cask 两类包；`sis` 按操作系统自动选用 Homebrew（macOS）或 winget（Windows）。
 - **图形界面（GUI）**：新增 `sis gui`，在本地浏览器窗口中浏览、勾选并一键安装/卸载，实时状态与逐条进度；前端资源 `go:embed` 内嵌，默认仅监听 127.0.0.1，`--lan`/`--port` 可开局域网预览。每个软件显示品牌图标（内嵌 SVG，缺失时以字母色块回退）。
 - **交互式 TUI**：新增 `sis tui`，在终端内浏览清单、选择并安装。

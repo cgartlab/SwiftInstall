@@ -70,7 +70,7 @@ func runUninstall(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(os.Stderr, "  ⚡ DRY-RUN 模式 — 不会实际卸载任何软件\n")
 	}
 
-	eng := engine.New(be, opts)
+	eng := newEngine(be, opts)
 	renderer.Header(len(m.Packages), manifestPath, "Uninstalling")
 
 	eng.OnProgress(func(index int, total int, result engine.Result) {

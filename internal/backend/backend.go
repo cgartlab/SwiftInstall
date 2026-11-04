@@ -32,6 +32,9 @@ type InstallOptions struct {
 	// "formula" vs "cask"). Empty means auto-detect. Backends that do not
 	// distinguish channels ignore it.
 	Kind string
+	// Asset names the GitHub release asset (or substring) to download, used
+	// by the GitHub backend. May contain {os}/{arch} placeholders.
+	Asset string
 }
 
 // Output captures the result of a backend command execution.

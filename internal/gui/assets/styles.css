@@ -203,6 +203,8 @@ html, body {
 
 .kind { font-size: 11.5px; color: var(--faint); min-width: 52px; text-align: right; }
 .kind.cask { color: var(--copper); }
+.kind.src-npm { color: #cb3837; }      /* npm red */
+.kind.src-github { color: var(--moss); }
 
 .status { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; min-width: 76px; justify-content: flex-end; }
 .status .led { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); flex: none; }

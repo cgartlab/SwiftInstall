@@ -23,3 +23,17 @@ func ForCurrentOS() (Backend, error) {
 			runtime.GOOS)
 	}
 }
+
+// ExtraBackends returns non-default backends (npm, github) detected on this
+// machine, keyed by their source name. A backend whose Detect() fails is
+// omitted, so callers can safely register whatever this returns.
+func ExtraBackends() map[string]Backend {
+	out := map[string]Backend{}
+	if n := NewNpmBackend(); n.Detect() == nil {
+		out["npm"] = n
+	}
+	if g := NewGithubBackend(); g.Detect() == nil {
+		out["github"] = g
+	}
+	return out
+}

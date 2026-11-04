@@ -101,7 +101,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	// Run
-	eng := engine.New(be, opts)
+	eng := newEngine(be, opts)
 	renderer.Header(len(m.Packages), manifestPath, "Installing")
 
 	eng.OnProgress(func(index int, total int, result engine.Result) {
