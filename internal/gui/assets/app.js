@@ -160,8 +160,12 @@ function render() {
 }
 
 function renderRow(p) {
+  const wrap = document.createElement("div");
+  wrap.className = "row-wrap";
+
   const row = document.createElement("div");
   row.className = "row";
+  row.dataset.id = p.id;
 
   const cb = document.createElement("input");
   cb.type = "checkbox";
@@ -187,6 +191,10 @@ function renderRow(p) {
     opt.textContent = "可选";
     main.appendChild(opt);
   }
+  const chev = document.createElement("span");
+  chev.className = "chev";
+  chev.textContent = "›";
+  main.appendChild(chev);
 
   const kind = document.createElement("span");
   kind.className = "kind" + (p.kind === "cask" ? " cask" : "");
@@ -203,7 +211,81 @@ function renderRow(p) {
   );
 
   row.append(cb, makeIcon(p), main, kind, status);
-  return row;
+  // Clicking anywhere on the row except the checkbox toggles details.
+  row.addEventListener("click", (e) => {
+    if (e.target === cb) return;
+    toggleDetail(wrap, row, p);
+  });
+
+  wrap.appendChild(row);
+  return wrap;
+}
+
+function toggleDetail(wrap, row, p) {
+  const open = wrap.classList.contains("open");
+  if (open) {
+    wrap.classList.remove("open");
+    wrap.querySelector(".detail")?.remove();
+    return;
+  }
+  const detail = document.createElement("div");
+  detail.className = "detail loading";
+  detail.textContent = "加载中…";
+  wrap.appendChild(detail);
+  wrap.classList.add("open");
+  loadDetail(wrap, detail, p);
+}
+
+async function loadDetail(wrap, detail, p) {
+  try {
+    const r = await fetch(`/api/info?name=${encodeURIComponent(p.id)}`).then((r) => r.json());
+    if (r.error) { detail.className = "detail"; detail.textContent = "无法获取详情：" + r.error; return; }
+    detail.className = "detail";
+    const meta = document.createElement("div");
+    meta.className = "detail-meta";
+    meta.innerHTML =
+      `<span class="dm"><span class="dm-l">版本</span><span class="dm-v">${r.version || "—"}</span></span>` +
+      `<span class="dm"><span class="dm-l">最近更新</span><span class="dm-v">${r.updated || "—"}</span></span>` +
+      `<span class="dm"><span class="dm-l">类型</span><span class="dm-v">${r.kind || "—"}</span></span>`;
+    const desc = document.createElement("div");
+    desc.className = "detail-desc";
+    desc.textContent = r.desc || "（无简介）";
+    const links = document.createElement("div");
+    links.className = "detail-links";
+    if (r.homepage) {
+      const a = document.createElement("a");
+      a.href = r.homepage; a.target = "_blank"; a.rel = "noreferrer"; a.textContent = "主页";
+      links.appendChild(a);
+    }
+    if (r.history_url) {
+      const a = document.createElement("a");
+      a.href = r.history_url; a.target = "_blank"; a.rel = "noreferrer"; a.textContent = "更新历史";
+      links.appendChild(a);
+    }
+    detail.append(meta, desc, links);
+
+    // Collapsed update log
+    const updates = r.updates || [];
+    if (updates.length) {
+      const upd = document.createElement("details");
+      upd.className = "detail-updates";
+      const sum = document.createElement("summary");
+      sum.textContent = `更新信息（${updates.length}）`;
+      upd.appendChild(sum);
+      const ul = document.createElement("ul");
+      for (const u of updates) {
+        const li = document.createElement("li");
+        li.innerHTML = `<span class="upd-d">${u.date}</span><span class="upd-m"></span>`;
+        li.querySelector(".upd-m").textContent = u.message;
+        ul.appendChild(li);
+      }
+      upd.appendChild(ul);
+      detail.appendChild(upd);
+    }
+  } catch (e) {
+    detail.className = "detail";
+    detail.textContent = "获取详情失败：" + e;
+  }
 }
 
 function updateStats() {

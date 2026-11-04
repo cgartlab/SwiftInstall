@@ -3,8 +3,10 @@ package backend
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -227,6 +229,135 @@ func (h *HomebrewBackend) Search(ctx context.Context, query string) ([]SearchHit
 		hits = hits[:60]
 	}
 	return hits, nil
+}
+
+// Info returns detailed metadata for a package: description, version, homepage
+// from `brew info --json=v2`, plus recent update history fetched from the
+// Homebrew/homebrew-core (formula) or homebrew-cask (cask) GitHub history for
+// that formula/cask file. The GitHub call is best-effort — offline it is
+// skipped without failing the whole call.
+func (h *HomebrewBackend) Info(ctx context.Context, name string) (*PackageInfo, error) {
+	if !h.ready {
+		return nil, errHomebrewNotReady
+	}
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, fmt.Errorf("包名为空")
+	}
+
+	out, err := h.runBrew(ctx, h.env(""), "info", "--json=v2", name)
+	if err != nil {
+		return nil, fmt.Errorf("brew info %s: %w", name, err)
+	}
+
+	var raw struct {
+		Formulae []struct {
+			Name      string `json:"name"`
+			Desc      string `json:"desc"`
+			Homepage  string `json:"homepage"`
+			SourceURL struct {
+				Stable struct {
+					URL string `json:"url"`
+				} `json:"stable"`
+			} `json:"urls"`
+			Versions struct {
+				Stable string `json:"stable"`
+			} `json:"versions"`
+		} `json:"formulae"`
+		Casks []struct {
+			Token    string `json:"token"`
+			Desc     string `json:"desc"`
+			Homepage string `json:"homepage"`
+			URL      string `json:"url"`
+			Version  string `json:"version"`
+		} `json:"casks"`
+	}
+	if err := json.Unmarshal([]byte(out.Stdout), &raw); err != nil {
+		return nil, fmt.Errorf("解析 brew info: %w", err)
+	}
+
+	info := &PackageInfo{Name: name}
+	var repo, fileSubdir string
+	if len(raw.Formulae) > 0 {
+		f := raw.Formulae[0]
+		info.Kind = "formula"
+		info.Desc = f.Desc
+		info.Homepage = f.Homepage
+		info.Version = f.Versions.Stable
+		info.SourceURL = f.SourceURL.Stable.URL
+		repo = "Homebrew/homebrew-core"
+		fileSubdir = "Formula"
+	} else if len(raw.Casks) > 0 {
+		c := raw.Casks[0]
+		info.Kind = "cask"
+		info.Desc = c.Desc
+		info.Homepage = c.Homepage
+		info.Version = c.Version
+		info.SourceURL = c.URL
+		repo = "Homebrew/homebrew-cask"
+		fileSubdir = "Casks"
+	} else {
+		return nil, fmt.Errorf("未找到包 %s", name)
+	}
+
+	// Update history from GitHub: file lives at <fileSubdir>/<first-letter>/<name>.rb
+	first := strings.ToLower(string([]rune(name)[0]))
+	path := fmt.Sprintf("%s/%s/%s.rb", fileSubdir, first, name)
+	info.HistoryURL = fmt.Sprintf("https://github.com/%s/commits/HEAD/%s", repo, path)
+
+	entries := fetchGitHubCommits(ctx, repo, path, 5)
+	if len(entries) > 0 {
+		info.Updates = entries
+		info.Updated = entries[0].Date
+	}
+	return info, nil
+}
+
+// fetchGitHubCommits returns up to `limit` recent commits for a path in a
+// Homebrew tap repo. It silently returns nil on any error (offline / rate
+// limit) so package info still works without network.
+func fetchGitHubCommits(ctx context.Context, repo, path string, limit int) []UpdateEntry {
+	url := fmt.Sprintf("https://api.github.com/repos/%s/commits?path=%s&per_page=%d", repo, path, limit)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil
+	}
+	req.Header.Set("Accept", "application/vnd.github+json")
+
+	client := &http.Client{Timeout: 8 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil
+	}
+
+	var commits []struct {
+		Commit struct {
+			Message   string `json:"message"`
+			Committer struct {
+				Date string `json:"date"`
+			} `json:"committer"`
+		} `json:"commit"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&commits); err != nil {
+		return nil
+	}
+	out := make([]UpdateEntry, 0, len(commits))
+	for _, c := range commits {
+		date := c.Commit.Committer.Date
+		if d, err := time.Parse(time.RFC3339, date); err == nil {
+			date = d.Format("2006-01-02")
+		}
+		msg := strings.TrimSpace(c.Commit.Message)
+		if i := strings.IndexByte(msg, '\n'); i > 0 {
+			msg = msg[:i]
+		}
+		out = append(out, UpdateEntry{Date: date, Message: msg})
+	}
+	return out
 }
 
 // Install installs id honouring opts.Kind:

@@ -66,3 +66,28 @@ type SearchHit struct {
 type Searcher interface {
 	Search(ctx context.Context, query string) ([]SearchHit, error)
 }
+
+// UpdateEntry is one item in a package's update history.
+type UpdateEntry struct {
+	Date    string `json:"date"`    // ISO date (short)
+	Message string `json:"message"` // commit / release message
+}
+
+// PackageInfo is the metadata shown when a user expands a package row.
+type PackageInfo struct {
+	Name       string        `json:"name"`
+	Kind       string        `json:"kind"` // formula | cask
+	Desc       string        `json:"desc"`
+	Version    string        `json:"version"`
+	Homepage   string        `json:"homepage"`
+	SourceURL  string        `json:"source_url"`  // download / source url
+	Updated    string        `json:"updated"`     // last update date (short ISO)
+	Updates    []UpdateEntry `json:"updates"`     // recent update history
+	HistoryURL string        `json:"history_url"` // link to full history
+}
+
+// InfoProvider is an optional capability a Backend may implement to return
+// detailed metadata for a single package (description, version, update history).
+type InfoProvider interface {
+	Info(ctx context.Context, name string) (*PackageInfo, error)
+}

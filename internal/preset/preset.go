@@ -20,7 +20,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var nameRe = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]*$`)
+var nameRe = regexp.MustCompile(`^[\p{L}\p{N}][\p{L}\p{N}._-]*$`)
 
 // Dir returns the preset directory, creating it if needed.
 func Dir() (string, error) {
@@ -38,7 +38,7 @@ func Dir() (string, error) {
 // Path returns the file path for a preset name. The name is validated.
 func Path(name string) (string, error) {
 	if !validName(name) {
-		return "", fmt.Errorf("预设名只能包含字母、数字、点、下划线或连字符，且不能以符号开头：%q", name)
+		return "", fmt.Errorf("预设名只能包含字母（含中文）、数字、点、下划线或连字符，且不能以符号开头：%q", name)
 	}
 	dir, err := Dir()
 	if err != nil {

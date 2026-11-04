@@ -98,6 +98,7 @@ func Run(ctx context.Context, opts Options) error {
 	mux.HandleFunc("/api/state", srv.handleState)
 	mux.HandleFunc("/api/status", srv.handleStatus)
 	mux.HandleFunc("/api/search", srv.handleSearch)
+	mux.HandleFunc("/api/info", srv.handleInfo)
 	mux.HandleFunc("/api/presets", srv.handlePresets)
 	mux.HandleFunc("/api/preset", srv.handlePreset)
 	mux.HandleFunc("/api/run", srv.handleRun)
@@ -250,6 +251,27 @@ func (s *server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{"installed": installed})
+}
+
+// handleInfo returns detailed metadata for one package (description, version,
+// homepage, update history) for the row-expand UI.
+func (s *server) handleInfo(w http.ResponseWriter, r *http.Request) {
+	name := strings.TrimSpace(r.URL.Query().Get("name"))
+	if name == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "缺少 name"})
+		return
+	}
+	provider, ok := s.opts.Backend.(backend.InfoProvider)
+	if !ok {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "当前后端不支持详情"})
+		return
+	}
+	info, err := provider.Info(r.Context(), name)
+	if err != nil {
+		writeJSON(w, http.StatusBadGateway, map[string]any{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, info)
 }
 
 // handleSearch queries the backend's full package repository (Homebrew
