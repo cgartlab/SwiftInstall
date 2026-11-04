@@ -302,17 +302,63 @@ html, body {
 .save-panel { width: min(420px, calc(100vw - 40px)); }
 .save-panel input { width: 100%; margin-bottom: 14px; }
 
-@media (max-width: 780px) {
-  .app { grid-template-columns: 1fr; }
-  .sidebar { flex-direction: row; flex-wrap: wrap; gap: 14px; border-right: 0; border-bottom: 1px solid var(--line); padding: 14px 18px; }
-  .mast { flex: 1 1 100%; }
-  .block.stats { flex: 1; border: 0; padding: 0; }
-  .side-actions { flex-direction: row; margin: 0; }
-  .bar { padding: 12px 18px; }
-  .list { padding: 8px 18px 40px; }
-  .actionbar { padding: 10px 18px; }
-  .row { grid-template-columns: 18px 24px 1fr auto; }
+/* repository search results (below the manifest list) */
+.repo-results { padding: 6px 28px 30px; max-width: 900px; }
+.repo-head {
+  font-size: 11px; color: var(--faint); padding: 12px 0 8px;
+  border-top: 1px solid var(--line); margin-top: 10px;
+}
+.srow {
+  display: grid; grid-template-columns: 24px 1fr auto auto; align-items: center; gap: 12px;
+  padding: 9px 4px; border-bottom: 1px solid var(--line-2);
+}
+.srow:hover { background: var(--tile); }
+.srow .pkg-icon { width: 24px; height: 24px; }
+.srow-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.srow .sname { font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.srow .sdesc { font-size: 11.5px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.srow .sstatus { font-size: 11.5px; color: var(--copper); }
+.srow-tail { display: flex; gap: 10px; align-items: center; }
+.srow .add-btn {
+  font-size: 12px; padding: 5px 12px; border-radius: 7px;
+  border: 1px solid var(--line); background: var(--tile); color: var(--ink); cursor: pointer;
+}
+.srow .add-btn:hover { border-color: var(--moss); color: var(--moss); }
+.srow .add-btn.added { color: var(--copper); border-color: transparent; cursor: default; }
+.srow .add-btn:disabled { opacity: .5; cursor: default; }
+
+@media (max-width: 900px) {
+  .app { grid-template-columns: 210px 1fr; }
+  .sidebar { padding: 20px 16px; }
+  .list, .repo-results { padding-left: 20px; padding-right: 20px; }
+  .bar { padding: 12px 20px; }
+}
+
+@media (max-width: 680px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .sidebar {
+    flex-direction: column; gap: 14px; border-right: 0;
+    border-bottom: 1px solid var(--line); padding: 14px 18px;
+  }
+  .mast { flex: none; }
+  .block.stats { flex-direction: row; border: 0; padding: 0; }
+  .stat-n { font-size: 18px; }
+  .side-actions { flex-direction: row; margin: 0; gap: 8px; }
+  .sidebtn { flex: 1; text-align: center; }
+  .presets { max-height: 160px; overflow-y: auto; }
+  .bar { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+  .filter { max-width: none; }
+  .list, .repo-results { padding: 8px 16px 30px; }
+  .actionbar { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+  .actions { width: 100%; }
+  .actions .btn { flex: 1; justify-content: center; }
+  .row { grid-template-columns: 18px 24px 1fr auto; gap: 10px; }
   .kind { display: none; }
+  .detail { padding-left: 52px; }
+  .detail-meta { gap: 18px; }
+  .srow { grid-template-columns: 24px 1fr auto; }
+  .srow .kind { display: none; }
+  .section-title { font-size: 15px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

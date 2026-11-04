@@ -61,6 +61,10 @@ type SearchHit struct {
 	Name string `json:"name"`
 	// Kind is the backend channel: "formula" or "cask" when known, else "".
 	Kind string `json:"kind,omitempty"`
+	// Source is where the hit came from: "brew", "npm" or "github".
+	Source string `json:"source"`
+	// Desc is a short description when available.
+	Desc string `json:"desc,omitempty"`
 }
 
 // Searcher is an optional capability a Backend may implement to search the

@@ -53,6 +53,9 @@ type server struct {
 	// manMu guards the manifest/source, which can be swapped at runtime when
 	// the user loads a preset. Run holds mu; reads take manMu.RLock.
 	manMu sync.RWMutex
+
+	// extra backends (npm, github) detected at startup, for cross-source search.
+	extra map[string]backend.Backend
 }
 
 // currentManifest returns the manifest currently loaded in the session.
@@ -86,7 +89,7 @@ func (s *server) loadPreset(name string) (*manifest.Manifest, error) {
 // Run starts the GUI server on the configured address (loopback by default),
 // optionally opens the browser, and blocks until ctx is cancelled.
 func Run(ctx context.Context, opts Options) error {
-	srv := &server{opts: opts}
+	srv := &server{opts: opts, extra: backend.ExtraBackends()}
 
 	sub, err := fs.Sub(assetsFS, "assets")
 	if err != nil {
@@ -274,47 +277,97 @@ func (s *server) handleInfo(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, info)
 }
 
-// handleSearch queries the backend's full package repository (Homebrew
-// `brew search`) and returns matches tagged with kind and installed state.
+// handleSearch queries every available source (Homebrew + npm + github) in
+// parallel and returns merged hits tagged with source, plus installed and
+// in-manifest flags so the UI can render add buttons.
 func (s *server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
-	searcher, ok := s.opts.Backend.(backend.Searcher)
-	if !ok {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "当前后端不支持仓库搜索"})
-		return
-	}
 	if q == "" {
 		writeJSON(w, http.StatusOK, map[string]any{"hits": []any{}})
 		return
 	}
 
-	hits, err := searcher.Search(r.Context(), q)
-	if err != nil {
-		writeJSON(w, http.StatusBadGateway, map[string]any{"error": err.Error()})
-		return
+	type srcBackend struct {
+		name string
+		be   backend.Backend
+	}
+	candidates := []srcBackend{{"brew", s.opts.Backend}}
+	for name, be := range s.extra {
+		candidates = append(candidates, srcBackend{name, be})
 	}
 
+	var mu sync.Mutex
+	var allHits []backend.SearchHit
+	var wg sync.WaitGroup
+	for _, c := range candidates {
+		searcher, ok := c.be.(backend.Searcher)
+		if !ok {
+			continue
+		}
+		wg.Add(1)
+		go func(name string, be backend.Backend) {
+			defer wg.Done()
+			hits, err := searcher.Search(r.Context(), q)
+			if err != nil || len(hits) == 0 {
+				return
+			}
+			mu.Lock()
+			allHits = append(allHits, hits...)
+			mu.Unlock()
+		}(c.name, c.be)
+	}
+	wg.Wait()
+
+	// Cap total results per source to keep the list manageable.
+	allHits = capPerSource(allHits, 12)
+
 	installed := map[string]bool{}
+	// Homebrew installed set covers brew hits; npm/github IsInstalled per hit.
 	if provider, ok := s.opts.Backend.(backend.InstalledSetProvider); ok {
 		if set, err := provider.InstalledSet(r.Context()); err == nil {
-			for _, h := range hits {
-				installed[h.Name] = set[h.Name]
+			for _, h := range allHits {
+				if h.Source == "brew" {
+					installed[h.Name] = set[h.Name]
+				}
+			}
+		}
+	}
+	if npmBe, ok := s.extra["npm"]; ok {
+		if provider, ok := npmBe.(backend.InstalledSetProvider); ok {
+			if set, err := provider.InstalledSet(r.Context()); err == nil {
+				for _, h := range allHits {
+					if h.Source == "npm" {
+						installed[h.Name] = set[h.Name]
+					}
+				}
 			}
 		}
 	}
 
-	// Report which names are already in the loaded manifest, so the UI can
-	// show "已添加".
 	inManifest := map[string]bool{}
 	for _, p := range s.currentManifest().Packages {
 		inManifest[p.ID] = true
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"hits":       hits,
+		"hits":       allHits,
 		"installed":  installed,
 		"inManifest": inManifest,
 	})
+}
+
+// capPerSource keeps at most n hits per source.
+func capPerSource(hits []backend.SearchHit, n int) []backend.SearchHit {
+	count := map[string]int{}
+	out := make([]backend.SearchHit, 0, len(hits))
+	for _, h := range hits {
+		if count[h.Source] >= n {
+			continue
+		}
+		count[h.Source]++
+		out = append(out, h)
+	}
+	return out
 }
 
 // handlePresets lists saved preset names.

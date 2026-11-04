@@ -221,7 +221,7 @@ func (h *HomebrewBackend) Search(ctx context.Context, query string) ([]SearchHit
 			if name == "" {
 				continue
 			}
-			hits = append(hits, SearchHit{Name: name, Kind: kind})
+			hits = append(hits, SearchHit{Name: name, Kind: kind, Source: "brew"})
 		}
 	}
 

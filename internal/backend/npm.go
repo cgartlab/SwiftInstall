@@ -6,10 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
 	"os/exec"
 	"strings"
 	"time"
 )
+
+func queryEscape(s string) string { return url.QueryEscape(s) }
 
 // NpmBackend installs global npm packages via `npm install -g`.
 type NpmBackend struct {
@@ -91,6 +95,55 @@ func (n *NpmBackend) Uninstall(ctx context.Context, id string) (*Output, error) 
 		return nil, errors.New("npm backend not initialized")
 	}
 	return n.run(ctx, "uninstall", "-g", id)
+}
+
+// Search queries the npm registry via its search API (works through the
+// npmmirror registry configured by `sis mirror`). Returns up to 20 hits.
+func (n *NpmBackend) Search(ctx context.Context, query string) ([]SearchHit, error) {
+	if !n.ready {
+		return nil, errors.New("npm backend not initialized")
+	}
+	query = strings.TrimSpace(query)
+	if query == "" {
+		return nil, nil
+	}
+	// Honour the configured registry (npmmirror after `sis mirror apply`).
+	registry := "https://registry.npmjs.org"
+	if out, err := exec.CommandContext(ctx, n.execPath, "config", "get", "registry").Output(); err == nil {
+		if r := strings.TrimSpace(string(out)); r != "" {
+			registry = strings.TrimRight(r, "/")
+		}
+	}
+	url := fmt.Sprintf("%s/-/v1/search?text=%s&size=20", registry, queryEscape(query))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("npm search: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("npm search: HTTP %d", resp.StatusCode)
+	}
+	var res struct {
+		Objects []struct {
+			Package struct {
+				Name        string `json:"name"`
+				Description string `json:"description"`
+			} `json:"package"`
+		} `json:"objects"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		return nil, fmt.Errorf("parse npm search: %w", err)
+	}
+	hits := make([]SearchHit, 0, len(res.Objects))
+	for _, o := range res.Objects {
+		hits = append(hits, SearchHit{Name: o.Package.Name, Source: "npm", Desc: o.Package.Description})
+	}
+	return hits, nil
 }
 
 func (n *NpmBackend) run(ctx context.Context, args ...string) (*Output, error) {

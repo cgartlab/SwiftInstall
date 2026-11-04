@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -194,6 +195,45 @@ func (g *GithubBackend) resolveAssetURL(ctx context.Context, repo, substr string
 		return rel.Assets[0].BrowserDownloadURL, nil
 	}
 	return "", fmt.Errorf("release 中没有匹配 %q 的资源", substr)
+}
+
+// Search queries GitHub for repositories matching query, returning the top
+// results by stars. The hit Name is owner/repo, suitable for use as a
+// github-source package id.
+func (g *GithubBackend) Search(ctx context.Context, query string) ([]SearchHit, error) {
+	query = strings.TrimSpace(query)
+	if query == "" {
+		return nil, nil
+	}
+	u := fmt.Sprintf("https://api.github.com/search/repositories?q=%s&sort=stars&order=desc&per_page=15", url.QueryEscape(query))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/vnd.github+json")
+	client := &http.Client{Timeout: 12 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("github search: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("github search: HTTP %d", resp.StatusCode)
+	}
+	var res struct {
+		Items []struct {
+			FullName    string `json:"full_name"`
+			Description string `json:"description"`
+		} `json:"items"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		return nil, fmt.Errorf("parse github search: %w", err)
+	}
+	hits := make([]SearchHit, 0, len(res.Items))
+	for _, it := range res.Items {
+		hits = append(hits, SearchHit{Name: it.FullName, Source: "github", Desc: it.Description})
+	}
+	return hits, nil
 }
 
 // withProxy prefixes the GitHub download proxy (SIS_GH_PROXY) when set, so

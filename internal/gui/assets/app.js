@@ -451,7 +451,6 @@ $("closeProgress").addEventListener("click", () => ($("overlay").hidden = true))
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     if (!$("overlay").hidden && !state.running) $("overlay").hidden = true;
-    else if (!$("searchOverlay").hidden) closeSearch();
     else if (!$("saveOverlay").hidden) $("saveOverlay").hidden = true;
   }
 });
@@ -559,46 +558,50 @@ $("saveConfirm").addEventListener("click", async () => {
   }
 });
 
-/* ---------------- homebrew search ---------------- */
+/* ---------------- cross-source repository search ---------------- */
+// The single search box both filters the loaded manifest and searches the
+// Homebrew / npm / GitHub repositories. Manifest matches show in the list;
+// repository hits show in a section below, each with an "添加" button.
 
-const searchState = { timer: null, req: 0 };
+const repoState = { timer: null, req: 0 };
 
-$("openSearch").addEventListener("click", openSearch);
-$("closeSearch").addEventListener("click", closeSearch);
-$("searchInput").addEventListener("input", (e) => {
-  clearTimeout(searchState.timer);
-  const q = e.target.value.trim();
+$("search").addEventListener("input", (e) => {
+  state.query = e.target.value;
+  render(); // filter the loaded list immediately
+  clearTimeout(repoState.timer);
+  const q = state.query.trim();
   if (!q) {
-    $("searchResults").innerHTML = "";
-    $("searchHint").textContent = "输入关键词搜索全部可用软件包，结果可添加到清单。";
+    $("repoResults").hidden = true;
+    $("repoResults").innerHTML = "";
     return;
   }
-  $("searchHint").textContent = "搜索中…";
-  searchState.timer = setTimeout(() => runSearch(q), 300);
+  repoState.timer = setTimeout(() => runRepoSearch(q), 350);
 });
 
-function openSearch() {
-  $("searchOverlay").hidden = false;
-  $("searchResults").innerHTML = "";
-  $("searchInput").value = "";
-  $("searchHint").textContent = "输入关键词搜索全部可用软件包，结果可添加到清单。";
-  setTimeout(() => $("searchInput").focus(), 30);
-}
-function closeSearch() { $("searchOverlay").hidden = true; }
-
-async function runSearch(q) {
-  const my = ++searchState.req;
+async function runRepoSearch(q) {
+  const my = ++repoState.req;
+  const el = $("repoResults");
+  el.hidden = false;
+  el.innerHTML = `<div class="repo-head">搜索仓库中…</div>`;
   try {
     const r = await fetch(`/api/search?q=${encodeURIComponent(q)}`).then((r) => r.json());
-    if (my !== searchState.req) return;
-    if (r.error) { $("searchHint").textContent = "搜索失败：" + r.error; $("searchResults").innerHTML = ""; return; }
+    if (my !== repoState.req) return;
+    if (r.error) { el.innerHTML = `<div class="repo-head">搜索失败：${r.error}</div>`; return; }
     const hits = r.hits || [];
     const installed = r.installed || {};
     const inManifest = r.inManifest || {};
-    if (hits.length === 0) { $("searchHint").textContent = `没有与 “${q}” 匹配的软件包`; $("searchResults").innerHTML = ""; return; }
-    $("searchHint").textContent = `${hits.length} 个结果，点「添加」放入清单`;
-    const el = $("searchResults");
+    // Group by source for the heading.
+    const bySrc = {};
+    for (const h of hits) (bySrc[h.source] ||= []).push(h);
+    if (hits.length === 0) {
+      el.innerHTML = `<div class="repo-head">仓库中没有与 “${q}” 匹配的结果</div>`;
+      return;
+    }
     el.innerHTML = "";
+    const head = document.createElement("div");
+    head.className = "repo-head";
+    head.textContent = `仓库搜索结果（${hits.length}）— 点击添加到清单`;
+    el.appendChild(head);
     for (const h of hits) {
       const row = document.createElement("div");
       row.className = "srow";
@@ -606,37 +609,64 @@ async function runSearch(q) {
       icon.className = "pkg-icon mono";
       icon.textContent = (h.name[0] || "?").toUpperCase();
       icon.style.background = monoColor(h.name);
+      const main = document.createElement("div");
+      main.className = "srow-main";
       const name = document.createElement("span");
       name.className = "sname";
       name.textContent = h.name;
       name.title = h.name;
-      const kind = document.createElement("span");
-      kind.className = "kind skind" + (h.kind === "cask" ? " cask" : "");
-      kind.textContent = h.kind || "auto";
+      const desc = document.createElement("span");
+      desc.className = "sdesc";
+      desc.textContent = h.desc || "";
+      main.append(name, desc);
+      const tag = document.createElement("span");
+      tag.className = "kind src-" + h.source;
+      tag.textContent = h.source;
       const tail = document.createElement("div");
-      tail.style.cssText = "display:flex;gap:12px;align-items:center;justify-content:flex-end";
-      const st = document.createElement("span");
-      st.className = "sstatus" + (installed[h.name] ? " installed" : "");
-      st.textContent = installed[h.name] ? "已安装" : "";
+      tail.className = "srow-tail";
+      if (installed[h.name]) {
+        const st = document.createElement("span");
+        st.className = "sstatus installed";
+        st.textContent = "已安装";
+        tail.appendChild(st);
+      }
       const add = document.createElement("button");
       add.className = "add-btn";
-      if (inManifest[h.name]) { add.classList.add("added"); add.textContent = "已添加"; add.disabled = true; }
-      else {
+      if (inManifest[h.name]) {
+        add.classList.add("added");
+        add.textContent = "已添加";
+        add.disabled = true;
+      } else {
         add.textContent = "添加";
         add.addEventListener("click", () => {
-          state.packages.push({ id: h.name, category: h.kind === "cask" ? "Apps" : "Dev", kind: h.kind || "", optional: false });
-          add.classList.add("added"); add.textContent = "已添加"; add.disabled = true;
-          updateStats(); render();
+          state.packages.push({
+            id: h.name,
+            source: h.source,
+            kind: h.source === "brew" ? (h.kind || "") : "",
+            category: sourceCategory(h.source),
+            optional: false,
+          });
+          add.classList.add("added");
+          add.textContent = "已添加";
+          add.disabled = true;
+          updateStats();
+          render();
           toast(`已添加 ${h.name}`);
         });
       }
-      tail.append(st, add);
-      row.append(icon, name, kind, tail);
+      tail.appendChild(add);
+      row.append(icon, main, tag, tail);
       el.appendChild(row);
     }
   } catch (e) {
-    if (my === searchState.req) $("searchHint").textContent = "搜索出错：" + e;
+    if (my === repoState.req) el.innerHTML = `<div class="repo-head">搜索出错：${e}</div>`;
   }
+}
+
+function sourceCategory(src) {
+  if (src === "npm") return "npm 包";
+  if (src === "github") return "GitHub 工具";
+  return h.kind === "cask" ? "Apps" : "Dev";
 }
 
 loadState();

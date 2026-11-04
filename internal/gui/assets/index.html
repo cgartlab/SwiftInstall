@@ -31,7 +31,6 @@
       </section>
 
       <div class="side-actions">
-        <button id="openSearch" class="sidebtn">搜索 Homebrew 仓库</button>
         <button id="refresh" class="sidebtn">重新检测状态</button>
       </div>
     </aside>
@@ -49,6 +48,7 @@
       </div>
 
       <div id="list" class="list" aria-live="polite"></div>
+      <div id="repoResults" class="repo-results" hidden></div>
       <div id="empty" class="empty" hidden>
         <div>没有匹配的软件</div>
       </div>
@@ -78,17 +78,6 @@
         <div id="progSummary" class="summary"></div>
         <button id="closeProgress" class="btn primary" hidden>完成</button>
       </div>
-    </div>
-  </div>
-
-  <div id="searchOverlay" class="overlay" hidden>
-    <div class="panel search-panel" role="dialog" aria-modal="true">
-      <div class="search-head">
-        <input id="searchInput" type="text" placeholder="搜索 Homebrew 仓库（formula / cask）…" autocomplete="off" spellcheck="false">
-        <button id="closeSearch" class="linkbtn">关闭</button>
-      </div>
-      <div id="searchHint" class="search-hint">输入关键词搜索全部可用软件包，结果可添加到清单。</div>
-      <div id="searchResults" class="search-results"></div>
     </div>
   </div>
 
