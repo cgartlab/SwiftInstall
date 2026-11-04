@@ -91,13 +91,13 @@ async function loadState() {
     render();
     loadStatus();
   } catch (e) {
-    console.error(e);
-    $("list").innerHTML = `<div class="empty"><div class="empty-glyph">⚠</div><div>无法加载清单：${e}</div></div>`;
+    $("list").innerHTML = `<div class="empty"><div>无法加载清单：${e}</div></div>`;
   }
 }
 
 async function loadStatus() {
   state.statusLoaded = false;
+  updateStats();
   render();
   try {
     const r = await fetch("/api/status").then((r) => r.json());
@@ -107,6 +107,7 @@ async function loadStatus() {
     console.error("status:", e);
   }
   state.statusLoaded = true;
+  updateStats();
   render();
 }
 
@@ -139,20 +140,22 @@ function render() {
   for (const [cat, items] of groups) {
     const sec = document.createElement("section");
     sec.className = "section";
-    const h = document.createElement("div");
-    h.className = "section-title";
-    h.textContent = cat;
-    sec.appendChild(h);
-    const card = document.createElement("div");
-    card.className = "card";
-    for (const p of items) card.appendChild(renderRow(p));
-    sec.appendChild(card);
+    const head = document.createElement("div");
+    head.className = "section-head";
+    const title = document.createElement("span");
+    title.className = "section-title";
+    title.textContent = cat;
+    const count = document.createElement("span");
+    count.className = "section-count";
+    count.textContent = items.length + " 项";
+    head.append(title, count);
+    sec.appendChild(head);
+    for (const p of items) sec.appendChild(renderRow(p));
     listEl.appendChild(sec);
   }
 
   $("empty").hidden = filtered.length > 0;
   syncSelectAll(filtered);
-  updateCounts();
   updateActions();
 }
 
@@ -166,7 +169,7 @@ function renderRow(p) {
   cb.addEventListener("change", () => {
     if (cb.checked) state.selected.add(p.id);
     else state.selected.delete(p.id);
-    updateCounts();
+    updateStats();
     updateActions();
     syncSelectAllCurrent();
   });
@@ -181,7 +184,7 @@ function renderRow(p) {
   if (p.optional) {
     const opt = document.createElement("span");
     opt.className = "pkg-opt";
-    opt.textContent = "optional";
+    opt.textContent = "可选";
     main.appendChild(opt);
   }
 
@@ -203,14 +206,15 @@ function renderRow(p) {
   return row;
 }
 
-function updateCounts() {
+function updateStats() {
   const total = state.packages.length;
   const installed = state.statusLoaded
     ? state.packages.filter((p) => state.installed[p.id]).length
-    : "…";
-  $("counts").innerHTML =
-    `共 <b>${total}</b> 个 · 已安装 <b>${installed}</b> · 已选 <b>${state.selected.size}</b>`;
-  $("selInfo").innerHTML = `已选 <b>${state.selected.size}</b> 项`;
+    : "–";
+  $("statTotal").textContent = total;
+  $("statInstalled").textContent = installed;
+  $("statSelected").textContent = state.selected.size;
+  $("selInfo").innerHTML = `已选 <b>${state.selected.size}</b>`;
 }
 
 function updateActions() {
@@ -227,17 +231,8 @@ function syncSelectAll(filtered) {
 }
 
 function syncSelectAllCurrent() {
-  const q = state.query.trim().toLowerCase();
-  const filtered = state.packages.filter(
-    (p) =>
-      !q ||
-      p.id.toLowerCase().includes(q) ||
-      (p.category || "").toLowerCase().includes(q)
-  );
-  syncSelectAll(filtered);
+  syncSelectAll(currentFiltered());
 }
-
-/* ---------------- actions ---------------- */
 
 function currentFiltered() {
   const q = state.query.trim().toLowerCase();
@@ -249,10 +244,13 @@ function currentFiltered() {
   );
 }
 
+/* ---------------- selection / filter ---------------- */
+
 $("selectAll").addEventListener("change", (e) => {
   const filtered = currentFiltered();
   if (e.target.checked) filtered.forEach((p) => state.selected.add(p.id));
   else filtered.forEach((p) => state.selected.delete(p.id));
+  updateStats();
   render();
 });
 
@@ -266,15 +264,12 @@ $("refresh").addEventListener("click", () => loadStatus());
 $("install").addEventListener("click", () => run("install"));
 $("uninstall").addEventListener("click", () => {
   let ids = [...state.selected];
-  if (state.statusLoaded) {
-    ids = ids.filter((id) => state.installed[id]);
-  }
-  if (ids.length === 0) {
-    toast("所选软件里没有已安装项可卸载");
-    return;
-  }
+  if (state.statusLoaded) ids = ids.filter((id) => state.installed[id]);
+  if (ids.length === 0) { toast("所选软件里没有已安装项可卸载"); return; }
   run("uninstall", ids);
 });
+
+/* ---------------- batch run ---------------- */
 
 function run(action, ids) {
   ids = ids && ids.length ? ids : [...state.selected];
@@ -283,7 +278,6 @@ function run(action, ids) {
   state.running = true;
   updateActions();
 
-  const overlay = $("overlay");
   const progList = $("progList");
   const barFill = $("barFill");
   const title = $("progTitle");
@@ -299,7 +293,7 @@ function run(action, ids) {
   barFill.style.width = "0%";
   progList.innerHTML = "";
   closeBtn.hidden = true;
-  overlay.hidden = false;
+  $("overlay").hidden = false;
 
   const items = new Map();
   const ensure = (id) => {
@@ -328,16 +322,10 @@ function run(action, ids) {
     done += 1;
     const li = ensure(d.id);
     li.classList.remove("ok", "fail", "skip");
-    const cls =
-      d.status === "success" ? "ok" : d.status === "failed" ? "fail" : "skip";
-    li.classList.add(cls);
-    const label =
-      d.status === "success"
-        ? "完成"
-        : d.status === "failed"
-        ? "失败"
-        : "跳过";
-    li.querySelector(".err").textContent = d.error || label;
+    li.classList.add(d.status === "success" ? "ok" : d.status === "failed" ? "fail" : "skip");
+    li.querySelector(".err").textContent =
+      d.error ||
+      (d.status === "success" ? "完成" : d.status === "failed" ? "失败" : "跳过");
     sub.textContent = `${done} / ${d.total}`;
     barFill.style.width = `${Math.round((done / d.total) * 100)}%`;
   });
@@ -354,7 +342,7 @@ function run(action, ids) {
       const parts = [`<b>${d.succeeded}</b> 成功`];
       if (d.skipped) parts.push(`<b>${d.skipped}</b> 跳过`);
       if (d.failed) parts.push(`<b>${d.failed}</b> 失败`);
-      summary.innerHTML = parts.join(" · ") + `　用时 ${d.duration}`;
+      summary.innerHTML = parts.join("　") + `　用时 ${d.duration}`;
     }
     closeBtn.hidden = false;
     loadStatus();
@@ -369,17 +357,13 @@ function run(action, ids) {
   };
 }
 
-$("closeProgress").addEventListener("click", () => {
-  $("overlay").hidden = true;
-});
+$("closeProgress").addEventListener("click", () => ($("overlay").hidden = true));
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "/" && document.activeElement !== $("search")) {
-    e.preventDefault();
-    $("search").focus();
-  }
-  if (e.key === "Escape" && !$("overlay").hidden && !state.running) {
-    $("overlay").hidden = true;
+  if (e.key === "Escape") {
+    if (!$("overlay").hidden && !state.running) $("overlay").hidden = true;
+    else if (!$("searchOverlay").hidden) closeSearch();
+    else if (!$("saveOverlay").hidden) $("saveOverlay").hidden = true;
   }
 });
 
@@ -388,12 +372,103 @@ function toast(msg) {
   const el = toast.el;
   el.textContent = msg;
   el.style.cssText =
-    "position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border);color:var(--text);padding:9px 16px;border-radius:999px;box-shadow:var(--shadow);font-size:13px;z-index:80;opacity:0;transition:opacity .2s";
+    "position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);color:var(--ink);padding:9px 16px;border-radius:8px;box-shadow:var(--shadow);font-size:13px;z-index:80;opacity:0;transition:opacity .2s";
   document.body.appendChild(el);
   requestAnimationFrame(() => (el.style.opacity = "1"));
   clearTimeout(toast.t);
   toast.t = setTimeout(() => (el.style.opacity = "0"), 1800);
 }
+
+/* ---------------- presets ---------------- */
+
+async function loadPresetList(selected) {
+  try {
+    const r = await fetch("/api/presets").then((r) => r.json());
+    const ul = $("presetList");
+    ul.innerHTML = "";
+    const names = r.presets || [];
+    if (names.length === 0) {
+      ul.innerHTML = '<li class="muted">尚无预设</li>';
+      return;
+    }
+    for (const n of names) {
+      const li = document.createElement("li");
+      li.className = "preset-item" + (n === selected ? " active" : "");
+      li.dataset.name = n;
+      const name = document.createElement("span");
+      name.className = "preset-name";
+      name.textContent = n;
+      const del = document.createElement("button");
+      del.className = "preset-del";
+      del.textContent = "×";
+      del.title = "删除预设";
+      del.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (!confirm(`删除预设 “${n}”？`)) return;
+        const rr = await fetch("/api/preset?action=delete", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: n }),
+        }).then((r) => r.json());
+        if (rr.error) { toast(rr.error); return; }
+        toast(`已删除 “${n}”`);
+        loadPresetList();
+      });
+      li.addEventListener("click", () => loadPresetByName(n));
+      li.append(name, del);
+      ul.appendChild(li);
+    }
+  } catch (e) {
+    console.error("presets:", e);
+  }
+}
+
+async function loadPresetByName(name) {
+  try {
+    const r = await fetch(`/api/preset?name=${encodeURIComponent(name)}`).then((r) => r.json());
+    if (r.error) { toast(r.error); return; }
+    state.packages = r.packages || [];
+    state.selected.clear();
+    state.installed = {};
+    state.statusLoaded = false;
+    $("source").textContent = "preset: " + name;
+    render();
+    updateStats();
+    loadStatus();
+    loadPresetList(name);
+    toast(`已加载预设 “${name}”`);
+  } catch (e) {
+    toast("加载失败：" + e);
+  }
+}
+
+$("presetSave").addEventListener("click", () => {
+  $("saveError").textContent = "";
+  $("saveName").value = "";
+  $("saveOverlay").hidden = false;
+  setTimeout(() => $("saveName").focus(), 30);
+});
+$("saveCancel").addEventListener("click", () => ($("saveOverlay").hidden = true));
+$("saveName").addEventListener("keydown", (e) => { if (e.key === "Enter") $("saveConfirm").click(); });
+$("saveConfirm").addEventListener("click", async () => {
+  const name = $("saveName").value.trim();
+  if (!name) { $("saveError").textContent = "请输入名称"; return; }
+  const body = {
+    name,
+    packages: state.packages.map((p) => ({ id: p.id, category: p.category, kind: p.kind, optional: p.optional })),
+  };
+  try {
+    const r = await fetch("/api/preset?action=save", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then((r) => r.json());
+    if (r.error) { $("saveError").textContent = r.error; return; }
+    $("saveOverlay").hidden = true;
+    toast(`已保存 “${name}”（${r.total} 个包）`);
+    await loadPresetList(name);
+  } catch (e) {
+    $("saveError").textContent = "保存失败：" + e;
+  }
+});
 
 /* ---------------- homebrew search ---------------- */
 
@@ -413,12 +488,6 @@ $("searchInput").addEventListener("input", (e) => {
   searchState.timer = setTimeout(() => runSearch(q), 300);
 });
 
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !$("searchOverlay").hidden) {
-    closeSearch();
-  }
-});
-
 function openSearch() {
   $("searchOverlay").hidden = false;
   $("searchResults").innerHTML = "";
@@ -426,85 +495,53 @@ function openSearch() {
   $("searchHint").textContent = "输入关键词搜索全部可用软件包，结果可添加到清单。";
   setTimeout(() => $("searchInput").focus(), 30);
 }
-function closeSearch() {
-  $("searchOverlay").hidden = true;
-}
+function closeSearch() { $("searchOverlay").hidden = true; }
 
 async function runSearch(q) {
   const my = ++searchState.req;
   try {
     const r = await fetch(`/api/search?q=${encodeURIComponent(q)}`).then((r) => r.json());
-    if (my !== searchState.req) return; // a newer query superseded this one
-    if (r.error) {
-      $("searchHint").textContent = "搜索失败：" + r.error;
-      $("searchResults").innerHTML = "";
-      return;
-    }
+    if (my !== searchState.req) return;
+    if (r.error) { $("searchHint").textContent = "搜索失败：" + r.error; $("searchResults").innerHTML = ""; return; }
     const hits = r.hits || [];
     const installed = r.installed || {};
     const inManifest = r.inManifest || {};
-    if (hits.length === 0) {
-      $("searchHint").textContent = `没有与 “${q}” 匹配的软件包`;
-      $("searchResults").innerHTML = "";
-      return;
-    }
-    $("searchHint").textContent = `${hits.length} 个结果（formula/cask），点击「添加」放入清单`;
+    if (hits.length === 0) { $("searchHint").textContent = `没有与 “${q}” 匹配的软件包`; $("searchResults").innerHTML = ""; return; }
+    $("searchHint").textContent = `${hits.length} 个结果，点「添加」放入清单`;
     const el = $("searchResults");
     el.innerHTML = "";
     for (const h of hits) {
       const row = document.createElement("div");
       row.className = "srow";
-
       const icon = document.createElement("span");
       icon.className = "pkg-icon mono";
       icon.textContent = (h.name[0] || "?").toUpperCase();
       icon.style.background = monoColor(h.name);
-
       const name = document.createElement("span");
       name.className = "sname";
       name.textContent = h.name;
       name.title = h.name;
-
       const kind = document.createElement("span");
       kind.className = "kind skind" + (h.kind === "cask" ? " cask" : "");
       kind.textContent = h.kind || "auto";
-
-      const st = installed[h.name] ? "installed" : "";
-      const status = document.createElement("span");
-      status.className = "sstatus " + st;
-      status.textContent = installed[h.name] ? "已安装" : "";
-
+      const tail = document.createElement("div");
+      tail.style.cssText = "display:flex;gap:12px;align-items:center;justify-content:flex-end";
+      const st = document.createElement("span");
+      st.className = "sstatus" + (installed[h.name] ? " installed" : "");
+      st.textContent = installed[h.name] ? "已安装" : "";
       const add = document.createElement("button");
       add.className = "add-btn";
-      if (inManifest[h.name]) {
-        add.classList.add("added");
-        add.textContent = "已添加";
-        add.disabled = true;
-      } else {
+      if (inManifest[h.name]) { add.classList.add("added"); add.textContent = "已添加"; add.disabled = true; }
+      else {
         add.textContent = "添加";
         add.addEventListener("click", () => {
-          state.packages.push({
-            id: h.name,
-            category: h.kind === "cask" ? "Apps" : "Dev",
-            kind: h.kind || "",
-            optional: false,
-          });
-          add.classList.add("added");
-          add.textContent = "已添加";
-          add.disabled = true;
-          render();
-          toast(`已添加 ${h.name} 到清单`);
+          state.packages.push({ id: h.name, category: h.kind === "cask" ? "Apps" : "Dev", kind: h.kind || "", optional: false });
+          add.classList.add("added"); add.textContent = "已添加"; add.disabled = true;
+          updateStats(); render();
+          toast(`已添加 ${h.name}`);
         });
       }
-
-      row.append(icon, name, kind, status, add);
-      // status + add share the last two columns: re-layout to 4 cols cleanly
-      // grid is 26px 1fr auto auto -> icon,name,kind, then status+add overflow.
-      // Fix: put status and add in a flex container in the 4th column.
-      const tail = document.createElement("div");
-      tail.style.cssText = "display:flex;gap:10px;align-items:center;justify-content:flex-end";
-      tail.append(status, add);
-      row.innerHTML = "";
+      tail.append(st, add);
       row.append(icon, name, kind, tail);
       el.appendChild(row);
     }
@@ -512,105 +549,6 @@ async function runSearch(q) {
     if (my === searchState.req) $("searchHint").textContent = "搜索出错：" + e;
   }
 }
-
-/* ---------------- presets ---------------- */
-
-async function loadPresetList(selected) {
-  try {
-    const r = await fetch("/api/presets").then((r) => r.json());
-    const sel = $("presetSelect");
-    sel.innerHTML = "";
-    const names = r.presets || [];
-    if (names.length === 0) {
-      sel.innerHTML = `<option value="">(无预设)</option>`;
-      return;
-    }
-    for (const n of names) {
-      const o = document.createElement("option");
-      o.value = n;
-      o.textContent = n;
-      sel.appendChild(o);
-    }
-    if (selected) sel.value = selected;
-  } catch (e) {
-    console.error("presets:", e);
-  }
-}
-
-$("presetLoad").addEventListener("click", async () => {
-  const name = $("presetSelect").value;
-  if (!name) {
-    toast("没有可加载的预设");
-    return;
-  }
-  try {
-    const r = await fetch(`/api/preset?name=${encodeURIComponent(name)}`).then((r) => r.json());
-    if (r.error) { toast(r.error); return; }
-    state.packages = r.packages || [];
-    state.selected.clear();
-    state.installed = {};
-    state.statusLoaded = false;
-    $("backend").textContent = r.backend || state.backend;
-    render();
-    toast(`已加载预设 “${name}”`);
-    loadStatus();
-  } catch (e) {
-    toast("加载失败：" + e);
-  }
-});
-
-$("presetSave").addEventListener("click", () => {
-  $("saveError").textContent = "";
-  $("saveName").value = $("presetSelect").value || "";
-  $("saveOverlay").hidden = false;
-  setTimeout(() => $("saveName").focus(), 30);
-});
-$("saveCancel").addEventListener("click", () => ($("saveOverlay").hidden = true));
-$("saveName").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") $("saveConfirm").click();
-});
-
-$("saveConfirm").addEventListener("click", async () => {
-  const name = $("saveName").value.trim();
-  if (!name) { $("saveError").textContent = "请输入名称"; return; }
-  const body = {
-    name,
-    packages: state.packages.map((p) => ({
-      id: p.id, category: p.category, kind: p.kind, optional: p.optional,
-    })),
-  };
-  try {
-    const r = await fetch("/api/preset?action=save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    }).then((r) => r.json());
-    if (r.error) { $("saveError").textContent = r.error; return; }
-    $("saveOverlay").hidden = true;
-    toast(`已保存预设 “${name}”（${r.total} 个包）`);
-    await loadPresetList(name);
-  } catch (e) {
-    $("saveError").textContent = "保存失败：" + e;
-  }
-});
-
-$("presetDelete").addEventListener("click", async () => {
-  const name = $("presetSelect").value;
-  if (!name) { toast("没有可删除的预设"); return; }
-  if (!confirm(`删除预设 “${name}”？`)) return;
-  try {
-    const r = await fetch("/api/preset?action=delete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    }).then((r) => r.json());
-    if (r.error) { toast(r.error); return; }
-    toast(`已删除预设 “${name}”`);
-    await loadPresetList();
-  } catch (e) {
-    toast("删除失败：" + e);
-  }
-});
 
 loadState();
 loadPresetList();

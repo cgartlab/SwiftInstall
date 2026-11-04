@@ -9,62 +9,55 @@
 </head>
 <body>
   <div class="app">
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/>
-          </svg>
-        </div>
-        <div class="brand-text">
-          <div class="title">SwiftInstall</div>
-          <div class="subtitle"><span id="backend">…</span><span class="dot">·</span><span id="source" class="mono">…</span></div>
+    <aside class="sidebar">
+      <div class="mast">
+        <div class="wordmark">SwiftInstall</div>
+        <div class="meta">
+          <span id="backend" class="backend">…</span>
+          <span id="source" class="source mono">…</span>
         </div>
       </div>
-      <div class="topbar-actions">
-        <div class="preset-bar">
-          <select id="presetSelect" title="已保存的预设"></select>
-          <button id="presetLoad" class="btn ghost" title="加载选中的预设">加载</button>
-          <button id="presetSave" class="btn ghost" title="把当前清单另存为预设">另存为…</button>
-          <button id="presetDelete" class="btn ghost" title="删除选中的预设">删除</button>
-        </div>
-        <button id="openSearch" class="btn ghost" title="在 Homebrew 仓库中搜索软件包">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
-          搜索 Homebrew
-        </button>
-        <button id="refresh" class="btn ghost" title="重新检测安装状态">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>
-          刷新
-        </button>
-      </div>
-    </header>
 
-    <main class="content">
-      <div class="toolbar">
+      <section class="block">
+        <h2 class="block-h">预设</h2>
+        <ul id="presetList" class="presets"></ul>
+        <button id="presetSave" class="linkbtn">＋ 另存为预设</button>
+      </section>
+
+      <section class="block stats">
+        <div class="stat"><span class="stat-n" id="statTotal">0</span><span class="stat-l">总数</span></div>
+        <div class="stat"><span class="stat-n" id="statInstalled">–</span><span class="stat-l">已安装</span></div>
+        <div class="stat"><span class="stat-n" id="statSelected">0</span><span class="stat-l">已选</span></div>
+      </section>
+
+      <div class="side-actions">
+        <button id="openSearch" class="sidebtn">搜索 Homebrew 仓库</button>
+        <button id="refresh" class="sidebtn">重新检测状态</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="bar">
+        <div class="filter">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+          <input id="search" type="text" placeholder="过滤当前清单…" autocomplete="off" spellcheck="false">
+        </div>
         <label class="selectall">
           <input type="checkbox" id="selectAll">
           <span>全选</span>
         </label>
-        <div class="toolbar-right">
-          <div class="search">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
-            <input id="search" type="text" placeholder="过滤当前清单…" autocomplete="off" spellcheck="false">
-          </div>
-          <div class="counts" id="counts"></div>
-        </div>
       </div>
 
       <div id="list" class="list" aria-live="polite"></div>
       <div id="empty" class="empty" hidden>
-        <div class="empty-glyph">◌</div>
         <div>没有匹配的软件</div>
       </div>
     </main>
 
     <footer class="actionbar">
-      <div class="selinfo" id="selInfo">已选 <b>0</b> 项</div>
+      <div class="selinfo" id="selInfo">已选 <b>0</b></div>
       <div class="actions">
-        <button id="uninstall" class="btn subtle-danger" disabled>卸载所选</button>
+        <button id="uninstall" class="btn danger" disabled>卸载所选</button>
         <button id="install" class="btn primary" disabled>安装所选</button>
       </div>
     </footer>
@@ -79,7 +72,7 @@
         </div>
         <div class="panel-badge" id="progBadge"></div>
       </div>
-      <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+      <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
       <ul class="proglist" id="progList"></ul>
       <div class="panel-foot">
         <div id="progSummary" class="summary"></div>
@@ -92,7 +85,7 @@
     <div class="panel search-panel" role="dialog" aria-modal="true">
       <div class="search-head">
         <input id="searchInput" type="text" placeholder="搜索 Homebrew 仓库（formula / cask）…" autocomplete="off" spellcheck="false">
-        <button id="closeSearch" class="btn ghost">关闭</button>
+        <button id="closeSearch" class="linkbtn">关闭</button>
       </div>
       <div id="searchHint" class="search-hint">输入关键词搜索全部可用软件包，结果可添加到清单。</div>
       <div id="searchResults" class="search-results"></div>
@@ -102,12 +95,12 @@
   <div id="saveOverlay" class="overlay" hidden>
     <div class="panel save-panel" role="dialog" aria-modal="true">
       <div class="panel-title">保存为预设</div>
-      <div class="search-hint" style="margin:8px 2px">把当前清单（含搜索添加的软件）保存为预设，随时切换加载。</div>
+      <div class="search-hint" style="margin:6px 0 12px">把当前清单（含搜索添加的软件）保存为预设，随时切换加载。</div>
       <input id="saveName" type="text" placeholder="预设名称，如 work / design" autocomplete="off" spellcheck="false">
       <div class="panel-foot">
         <span id="saveError" class="summary" style="color:var(--red)"></span>
         <div class="actions">
-          <button id="saveCancel" class="btn ghost">取消</button>
+          <button id="saveCancel" class="btn">取消</button>
           <button id="saveConfirm" class="btn primary">保存</button>
         </div>
       </div>
