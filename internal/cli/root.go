@@ -48,6 +48,7 @@ func newRootCmd(version, commit, date string) *cobra.Command {
 	cmd.AddCommand(newSearchCmd())
 	cmd.AddCommand(newPresetCmd())
 	cmd.AddCommand(newMirrorCmd())
+	cmd.AddCommand(newLLMCmd())
 	cmd.AddCommand(newInstallCmd())
 	cmd.AddCommand(newUninstallCmd())
 	cmd.AddCommand(newListCmd())

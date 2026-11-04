@@ -180,6 +180,7 @@ html, body {
 .dm-l { font-size: 10.5px; color: var(--faint); }
 .dm-v { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .detail-desc { font-size: 13px; color: var(--muted); line-height: 1.5; max-width: 60ch; }
+.ai-badge { display: inline-block; margin-left: 8px; font-size: 10px; color: var(--moss); border: 1px solid var(--moss); border-radius: 5px; padding: 0 5px; vertical-align: middle; }
 .detail-links { display: flex; gap: 16px; }
 .detail-links a { color: var(--moss); font-size: 12.5px; text-decoration: none; border-bottom: 1px solid transparent; }
 .detail-links a:hover { border-color: var(--moss); }
@@ -301,6 +302,8 @@ html, body {
 .srow .add-btn:disabled { opacity: .5; cursor: default; }
 .save-panel { width: min(420px, calc(100vw - 40px)); }
 .save-panel input { width: 100%; margin-bottom: 14px; }
+.llm-l { font-size: 11px; color: var(--faint); margin: 8px 2px 3px; display:block; }
+.llm-l:first-of-type { margin-top: 0; }
 
 /* repository search results (below the manifest list) */
 .repo-results { padding: 6px 28px 30px; max-width: 900px; }

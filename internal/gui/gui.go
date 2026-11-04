@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -23,6 +24,7 @@ import (
 
 	"github.com/cgartlab/SwiftInstall/internal/backend"
 	"github.com/cgartlab/SwiftInstall/internal/engine"
+	"github.com/cgartlab/SwiftInstall/internal/llm"
 	"github.com/cgartlab/SwiftInstall/internal/manifest"
 	"github.com/cgartlab/SwiftInstall/internal/preset"
 )
@@ -102,6 +104,7 @@ func Run(ctx context.Context, opts Options) error {
 	mux.HandleFunc("/api/status", srv.handleStatus)
 	mux.HandleFunc("/api/search", srv.handleSearch)
 	mux.HandleFunc("/api/info", srv.handleInfo)
+	mux.HandleFunc("/api/llm", srv.handleLLM)
 	mux.HandleFunc("/api/presets", srv.handlePresets)
 	mux.HandleFunc("/api/preset", srv.handlePreset)
 	mux.HandleFunc("/api/run", srv.handleRun)
@@ -256,6 +259,105 @@ func (s *server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"installed": installed})
 }
 
+// aiDescription returns a cached or freshly-generated description for a
+// package whose source has none (e.g. fonts). It only runs when the user has
+// configured an LLM; otherwise it returns false and the empty desc stays.
+func aiDescription(ctx context.Context, name, kind string) (string, bool) {
+	if desc, ok := readAICache(name); ok {
+		return desc, true
+	}
+	cfg, err := llm.Load()
+	if err != nil || !cfg.Configured() {
+		return "", false
+	}
+	cl := llm.NewClient(cfg)
+	prompt := fmt.Sprintf("用一句简体中文（不超过 30 字）介绍软件包 %q", name)
+	if kind != "" {
+		prompt += fmt.Sprintf("（Homebrew %s）", kind)
+	}
+	prompt += "。只输出介绍内容，不要引号或多余说明。"
+	out, err := cl.Complete(ctx, prompt)
+	if err != nil || out == "" {
+		return "", false
+	}
+	_ = writeAICache(name, out)
+	return out, true
+}
+
+func aiCacheDir() string {
+	base, err := os.UserConfigDir()
+	if err != nil {
+		base = "."
+	}
+	dir := filepath.Join(base, "sis", "ai-cache")
+	_ = os.MkdirAll(dir, 0o755)
+	return dir
+}
+
+func readAICache(name string) (string, bool) {
+	data, err := os.ReadFile(filepath.Join(aiCacheDir(), strings.ReplaceAll(name, "/", "_")+".txt"))
+	if err != nil {
+		return "", false
+	}
+	return strings.TrimSpace(string(data)), true
+}
+
+func writeAICache(name, desc string) error {
+	p := filepath.Join(aiCacheDir(), strings.ReplaceAll(name, "/", "_")+".txt")
+	return os.WriteFile(p, []byte(desc), 0o644)
+}
+
+// handleLLM gets or sets the LLM configuration.
+//
+//	GET  /api/llm          → current config (api key masked)
+//	POST /api/llm          body {"base_url","api_key","model"}
+func (s *server) handleLLM(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		cfg, err := llm.Load()
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{
+			"base_url":   cfg.BaseURL,
+			"api_key":    cfg.MaskedKey(),
+			"model":      cfg.Model,
+			"configured": cfg.Configured(),
+		})
+		return
+	}
+	if r.Method == http.MethodPost {
+		var body struct {
+			BaseURL string `json:"base_url"`
+			APIKey  string `json:"api_key"`
+			Model   string `json:"model"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "无效 JSON"})
+			return
+		}
+		cfg, _ := llm.Load()
+		if body.BaseURL != "" {
+			cfg.BaseURL = body.BaseURL
+		}
+		if body.APIKey != "" && !isMasked(body.APIKey) {
+			cfg.APIKey = body.APIKey
+		}
+		if body.Model != "" {
+			cfg.Model = body.Model
+		}
+		if err := llm.Save(cfg); err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "configured": cfg.Configured()})
+		return
+	}
+	writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"error": "method not allowed"})
+}
+
+func isMasked(s string) bool { return strings.Contains(s, "•") }
+
 // handleInfo returns detailed metadata for one package (description, version,
 // homepage, update history) for the row-expand UI.
 func (s *server) handleInfo(w http.ResponseWriter, r *http.Request) {
@@ -274,6 +376,17 @@ func (s *server) handleInfo(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadGateway, map[string]any{"error": err.Error()})
 		return
 	}
+
+	// If the package has no description (common for fonts and some casks),
+	// ask the configured LLM to write one and cache it. This is the first
+	// "AI in the surface" integration; future ones reuse the same llm config.
+	if info.Desc == "" {
+		if desc, ok := aiDescription(r.Context(), name, info.Kind); ok {
+			info.Desc = desc
+			info.AIDesc = true
+		}
+	}
+
 	writeJSON(w, http.StatusOK, info)
 }
 

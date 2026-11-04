@@ -257,6 +257,12 @@ async function loadDetail(wrap, detail, p) {
     const desc = document.createElement("div");
     desc.className = "detail-desc";
     desc.textContent = r.desc || "（无简介）";
+    if (r.ai_desc) {
+      const badge = document.createElement("span");
+      badge.className = "ai-badge";
+      badge.textContent = "AI 补全";
+      desc.appendChild(badge);
+    }
     const links = document.createElement("div");
     links.className = "detail-links";
     if (r.homepage) {
@@ -465,6 +471,45 @@ function toast(msg) {
   requestAnimationFrame(() => (el.style.opacity = "1"));
   clearTimeout(toast.t);
   toast.t = setTimeout(() => (el.style.opacity = "0"), 1800);
+}
+
+/* ---------------- LLM settings ---------------- */
+
+$("openLLM").addEventListener("click", openLLM);
+$("llmCancel").addEventListener("click", () => ($("llmOverlay").hidden = true));
+$("llmSave").addEventListener("click", saveLLM);
+
+async function openLLM() {
+  $("llmError").textContent = "";
+  try {
+    const r = await fetch("/api/llm").then((r) => r.json());
+    $("llmBase").value = r.base_url || "";
+    $("llmModel").value = r.model || "";
+    $("llmKey").value = r.api_key || "";
+    $("llmKey").placeholder = r.configured ? "（已配置，留空保持不变）" : "sk-…";
+  } catch (e) {}
+  $("llmOverlay").hidden = false;
+  setTimeout(() => $("llmBase").focus(), 30);
+}
+
+async function saveLLM() {
+  $("llmError").textContent = "";
+  const body = {
+    base_url: $("llmBase").value.trim(),
+    model: $("llmModel").value.trim(),
+    api_key: $("llmKey").value,
+  };
+  try {
+    const r = await fetch("/api/llm", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then((r) => r.json());
+    if (r.error) { $("llmError").textContent = r.error; return; }
+    $("llmOverlay").hidden = true;
+    toast(r.configured ? "LLM 已配置，软件详情将自动补全简介" : "已保存（配置不完整）");
+  } catch (e) {
+    $("llmError").textContent = "保存失败：" + e;
+  }
 }
 
 /* ---------------- presets ---------------- */

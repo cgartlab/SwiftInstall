@@ -31,6 +31,7 @@
       </section>
 
       <div class="side-actions">
+        <button id="openLLM" class="sidebtn">AI / LLM 设置</button>
         <button id="refresh" class="sidebtn">重新检测状态</button>
       </div>
     </aside>
@@ -77,6 +78,26 @@
       <div class="panel-foot">
         <div id="progSummary" class="summary"></div>
         <button id="closeProgress" class="btn primary" hidden>完成</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="llmOverlay" class="overlay" hidden>
+    <div class="panel save-panel" role="dialog" aria-modal="true">
+      <div class="panel-title">AI / LLM 设置</div>
+      <div class="search-hint" style="margin:6px 0 12px">配置一个 OpenAI 兼容端点，用于为信息不全的软件/字体生成简介。兼容 OpenAI、DeepSeek、GLM、magpie 网关等。</div>
+      <label class="llm-l">Base URL</label>
+      <input id="llmBase" type="text" placeholder="https://api.deepseek.com/v1" autocomplete="off" spellcheck="false">
+      <label class="llm-l">Model</label>
+      <input id="llmModel" type="text" placeholder="deepseek-chat" autocomplete="off" spellcheck="false">
+      <label class="llm-l">API Key</label>
+      <input id="llmKey" type="password" placeholder="sk-…" autocomplete="off" spellcheck="false">
+      <div class="panel-foot">
+        <span id="llmError" class="summary" style="color:var(--red)"></span>
+        <div class="actions">
+          <button id="llmCancel" class="btn">取消</button>
+          <button id="llmSave" class="btn primary">保存</button>
+        </div>
       </div>
     </div>
   </div>
