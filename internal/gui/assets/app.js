@@ -118,7 +118,18 @@ function statusOf(id) {
 
 /* ---------------- rendering ---------------- */
 
+var kbIndex = -1;
+function visibleRows() { return Array.prototype.slice.call(document.querySelectorAll("#list .row")); }
+function setKb(i) {
+  var rows = visibleRows();
+  if (!rows.length) { kbIndex = -1; return; }
+  kbIndex = Math.max(0, Math.min(rows.length - 1, i));
+  rows.forEach(function (r, j) { r.classList.toggle("kb", j === kbIndex); });
+  rows[kbIndex].scrollIntoView({ block: "nearest" });
+}
+
 function render() {
+  kbIndex = -1;
   const q = state.query.trim().toLowerCase();
   const filtered = state.packages.filter(
     (p) =>
@@ -480,6 +491,28 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     if (!$("overlay").hidden && !state.running) $("overlay").hidden = true;
     else if (!$("saveOverlay").hidden) $("saveOverlay").hidden = true;
+  }
+  // vim-style list navigation: j/k move, Space toggles, Enter opens detail.
+  const tag = (e.target && e.target.tagName || "").toLowerCase();
+  const typing = tag === "input" || tag === "textarea" || tag === "select" || (e.target && e.target.isContentEditable);
+  const cm = document.getElementById("cmdk");
+  const cmOpen = cm && !cm.hidden;
+  const active = document.activeElement;
+  const onControl = active && active !== document.body && !(active.classList && active.classList.contains("row"));
+  if (typing || cmOpen) return;
+  if (kbIndex < 0 && onControl) return; // let buttons/links keep their native keys
+  if (e.key === "j") { e.preventDefault(); setKb(kbIndex < 0 ? 0 : kbIndex + 1); }
+  else if (e.key === "k") { e.preventDefault(); setKb(kbIndex < 0 ? 0 : kbIndex - 1); }
+  else if (e.key === " " || e.key === "Spacebar") {
+    const rows = visibleRows();
+    if (kbIndex >= 0 && rows[kbIndex]) {
+      e.preventDefault();
+      const cb = rows[kbIndex].querySelector('input[type=checkbox]');
+      if (cb) { cb.checked = !cb.checked; cb.dispatchEvent(new Event("change")); }
+    }
+  } else if (e.key === "Enter") {
+    const rows = visibleRows();
+    if (kbIndex >= 0 && rows[kbIndex]) { e.preventDefault(); rows[kbIndex].click(); }
   }
 });
 

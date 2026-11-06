@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **列表键盘导航**：主界面支持 `j/k` 上下选择行、`空格` 勾选、`Enter` 打开详情（输入框/命令面板/按钮聚焦时自动让路），选中行有绿底+左标高亮。
+
 - **安全回归测试 + 顶栏现代化**：补 preset 路径穿越拒绝、清单导入→回读 回归测试；顶栏加镜面高光边并补 `prefers-reduced-transparency` 实心兜底。
 
 - **更多命令尊重 `--format`**：`sis doctor`、`sis guide --list`、`sis llm show`、`sis mirror show` 支持 `json|silent`（之前忽略输出开关）。
