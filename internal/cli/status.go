@@ -66,8 +66,23 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	missing := 0
 	errors := 0
 
+	// Prefer a single bulk probe (one `brew list`) over per-package IsInstalled,
+	// which spawns a backend call per package and is very slow on large manifests.
+	var bulkSet map[string]bool
+	if provider, ok := be.(backend.InstalledSetProvider); ok {
+		if set, err := provider.InstalledSet(context.Background()); err == nil {
+			bulkSet = set
+		}
+	}
+
 	for i, pkg := range m.Packages {
-		isInstalled, err := be.IsInstalled(context.Background(), pkg.ID)
+		var isInstalled bool
+		var err error
+		if bulkSet != nil {
+			isInstalled = bulkSet[pkg.ID]
+		} else {
+			isInstalled, err = be.IsInstalled(context.Background(), pkg.ID)
+		}
 
 		status := pkgStatus{Package: pkg, Installed: isInstalled}
 		if err != nil {
