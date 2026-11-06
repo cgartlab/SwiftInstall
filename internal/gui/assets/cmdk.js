@@ -22,6 +22,7 @@
   .cmdk-item .cd{font-size:12px;color:var(--muted,#6E6B60);margin-top:1px}
   .cmdk-item .ck{font-size:11px;color:var(--faint,#9A9384)}
   .cmdk-empty{padding:16px 12px;color:var(--faint,#9A9384);font-size:13px}
+  .cmdk-grp{list-style:none;font-size:11px;letter-spacing:.04em;color:var(--faint,#9A9384);padding:9px 12px 3px}
   @media (prefers-reduced-transparency:reduce){.cmdk{background:rgba(11,11,10,.92);backdrop-filter:none}}
   .cmdk-foot{font-size:11px;color:var(--faint,#9A9384);padding:9px 16px;
     border-top:1px solid var(--line,#DDD6C7);text-align:right}
@@ -92,13 +93,18 @@
     shown = scored.map(function (x) { return x.c; });
     sel = 0; paint();
   }
+  function groupOf(c) { return (c.t === "回到顶部" || c.t === "刷新") ? "动作" : "导航"; }
   function paint() {
     if (!shown.length) { list.innerHTML = '<li class="cmdk-empty">没有匹配的命令</li>'; return; }
-    list.innerHTML = shown.map(function (c, i) {
-      return '<li class="cmdk-item ' + (i === sel ? "on" : "") + '" data-i="' + i + '">' +
+    var html = "", lastG = null;
+    shown.forEach(function (c, i) {
+      var g = groupOf(c);
+      if (g !== lastG) { html += '<li class="cmdk-grp">' + g + '</li>'; lastG = g; }
+      html += '<li class="cmdk-item ' + (i === sel ? "on" : "") + '" data-i="' + i + '">' +
         '<div><div class="ct">' + c.t + '</div><div class="cd">' + c.d + '</div></div>' +
         '<span class="ck">↵</span></li>';
-    }).join("");
+    });
+    list.innerHTML = html;
     Array.prototype.forEach.call(list.querySelectorAll(".cmdk-item"), function (li) {
       li.onclick = function () { sel = +li.dataset.i; exec(); };
     });
