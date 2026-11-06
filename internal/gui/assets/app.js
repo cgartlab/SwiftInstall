@@ -166,7 +166,20 @@ function render() {
     listEl.appendChild(sec);
   }
 
-  $("empty").hidden = filtered.length > 0;
+  const emptyEl = $("empty");
+  if (filtered.length === 0) {
+    if (state.packages.length === 0) {
+      emptyEl.innerHTML = '<div>当前清单还没有软件</div>' +
+        '<div class="empty-sub">去「软件清单」挑一批只收免费/开源的工具，或另存一份自己的清单。</div>' +
+        '<a class="btn" href="/toollists" style="margin-top:14px;display:inline-flex">去软件清单 →</a>';
+    } else {
+      emptyEl.innerHTML = '<div>没有匹配的软件</div>' +
+        '<div class="empty-sub">试试换个关键词，或清空过滤条件。</div>';
+    }
+    emptyEl.hidden = false;
+  } else {
+    emptyEl.hidden = true;
+  }
   syncSelectAll(filtered);
   updateActions();
 }
