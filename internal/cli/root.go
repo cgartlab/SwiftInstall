@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 )
 
@@ -34,6 +35,18 @@ func newRootCmd(version, commit, date string) *cobra.Command {
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
+	}
+
+	// Validate --format early so a typo (e.g. "jsn") fails loudly instead of
+	// silently falling back to the table renderer.
+	cmd.PersistentPreRunE = func(c *cobra.Command, args []string) error {
+		f, _ := c.Flags().GetString("format")
+		switch f {
+		case "", "table", "json", "silent":
+			return nil
+		default:
+			return fmt.Errorf("无效的 --format %q（可选 table | json | silent）", f)
+		}
 	}
 
 	// Global flags
