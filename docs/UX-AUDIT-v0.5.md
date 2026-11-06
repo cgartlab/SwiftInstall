@@ -43,7 +43,9 @@
 - 待办：核对嵌套圆角"内 = 外 − 间距"；避免卡片套卡片。
 
 ## 多语言 / 长文案 / 多尺寸（规则 10）
-- 待办：切到英文/长语言时优先"最长文案"布局，允许改文案但不缩字号不截断；在窄/中/宽三档宽度回归。
+- ✅ 复核响应式断点：`≤900` 侧栏收窄(210px)、`≤680` 侧栏折叠为顶部条 + 隐藏 kind + 行栅格收窄 + 底栏换行；`.pkg-main{min-width:0}` + `.pkg-id` 省略号，长包名不撑破栅格。820 宽截图：`gui-main-820.png`。
+- 待办：本机 GUI 为桌面浏览器工具（主要 ≥768）；如需手机端，再补 375 档的真机回放。英文/长语言需上 i18n 后按最长文案回归；当前产品仅中文，无截断风险。
+- 说明：`qlmanage` 只按像素缩放、不真正改 CSS 视口，无法替代真机断点回归；断点已代码复核。
 
 ## 本轮改动文件
 `internal/gui/assets/styles.css`、`app.js`、`audit.html`、`cmdk.js`、`internal/ui/terminal.go`、`internal/cli/status.go`、`install.go`、`uninstall.go`、`list.go`；截图 `docs/screenshots/gui-main.png`（扁平化 + 单一强调色）。
