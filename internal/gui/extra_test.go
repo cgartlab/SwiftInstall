@@ -109,3 +109,22 @@ func TestCapPerSource(t *testing.T) {
 		t.Errorf("per-source counts = %v, want brew=1 npm=1", bySrc)
 	}
 }
+
+func TestCatalogNotFound_404(t *testing.T) {
+	ts := newTestServer(t)
+	defer ts.Close()
+	for _, u := range []string{
+		"/api/toollist?toollist=bogus",
+		"/api/toollist/export?toollist=bogus",
+		"/api/audit?toollist=bogus",
+	} {
+		resp, err := http.Get(ts.URL + u)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusNotFound {
+			t.Errorf("%s = %d, want 404", u, resp.StatusCode)
+		}
+	}
+}

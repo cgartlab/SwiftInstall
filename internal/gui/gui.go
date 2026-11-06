@@ -10,6 +10,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -306,7 +307,7 @@ func (s *server) handleStatus(w http.ResponseWriter, r *http.Request) {
 func (s *server) handleAudit(w http.ResponseWriter, r *http.Request) {
 	cat, err := s.catalogByName(r.URL.Query().Get("toollist"))
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		writeCatalogError(w, err)
 		return
 	}
 	rep, err := audit.Run(r.Context(), audit.SystemLister{}, cat)
@@ -474,10 +475,19 @@ func (s *server) handleToollistImport(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleToollist returns the full catalog (items + equivalences) for one toollist.
+// writeCatalogError maps "toollist not found" to 404 and everything else to 500.
+func writeCatalogError(w http.ResponseWriter, err error) {
+	if errors.Is(err, fs.ErrNotExist) || strings.Contains(err.Error(), "未找到") {
+		writeJSON(w, http.StatusNotFound, map[string]any{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+}
+
 func (s *server) handleToollist(w http.ResponseWriter, r *http.Request) {
 	cat, err := s.catalogByName(r.URL.Query().Get("toollist"))
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		writeCatalogError(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, cat)
@@ -487,7 +497,7 @@ func (s *server) handleToollist(w http.ResponseWriter, r *http.Request) {
 func (s *server) handleToollistExport(w http.ResponseWriter, r *http.Request) {
 	cat, err := s.catalogByName(r.URL.Query().Get("toollist"))
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		writeCatalogError(w, err)
 		return
 	}
 	b, err := toollist.Marshal(cat)
