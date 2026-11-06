@@ -31,7 +31,7 @@
   .lock{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:12.5px}
   .lock i{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block}
 
-  .kicker{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--green);
+  .kicker{font-size:12px;letter-spacing:2.5px;color:var(--green);
     font-weight:600;margin:54px 0 14px}
   h1{font-family:var(--serif);font-size:44px;line-height:1.12;font-weight:600;letter-spacing:-.5px}
   .lede{font-size:15.5px;color:var(--muted);max-width:560px;margin-top:16px}
@@ -104,7 +104,7 @@
   @media(max-width:720px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}
     .rep{flex-direction:column;gap:6px}.rep .flow{min-width:0}}
   /* migration guide drawer */
-  .scrim{position:fixed;inset:0;background:rgba(28,27,23,.30);opacity:0;pointer-events:none;transition:.3s;z-index:40;backdrop-filter:blur(1px)}
+  .scrim{position:fixed;inset:0;background:rgba(28,27,23,.30);opacity:0;pointer-events:none;transition:.3s;z-index:40}
   .scrim.on{opacity:1;pointer-events:auto}
   .gdrawer{position:fixed;top:0;right:0;bottom:0;width:min(450px,94%);background:var(--paper);
     border-left:1px solid var(--line);box-shadow:-20px 0 50px rgba(28,27,23,.16);

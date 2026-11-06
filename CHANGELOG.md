@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **UX/文案/视觉第一批（对照 11 条要求）**：去毛玻璃与顶栏高光（改扁平化）；已安装点/图标 tile 统一为单一强调绿；CLI 英文残留中文化（Checking status/installed/Total/Installing…）；去占位符斜体与 kicker 全大写；列表 kind 显示「命令行/应用/自动」；新增 `docs/UX-AUDIT-v0.5.md`。
+
 - **空状态引导**：主界面区分「清单为空」（引导去软件清单挑选）与「过滤无匹配」，附 CTA 按钮，新手更易上手。
 
 - **LLM 接口回归测试**：覆盖 `/api/llm` 保存后 GET 返回脱敏 key（绝不回显明文）、字段往返、非法 JSON→400。

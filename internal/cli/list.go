@@ -112,7 +112,7 @@ func listTable(packages []manifest.Package, source string, color bool) error {
 		fmt.Fprintln(os.Stderr)
 	}
 
-	fmt.Fprintf(os.Stderr, "  Total: %d packages\n\n", len(packages))
+	fmt.Fprintf(os.Stderr, "  共 %d 个软件\n\n", len(packages))
 	return nil
 }
 

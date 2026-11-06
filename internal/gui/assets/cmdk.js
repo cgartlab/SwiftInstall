@@ -7,7 +7,7 @@
 
   var css = `
   .cmdk{position:fixed;inset:0;z-index:2000;display:grid;place-items:start center;padding-top:14vh;
-    background:color-mix(in srgb,#0b0b0a 42%,transparent);backdrop-filter:blur(6px)}
+    background:color-mix(in srgb,#0b0b0a 42%,transparent)}
   .cmdk[hidden]{display:none}
   .cmdk-box{width:min(560px,92vw);background:var(--card,var(--panel,#FBF8F1));
     border:1px solid var(--line,#DDD6C7);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 24px 70px rgba(0,0,0,.35);overflow:hidden}

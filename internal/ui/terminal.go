@@ -32,7 +32,7 @@ func NewTerminalRenderer(color bool) *TerminalRenderer {
 }
 
 func (t *TerminalRenderer) Header(total int, source string, action string) {
-	fmt.Fprintf(os.Stderr, "\n%s %s %d packages from %s%s\n\n",
+	fmt.Fprintf(os.Stderr, "\n%s %s %d 个软件（清单：%s）%s\n\n",
 		t.style(colorBold), action, total, source, t.style(colorReset))
 }
 
@@ -73,26 +73,26 @@ func (t *TerminalRenderer) Summary(summary *engine.Summary) {
 	// Build a compact summary line
 	parts := []string{}
 	if summary.Succeeded > 0 {
-		parts = append(parts, fmt.Sprintf("%s%s%d succeeded%s",
+		parts = append(parts, fmt.Sprintf("%s%s%d 成功%s",
 			t.style(colorGreen), t.style(colorBold), summary.Succeeded, t.style(colorReset)))
 	}
 	if summary.Skipped > 0 {
-		parts = append(parts, fmt.Sprintf("%s%d skipped%s",
+		parts = append(parts, fmt.Sprintf("%s%d 跳过%s",
 			t.style(colorYellow), summary.Skipped, t.style(colorReset)))
 	}
 	if summary.Failed > 0 {
-		parts = append(parts, fmt.Sprintf("%s%s%d failed%s",
+		parts = append(parts, fmt.Sprintf("%s%s%d 失败%s",
 			t.style(colorRed), t.style(colorBold), summary.Failed, t.style(colorReset)))
 	}
 
-	fmt.Fprintf(os.Stderr, "  %s%sTotal: %d%s  |  %s  %s(%s)%s\n",
+	fmt.Fprintf(os.Stderr, "  %s%s共 %d 项%s  |  %s  %s(%s)%s\n",
 		t.style(colorBold), t.style(colorCyan), summary.Total, t.style(colorReset),
 		strings.Join(parts, "  "),
 		t.style(colorDim), formatDuration(summary.Duration), t.style(colorReset))
 
 	// List failures at the end for easy identification
 	if summary.Failed > 0 {
-		fmt.Fprintf(os.Stderr, "\n  %sFailed packages:%s\n", t.style(colorRed), t.style(colorReset))
+		fmt.Fprintf(os.Stderr, "\n  %s失败的软件：%s\n", t.style(colorRed), t.style(colorReset))
 		for _, r := range summary.Results {
 			if r.Status == engine.StatusFailed {
 				errMsg := r.Error

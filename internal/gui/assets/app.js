@@ -229,7 +229,7 @@ function renderRow(p) {
     kind.textContent = p.source;
   } else {
     kind.className = "kind" + (p.kind === "cask" ? " cask" : "");
-    kind.textContent = p.kind || "auto";
+    kind.textContent = p.kind === "cask" ? "应用" : p.kind === "formula" ? "命令行" : "自动";
   }
 
   const st = statusOf(p.id);

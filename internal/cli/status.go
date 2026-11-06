@@ -58,7 +58,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	}
 
 	if !silent && format != "json" {
-		fmt.Fprintf(os.Stderr, "\nChecking status of %d packages from %s\n\n", len(m.Packages), manifestPath)
+		fmt.Fprintf(os.Stderr, "\n正在检查 %d 个软件的安装状态（清单：%s）\n\n", len(m.Packages), manifestPath)
 	}
 
 	var results []pkgStatus
@@ -147,7 +147,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 			red = ""
 			reset = ""
 		}
-		fmt.Fprintf(os.Stderr, "\n  %s%d installed%s, %s%d missing%s\n\n",
+		fmt.Fprintf(os.Stderr, "\n  %s已安装 %d%s，%s未安装 %d%s\n\n",
 			green, installed, reset, red, missing, reset)
 	}
 
