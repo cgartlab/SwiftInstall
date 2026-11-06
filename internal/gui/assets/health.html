@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SwiftInstall · 系统自检</title>
+<title>SwiftInstall，系统自检</title>
 <style>
   :root{--paper:#F4EFE6;--card:#FBF8F1;--ink:#1C1B17;--muted:#6E6B60;--faint:#9A9384;--line:#DDD6C7;
     --green:#3F6B52;--green-soft:#E6EEE7;--amber:#7C7568;--amber-soft:#EFE9DC;
@@ -62,7 +62,7 @@ const $=s=>document.querySelector(s);
 let RAW=null;
 function row(ok,label,det,val){
   const cls = ok===true?"ok":ok===false?"no":"na";
-  const mark = ok===true?"✓":ok===false?"!":"·";
+  const mark = ok===true?"✓":ok===false?"!":"–";
   return `<div class="row"><div class="ic ${cls}">${mark}</div><div><div class="lbl">${label}</div>${det?`<div class="det">${det}</div>`:""}</div><div class="val">${val||""}</div></div>`;
 }
 async function load(){
@@ -73,7 +73,7 @@ async function load(){
     h+=row(true,"平台", "", (j.goos||"")+"/"+(j.goarch||""));
     h+=row(pm.ok===true,"包管理器 "+((pm.name)||""), pm.ok===false?(pm.error||""):"", pm.ok?"可用":"不可用");
     h+=row(ins.ok===true,"已装扫描", ins.ok===false?(ins.error||""):"", ins.ok?("识别 "+ins.count+" 个"):"失败");
-    h+=row((tt.stale||0)===0,"软件清单", (tt.lists||0)+" 份 · "+(tt.items||0)+" 项", tn(tt));
+    h+=row((tt.stale||0)===0,"软件清单", (tt.lists||0)+" 份，"+(tt.items||0)+" 项", tn(tt));
     h+=row(true,"AI / LLM", llm.configured?(llm.model||"已配置"):"未配置（可选）", llm.configured?"已配置":"○");
     $("#rows").innerHTML=h;
     { const c=$("#rows"); c.classList.remove("enter"); void c.offsetWidth;
@@ -82,7 +82,7 @@ async function load(){
     $("#hint").textContent="检查于 "+new Date().toLocaleString("zh-CN");
   }catch(e){ $("#rows").innerHTML=row(false,"自检失败", e.message, ""); }
 }
-function tn(tt){ return "新鲜 "+(tt.fresh||0)+" · 需复核 "+(tt.stale||0); }
+function tn(tt){ return "新鲜 "+(tt.fresh||0)+"，需复核 "+(tt.stale||0); }
 $("#copyBtn").onclick=()=>{ if(RAW) navigator.clipboard.writeText(JSON.stringify(RAW,null,2)).then(()=>{ $("#copyBtn").textContent="已复制 ✓"; }); };
 load();
 </script>

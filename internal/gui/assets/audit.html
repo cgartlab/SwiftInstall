@@ -64,7 +64,7 @@
   .stat.hl .v{color:var(--green)}
   .stat.am .v{color:var(--amber)}
 
-  .sect-t{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);
+  .sect-t{font-size:12px;letter-spacing:1.6px;color:var(--muted);
     font-weight:600;margin:34px 0 12px;padding-top:18px;border-top:1px solid var(--line)}
   .sect-t .c{color:var(--green)}
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:10px}
@@ -164,13 +164,13 @@
       <a href="/">← 返回清单</a>
       <select id="toollistSel" class="blsel" title="选择软件清单"></select>
       <a href="/api/toollist/export" id="exportLink" download>导出软件清单</a>
-      <span class="lock"><i></i> 本地扫描 · 数据不外传</span>
+      <span class="lock"><i></i> 本地扫描，数据不外传</span>
     </div>
   </header>
 
   <!-- hero -->
   <section id="hero">
-    <div class="kicker">首次启动 · 环境体检</div>
+    <div class="kicker">首次启动，环境体检</div>
     <h1>先看看你的 Mac<br>装了什么。</h1>
     <p class="lede">这一步只是「看一眼」你的电脑：<b>不会改动、也不会卸载任何东西</b>。我们扫描你已安装的软件，按可核验的维度给出客观评价，并找出其中更适合你的<b>免费 / 开源平替</b>。全程本地完成，你决定要不要换。</p>
     <div class="start-row">
@@ -198,7 +198,7 @@
       <div class="stat"><div class="v" id="sKeep">—</div><div class="l">已装且够用</div></div>
     </div>
     <div id="sections" aria-live="polite"></div>
-    <div class="legend">判断基于可核验维度（授权、免费版范围、维护活跃度、隐私、可导出性），非主观好坏。软件清单：<span id="catName"></span> · 更新 <span id="catUpd"></span></div>
+    <div class="legend">判断基于可核验维度（授权、免费版范围、维护活跃度、隐私、可导出性），非主观好坏。软件清单：<span id="catName"></span>，更新 <span id="catUpd"></span></div>
   </section>
 </div>
 <div class="toast" id="toast"></div>
@@ -269,7 +269,7 @@ function render(j){
 
   // replaces
   const reps = j.replaces || [];
-  h += `<div class="sect-t"><span class="c">可替换 · ${reps.length}</span>　（已装的付费软件存在更好的免费/开源平替）</div>`;
+  h += `<div class="sect-t"><span class="c">可替换，${reps.length}</span>　（已装的付费软件存在更好的免费/开源平替）</div>`;
   if(!reps.length){ h += `<div class="empty">未发现可替换项。</div>`; }
   else{
     h += reps.map((r,i)=>{
@@ -285,7 +285,7 @@ function render(j){
 
   // adds grouped by category
   const adds = j.adds || [];
-  h += `<div class="sect-t"><span class="c">建议补充 · ${adds.length}</span>　（软件清单推荐，尚未安装）</div>`;
+  h += `<div class="sect-t"><span class="c">建议补充，${adds.length}</span>　（软件清单推荐，尚未安装）</div>`;
   if(!adds.length){ h += `<div class="empty">软件清单已全部就绪。</div>`; }
   else{
     const groups = {};
@@ -308,10 +308,10 @@ function render(j){
 
   // keeps
   const keeps = j.keeps || [];
-  h += `<div class="sect-t"><span class="c">已装且够用 · ${keeps.length}</span></div>`;
+  h += `<div class="sect-t"><span class="c">已装且够用，${keeps.length}</span></div>`;
   h += keeps.length ? `<div class="keeps">${keeps.map(k=>`<span class="keep">${esc(k)}</span>`).join("")}</div>`
                     : `<div class="empty">无。</div>`;
-  if(j.unmatched_count){ h += `<div class="sect-t">未收录 · ${j.unmatched_count}</div><div class="why">另有 ${j.unmatched_count} 个已安装应用不在本清单中；可到「软件清单」页用 AI 查它们是什么、有没有免费平替。</div>`; }
+  if(j.unmatched_count){ h += `<div class="sect-t">未收录，${j.unmatched_count}</div><div class="why">另有 ${j.unmatched_count} 个已安装应用不在本清单中；可到「软件清单」页用 AI 查它们是什么、有没有免费平替。</div>`; }
 
   $("#sections").innerHTML = h;
   { const sec=$("#sections"); sec.classList.remove("enter"); void sec.offsetWidth;
@@ -355,7 +355,7 @@ async function initToollists(){
     (j.toollists||[]).forEach(b=>{
       const o = document.createElement("option");
       o.value = b.id;
-      o.textContent = b.title + (b.playbooks ? " · " + b.playbooks + " 个迁移指导" : "");
+      o.textContent = b.title + (b.playbooks ? "，" + b.playbooks + " 个迁移指导" : "");
       sel.appendChild(o);
     });
     if(cur) sel.value = cur;

@@ -32,9 +32,9 @@
 
       <section class="block">
         <h2 class="block-h">入门</h2>
-        <a href="/toollists" class="linkbtn" style="display:inline-flex;align-items:center;gap:6px">◍ 软件清单 · 精选免费/开源</a>
-        <a href="/audit" class="linkbtn" style="display:inline-flex;align-items:center;gap:6px">◎ 环境体检 · 看看该装什么</a>
-        <a href="/health" class="linkbtn" style="display:inline-flex;align-items:center;gap:6px">✚ 系统自检 · 环境是否健康</a>
+        <a href="/toollists" class="linkbtn" style="display:inline-flex;align-items:center;gap:6px">◍ 软件清单，精选免费/开源</a>
+        <a href="/audit" class="linkbtn" style="display:inline-flex;align-items:center;gap:6px">◎ 环境体检，看看该装什么</a>
+        <a href="/health" class="linkbtn" style="display:inline-flex;align-items:center;gap:6px">✚ 系统自检，环境是否健康</a>
         <p style="font-size:11.5px;color:var(--faint);line-height:1.5;margin-top:2px">第一次用？从「软件清单」挑工具，或先做「环境体检」看看该装什么。</p>
       </section>
 
@@ -153,7 +153,7 @@
     <div class="cmdk-box" role="dialog" aria-modal="true" aria-label="命令面板">
       <input id="cmdkInput" class="cmdk-input" type="text" placeholder="搜索命令…（体检 / 软件清单 / 逐条决策）" autocomplete="off" spellcheck="false">
       <ul id="cmdkList" class="cmdk-list"></ul>
-      <div class="cmdk-foot">↑↓ 选择 · ↵ 执行 · Esc 关闭</div>
+      <div class="cmdk-foot">↑↓ 选择，↵ 执行，Esc 关闭</div>
     </div>
   </div>
 
@@ -165,8 +165,8 @@
     const CMDS=[
       {t:"环境体检", d:"扫描已装软件，看该装 / 该换什么", run:()=>location.href="/audit"},
       {t:"软件清单", d:"浏览精选免费 / 开源清单", run:()=>location.href="/toollists"},
-      {t:"逐条决策 · 设计师清单", d:"用平替滑卡逐条决定", run:()=>location.href="/swap?toollist=mac-designers"},
-      {t:"逐条决策 · 开发者清单", d:"用平替滑卡逐条决定", run:()=>location.href="/swap?toollist=developers"},
+      {t:"逐条决策，设计师清单", d:"用平替滑卡逐条决定", run:()=>location.href="/swap?toollist=mac-designers"},
+      {t:"逐条决策，开发者清单", d:"用平替滑卡逐条决定", run:()=>location.href="/swap?toollist=developers"},
       {t:"过滤当前清单", d:"聚焦顶部搜索框", run:()=>{ close(); const el=$("#search"); if(el) el.focus(); }},
       {t:"检查已安装更新", d:"Homebrew outdated", run:()=>{ close(); const b=$("#checkUpdates"); if(b) b.click(); }},
       {t:"刷新状态", d:"重新加载页面", run:()=>location.reload()},

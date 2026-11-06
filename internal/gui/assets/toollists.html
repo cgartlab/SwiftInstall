@@ -128,7 +128,7 @@
   <aside class="rail">
     <div>
       <div class="wordmark">SwiftInstall</div>
-      <div class="sub">动态软件清单 · 只收免费 / 开源</div>
+      <div class="sub">动态软件清单，只收免费 / 开源</div>
     </div>
     <div class="rail-label">软件清单</div>
     <ul id="rail" class="rail-list"></ul>
@@ -172,7 +172,7 @@ function renderRail(lists, active){
   $("#rail").innerHTML = lists.map(b=>
     `<li class="rail-item ${b.id===active?'active':''}" data-id="${esc(b.id)}">
        <div class="rt">${esc(b.title)}</div>
-       <div class="rm">${b.items} 款 · 平替 ${b.equivalences} 组${b.stale? ' · '+b.stale+' 需复核':''}${b.imported?' · 已导入':''}</div>
+       <div class="rm">${b.items} 款，平替 ${b.equivalences} 组${b.stale? '，'+b.stale+' 需复核':''}${b.imported?'，已导入':''}</div>
      </li>`).join("");
   document.querySelectorAll(".rail-item").forEach(el=>{
     el.onclick = ()=>{ currentId = el.dataset.id; location.href = "/toollists?toollist=" + encodeURIComponent(currentId); };
@@ -200,7 +200,7 @@ function render(c){
       <dl class="meta">
         <div><dt>面向</dt><dd>${esc(c.audience||"—")}</dd></div>
         <div><dt>更新</dt><dd>${esc(c.updated||"—")}</dd></div>
-        <div><dt>收录</dt><dd>${(c.items||[]).length} 款 · 平替 ${(c.equivalences||[]).length} 组</dd></div>
+        <div><dt>收录</dt><dd>${(c.items||[]).length} 款，平替 ${(c.equivalences||[]).length} 组</dd></div>
       </dl>
       <div class="head-actions">
         <input id="filter" class="filterin" type="text" placeholder="过滤这份清单…" autocomplete="off" spellcheck="false">

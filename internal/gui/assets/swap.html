@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SwiftInstall · 逐条决策</title>
+<title>SwiftInstall，逐条决策</title>
 <style>
   :root{
     --paper:#F4EFE6; --card:#FBF8F1; --ink:#1C1B17; --muted:#6E6B60; --faint:#9A9384;
@@ -88,7 +88,7 @@
   </div>
   <div class="wrap">
     <div class="head">
-      <div class="kicker">逐条决策 · 平替滑卡</div>
+      <div class="kicker">逐条决策，平替滑卡</div>
       <h1 id="title">这些平替，值得换吗？</h1>
       <p class="sub">拖一下：← 保留、→ 换；点卡片翻面看"数据保真 + 迁移第一步"。也支持键盘 ←/→/Enter/Z。</p>
     </div>
@@ -99,7 +99,7 @@
       <button class="btn ghost" id="flipBtn">详情</button>
       <button class="btn ghost" id="undoBtn">撤销</button>
     </div>
-    <div class="tally" id="tally" style="display:none">已换 <b id="nSwap">0</b> · 已留 <b id="nKeep">0</b> · 剩余 <b id="nLeft">0</b></div>
+    <div class="tally" id="tally" style="display:none">已换 <b id="nSwap">0</b>，已留 <b id="nKeep">0</b>，剩余 <b id="nLeft">0</b></div>
     <div class="done" id="done">
       <h2>这一轮翻完了</h2>
       <p id="doneP">可把"已换"的这批存成安装清单，去主界面一键装。</p>
@@ -144,10 +144,10 @@ function front(c){return `<div class="face front">
   <div class="names"><span class="from">${esc(c.from)}</span><span class="arrow">→</span><span class="to">${esc(c.to)}</span></div>
   <div class="chips"><span>更好的</span><span class="chip free">${LIC[c.lic]||esc(c.lic)}</span></div>
   <p class="why">${esc(c.why)}</p><div class="spacer"></div>
-  <div class="hint"><span>拖动决定 · 点卡片翻面</span><button class="flipbtn" type="button">详情</button></div>
+  <div class="hint"><span>拖动决定，点卡片翻面</span><button class="flipbtn" type="button">详情</button></div>
 </div>`;}
 function back(c){return `<div class="face back">
-  <h3>${esc(c.from)} → ${esc(c.to)} · 怎么换</h3>
+  <h3>${esc(c.from)} → ${esc(c.to)}，怎么换</h3>
   <div class="fid"><b>数据保真</b>：${esc(c.fid)}</div>
   <div class="step"><b>第一步</b>：${esc(c.step)}</div>
   ${c.src?`<a class="src" href="${esc(c.src)}" target="_blank" rel="noopener">官方来源 ↗</a>`:""}

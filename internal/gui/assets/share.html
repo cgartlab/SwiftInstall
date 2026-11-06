@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SwiftInstall · 分享卡片</title>
+<title>SwiftInstall，分享卡片</title>
 <style>
   :root{--paper:#F4EFE6;--card:#FBF8F1;--ink:#1C1B17;--muted:#6E6B60;--faint:#9A9384;--line:#DDD6C7;
     --green:#3F6B52;--green-soft:#E6EEE7;--amber:#7C7568;--amber-soft:#EFE9DC;
@@ -46,13 +46,13 @@
 </head>
 <body>
   <div class="poster" id="poster">
-    <div class="kicker">免费 / 开源 · 软件清单</div>
+    <div class="kicker">免费 / 开源，软件清单</div>
     <h1 id="title">正在生成…</h1>
     <p class="sub" id="sub"></p>
     <div class="grid" id="grid"></div>
     <div class="more" id="more"></div>
     <div class="foot">
-      <div><div class="brand">SwiftInstall</div><div class="tag">只收免费/开源 · 免费版就够用</div></div>
+      <div><div class="brand">SwiftInstall</div><div class="tag">只收免费/开源，免费版就够用</div></div>
       <div class="controls">
         <button class="btn" id="copyBtn">复制文案</button>
         <button class="btn primary" id="dlBtn">下载图片</button>
@@ -72,7 +72,7 @@
       const r=await fetch("/api/toollist?toollist="+encodeURIComponent(id)); const c=await r.json();
       if(!r.ok) throw new Error(c.error||"读取失败"); RAW=c;
       $("#title").textContent=c.title;
-      $("#sub").textContent=(c.audience?c.audience+" · ":"")+(c.items||[]).length+" 款精选工具";
+      $("#sub").textContent=(c.audience?c.audience+"，":"")+(c.items||[]).length+" 款精选工具";
       const items=(c.items||[]).slice(0,14);
       $("#grid").innerHTML=items.map(it=>`<div class="it"><span class="nm">${esc(it.name)}</span> <span class="chip ${esc(it.license)}">${LIC[it.license]||esc(it.license)}</span></div>`).join("");
       const rest=(c.items||[]).length-items.length;
@@ -90,11 +90,11 @@ $("#dlBtn").onclick=()=>{
   g.fillStyle=cv("--paper","#F4EFE6"); g.fillRect(0,0,W,H);
   g.fillStyle=cv("--card","#FBF8F1"); rr(g,28,28,W-56,H-56,30); g.fill(); g.strokeStyle=cv("--line","#DDD6C7"); g.lineWidth=1; g.stroke();
   const cx=pad+8, cw=W-2*(pad+8);
-  g.fillStyle=cv("--green","#3F6B52"); g.font='600 22px -apple-system,"PingFang SC",sans-serif'; g.fillText("免费 / 开源 · 软件清单", cx, pad+44);
+  g.fillStyle=cv("--green","#3F6B52"); g.font='600 22px -apple-system,"PingFang SC",sans-serif'; g.fillText("免费 / 开源，软件清单", cx, pad+44);
   g.fillStyle=cv("--ink","#1C1B17"); g.font='700 46px "Songti SC","Iowan Old Style",serif';
   g.fillText(trim(g,RAW.title||"",W-2*pad-16), cx, pad+104);
   g.fillStyle=cv("--muted","#6E6B60"); g.font='400 22px -apple-system,"PingFang SC",sans-serif';
-  g.fillText((RAW.audience?RAW.audience+" · ":"")+((RAW.items||[]).length)+" 款精选工具", cx, pad+140);
+  g.fillText((RAW.audience?RAW.audience+"，":"")+((RAW.items||[]).length)+" 款精选工具", cx, pad+140);
   const gap=46, colW=(cw-gap)/2;
   for(let i=0;i<items.length;i++){ const col=i%2, row=Math.floor(i/2);
     const x=cx+col*(colW+gap), y=pad+head+row*rowH;
@@ -111,7 +111,7 @@ $("#dlBtn").onclick=()=>{
   const fy=H-pad-foot+40;
   g.strokeStyle=cv("--line","#DDD6C7"); g.beginPath(); g.moveTo(cx,fy-30); g.lineTo(cx+cw,fy-30); g.stroke();
   g.fillStyle=cv("--ink","#1C1B17"); g.font='700 30px "Songti SC",serif'; g.fillText("SwiftInstall", cx, fy+10);
-  g.fillStyle=cv("--muted","#6E6B60"); g.font='400 20px -apple-system,"PingFang SC",sans-serif'; g.fillText("只收免费/开源 · 免费版就够用", cx, fy+42);
+  g.fillStyle=cv("--muted","#6E6B60"); g.font='400 20px -apple-system,"PingFang SC",sans-serif'; g.fillText("只收免费/开源，免费版就够用", cx, fy+42);
   cv.toBlob(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="toollist-"+id+".png";a.click();URL.revokeObjectURL(a.href);},"image/png");
 };
 $("#copyBtn").onclick=()=>{

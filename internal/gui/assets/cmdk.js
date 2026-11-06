@@ -38,15 +38,15 @@
     '<div class="cmdk-box" role="dialog" aria-modal="true" aria-label="命令面板">' +
     '<input id="cmdkInput" class="cmdk-input" type="text" placeholder="搜索命令…（体检 / 清单 / 逐条决策 / 返回）" autocomplete="off" spellcheck="false">' +
     '<ul id="cmdkList" class="cmdk-list"></ul>' +
-    '<div class="cmdk-foot">↑↓ 选择 · ↵ 执行 · Esc 关闭</div></div>';
+    '<div class="cmdk-foot">↑↓ 选择，↵ 执行，Esc 关闭</div></div>';
   document.body.appendChild(ov);
 
   var CMDS = [
     { t: "环境体检", d: "扫描已装软件，看该装 / 该换什么", run: function () { location.href = "/audit"; } },
     { t: "软件清单", d: "浏览精选免费 / 开源清单", run: function () { location.href = "/toollists"; } },
-    { t: "逐条决策 · 设计师清单", d: "用平替滑卡逐条决定", run: function () { location.href = "/swap?toollist=mac-designers"; } },
-    { t: "逐条决策 · 开发者清单", d: "用平替滑卡逐条决定", run: function () { location.href = "/swap?toollist=developers"; } },
-    { t: "逐条决策 · 创作者清单", d: "用平替滑卡逐条决定", run: function () { location.href = "/swap?toollist=creators"; } },
+    { t: "逐条决策，设计师清单", d: "用平替滑卡逐条决定", run: function () { location.href = "/swap?toollist=mac-designers"; } },
+    { t: "逐条决策，开发者清单", d: "用平替滑卡逐条决定", run: function () { location.href = "/swap?toollist=developers"; } },
+    { t: "逐条决策，创作者清单", d: "用平替滑卡逐条决定", run: function () { location.href = "/swap?toollist=creators"; } },
     { t: "系统自检", d: "看包管理器 / 清单新鲜度 / AI 配置", run: function () { location.href = "/health"; } },
     { t: "回到主界面", d: "返回清单管理", run: function () { location.href = "/"; } },
     { t: "回到顶部", d: "滚动到页面顶部", run: function () { close(); window.scrollTo({ top: 0, behavior: "smooth" }); } },
