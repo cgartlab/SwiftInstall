@@ -13,6 +13,8 @@
 ## 二、设计 Token
 
 ### 颜色（CSS 变量，亮/暗两套）
+
+> 暗色实现采用 `@media (prefers-color-scheme: dark)`（跟随系统），而非 `[data-theme="dark"]`。审查/Argus 报告若出现「dark 未覆盖」告警，属误报。
 | Token | 亮色 | 暗色 | 用途 |
 |---|---|---|---|
 | `--paper` | `#F4EFE6` | `#16140F` | 页面底色（骨纸） |
