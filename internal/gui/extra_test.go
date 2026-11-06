@@ -177,3 +177,22 @@ func TestImportThenFetch(t *testing.T) {
 		t.Errorf("fetch imported toollist = %d, want 200", resp2.StatusCode)
 	}
 }
+
+func TestHandleRunValidation(t *testing.T) {
+	ts := newTestServer(t)
+	defer ts.Close()
+	for _, u := range []string{
+		"/api/run?action=bogus&ids=git",
+		"/api/run?action=install",
+		"/api/run?action=install&ids=,,",
+	} {
+		resp, err := http.Get(ts.URL + u)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("%s = %d, want 400", u, resp.StatusCode)
+		}
+	}
+}

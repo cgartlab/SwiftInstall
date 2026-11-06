@@ -401,3 +401,4 @@ html, body {
 
 /* vim-style keyboard focus row */
 .row.kb { background: var(--moss-soft); box-shadow: inset 2px 0 0 var(--moss); }
+.row:active { background: var(--panel-2); }
