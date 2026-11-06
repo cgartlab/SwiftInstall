@@ -22,7 +22,7 @@
   header{display:flex;align-items:center;justify-content:space-between;
     padding:22px 0 16px;border-bottom:1px solid var(--line)}
   .brand{display:flex;align-items:center;gap:11px;font-weight:600;letter-spacing:.2px}
-  .brand .mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--green),#4b7d60);
+  .brand .mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--green),var(--green-hi));
     display:grid;place-items:center;color:var(--on-accent);font-size:13px;font-weight:700}
   .nav{display:flex;align-items:center;gap:18px;font-size:13.5px}
   .nav a{color:var(--muted);text-decoration:none}
@@ -147,7 +147,7 @@
   @keyframes rowin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){#sections.enter > *{animation:none!important;opacity:1;transform:none}}
 
-  :root{--on-accent:#FFFFFF;--red:#A24B3B;--red-soft:#F5E3DE;--err:#9a3d30;--on-moss:#2c4d3c}
+  :root{--on-accent:#FFFFFF;--red:#A24B3B;--red-soft:#F5E3DE;--err:#9a3d30;--on-moss:#2c4d3c;--green-hi:#4b7d60}
   @media (prefers-color-scheme:dark){:root{--red:#D97757;--red-soft:#3A2C18;--err:#D97757;--on-moss:#ECE7DC}}
 </style>
 </head>
