@@ -225,3 +225,27 @@ func TestImportRejectsUnsafeID(t *testing.T) {
 		t.Errorf("unsafe id import = %d, want 400", resp.StatusCode)
 	}
 }
+
+func TestReadOnlyMethodGuard(t *testing.T) {
+	ts := newTestServer(t)
+	defer ts.Close()
+	for _, u := range []string{"/api/state", "/api/toollists", "/api/health", "/api/status", "/api/audit"} {
+		resp, err := http.Post(ts.URL+u, "application/json", strings.NewReader("{}"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusMethodNotAllowed {
+			t.Errorf("POST %s = %d, want 405", u, resp.StatusCode)
+		}
+		// GET should still work (200 or 502 depending on backend, but not 405)
+		gr, err := http.Get(ts.URL + u)
+		if err != nil {
+			t.Fatal(err)
+		}
+		gr.Body.Close()
+		if gr.StatusCode == http.StatusMethodNotAllowed {
+			t.Errorf("GET %s = 405, should be allowed", u)
+		}
+	}
+}
