@@ -11,6 +11,18 @@ if ! go build -ldflags "-X main.Version=$(cat VERSION 2>/dev/null || echo dev)" 
   echo "build failed"; exit 1
 fi
 
+# Cross-platform build check (other OSes must still compile).
+XDIR="$(mktemp -d)"
+for t in "windows amd64" "linux amd64" "darwin arm64"; do
+  set -- $t
+  if GOOS=$1 GOARCH=$2 go build -o "$XDIR/sis-$1-$2" ./cmd/sis/ 2>/dev/null; then
+    pass=$((pass+1))
+  else
+    fail=$((fail+1)); echo "FAIL(cross-build) $1/$2"
+  fi
+done
+rm -rf "$XDIR"
+
 MAN="$(mktemp -t man.XXXXXX).yaml"
 printf 'packages:\n  - id: git\n  - id: gh\n' > "$MAN"
 
