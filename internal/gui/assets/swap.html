@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SwiftInstall，逐条决策</title>
 <style>
-  :root{
+  :root{ --fs-1: 11px; --fs-2: 12.5px; --fs-3: 17px; --fs-4: 28px;
     --paper:#F4EFE6; --card:#FBF8F1; --ink:#1C1B17; --muted:#6E6B60; --faint:#9A9384;
     --line:#DDD6C7; --green:#3F6B52; --green-soft:#E6EEE7; --amber:#7C7568; --amber-soft:#EFE9DC;
     --serif:"Iowan Old Style","Palatino Linotype","Songti SC","Noto Serif SC",Georgia,serif;
@@ -19,14 +19,14 @@
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{min-height:100%}
   body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px;-webkit-font-smoothing:antialiased}
-  .top{max-width:560px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;font-size:13px}
+  .top{max-width:560px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;font-size: var(--fs-2)}
   .top a{color:var(--muted);text-decoration:none}
   .top a:hover{color:var(--ink)}
   .wrap{width:min(560px,100%);margin:0 auto}
   .head{text-align:center;margin:18px 0 20px}
-  .kicker{font-size:12px;letter-spacing:.06em;color:var(--green);margin-bottom:8px}
-  h1{font-family:var(--serif);font-size:28px;font-weight:600;letter-spacing:-.4px}
-  .sub{font-size:13px;color:var(--muted);margin-top:8px}
+  .kicker{font-size: var(--fs-2);letter-spacing:.06em;color:var(--green);margin-bottom:8px}
+  h1{font-family:var(--serif);font-size: var(--fs-4);font-weight:600;letter-spacing:-.4px}
+  .sub{font-size: var(--fs-2);color:var(--muted);margin-top:8px}
   .stage{position:relative;height:420px;margin:0 auto}
   .card{position:absolute;inset:0;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px 26px 20px;
     box-shadow:0 1px 2px rgba(30,26,18,.05),0 14px 40px rgba(30,26,18,.10);
@@ -40,38 +40,38 @@
   .card.flipped .inner{transform:rotateY(180deg)}
   .face{position:absolute;inset:0;backface-visibility:hidden;display:flex;flex-direction:column}
   .back{transform:rotateY(180deg)}
-  .chips{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
-  .chip{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+  .chips{display:flex;align-items:center;gap:10px;font-size: var(--fs-2);color:var(--muted)}
+  .chip{font-size: var(--fs-1);font-weight:600;padding:2px 8px;border-radius:20px}
   .chip.paid{background:var(--amber-soft);color:var(--amber)}
   .chip.free{background:var(--green-soft);color:var(--green)}
   .names{display:flex;align-items:baseline;gap:12px;margin:22px 0 6px;font-family:var(--serif)}
-  .from{font-size:28px;font-weight:600}.arrow{color:var(--green);font-size:24px}.to{font-size:28px;font-weight:600;color:var(--green)}
-  .role{font-size:12.5px;color:var(--faint)}
-  .why{font-size:14px;color:var(--muted);line-height:1.6;margin-top:16px;max-width:44ch}
+  .from{font-size: var(--fs-4);font-weight:600}.arrow{color:var(--green);font-size: var(--fs-4)}.to{font-size: var(--fs-4);font-weight:600;color:var(--green)}
+  .role{font-size: var(--fs-2);color:var(--faint)}
+  .why{font-size: var(--fs-2);color:var(--muted);line-height:1.6;margin-top:16px;max-width:44ch}
   .spacer{flex:1}
-  .hint{font-size:12px;color:var(--faint);border-top:1px solid var(--line);padding-top:12px;display:flex;justify-content:space-between;align-items:center}
-  .flipbtn{border:1px solid var(--line);background:transparent;color:var(--green);font-size:12px;padding:5px 12px;border-radius:9px;cursor:pointer;font-family:inherit}
-  .back h3{font-family:var(--serif);font-size:17px;font-weight:600;margin-bottom:12px}
-  .fid{background:var(--green-soft);color:var(--on-moss);border-radius:10px;padding:10px 12px;font-size:12.5px;margin-bottom:12px}
+  .hint{font-size: var(--fs-2);color:var(--faint);border-top:1px solid var(--line);padding-top:12px;display:flex;justify-content:space-between;align-items:center}
+  .flipbtn{border:1px solid var(--line);background:transparent;color:var(--green);font-size: var(--fs-2);padding:5px 12px;border-radius:9px;cursor:pointer;font-family:inherit}
+  .back h3{font-family:var(--serif);font-size: var(--fs-3);font-weight:600;margin-bottom:12px}
+  .fid{background:var(--green-soft);color:var(--on-moss);border-radius:10px;padding:10px 12px;font-size: var(--fs-2);margin-bottom:12px}
   @media (prefers-color-scheme:dark){.fid{color:var(--ink)}}
-  .step{font-size:12.5px;color:var(--muted);line-height:1.55}.step b{color:var(--ink)}
-  .src{font-size:11.5px;color:var(--green);text-decoration:none;margin-top:8px;display:inline-block}
+  .step{font-size: var(--fs-2);color:var(--muted);line-height:1.55}.step b{color:var(--ink)}
+  .src{font-size: var(--fs-1);color:var(--green);text-decoration:none;margin-top:8px;display:inline-block}
   .controls{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:18px}
   .btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);color:var(--ink);
-    font-size:13.5px;font-weight:600;padding:10px 18px;border-radius:11px;cursor:pointer;font-family:inherit;
+    font-size: var(--fs-2);font-weight:600;padding:10px 18px;border-radius:11px;cursor:pointer;font-family:inherit;
     transition:transform var(--dur-2) var(--ease),border-color var(--dur-2)}
   @media (hover:hover) and (pointer:fine){.btn:hover{transform:translateY(-1px)}}
   .btn:active{transform:scale(0.97)}
   .btn.keep{color:var(--muted)}
   .btn.swap{background:var(--green);border-color:var(--green);color:var(--on-accent)}.btn.ghost{background:transparent}
-  .tally{display:flex;justify-content:center;gap:22px;margin-top:16px;font-size:12.5px;color:var(--muted)}
+  .tally{display:flex;justify-content:center;gap:22px;margin-top:16px;font-size: var(--fs-2);color:var(--muted)}
   .tally b{color:var(--ink);font-variant-numeric:tabular-nums}
   .done{text-align:center;padding:40px 20px;display:none}
-  .done h2{font-family:var(--serif);font-size:23px;margin-bottom:10px}
-  .done p{color:var(--muted);font-size:14px;margin-bottom:16px}
-  .out{max-width:70ch;margin:12px auto 0;white-space:pre-wrap;font-size:13px;color:var(--green);display:none}
+  .done h2{font-family:var(--serif);font-size: var(--fs-4);margin-bottom:10px}
+  .done p{color:var(--muted);font-size: var(--fs-2);margin-bottom:16px}
+  .out{max-width:70ch;margin:12px auto 0;white-space:pre-wrap;font-size: var(--fs-2);color:var(--green);display:none}
   .out.on{display:block}
-  .empty{text-align:center;color:var(--muted);padding:80px 20px;font-size:14px}
+  .empty{text-align:center;color:var(--muted);padding:80px 20px;font-size: var(--fs-2)}
   @media (prefers-reduced-motion:reduce){.card,.inner,.btn,.flipbtn{transition-property:opacity,background-color,border-color,color!important}.card{box-shadow:none}}
 
   :root{--on-accent:#FFFFFF;--red:#A24B3B;--red-soft:#F5E3DE;--err:#9a3d30;--on-moss:#2c4d3c}

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SwiftInstall，系统自检</title>
 <style>
-  :root{--paper:#F4EFE6;--card:#FBF8F1;--ink:#1C1B17;--muted:#6E6B60;--faint:#9A9384;--line:#DDD6C7;
+  :root{ --fs-1: 12px; --fs-2: 12.5px; --fs-3: 13.5px; --fs-4: 28px;--paper:#F4EFE6;--card:#FBF8F1;--ink:#1C1B17;--muted:#6E6B60;--faint:#9A9384;--line:#DDD6C7;
     --green:#3F6B52;--green-soft:#E6EEE7;--amber:#7C7568;--amber-soft:#EFE9DC;
     --serif:"Iowan Old Style","Palatino Linotype","Songti SC","Noto Serif SC",Georgia,serif;
     --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",sans-serif}
@@ -13,26 +13,26 @@
     --faint:#6F6858;--line:#2E2A20;--green:#86AE92;--green-soft:#1E2A22;--amber:#B8AD98;--amber-soft:#2A2620}}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px}
-  .top{max-width:640px;margin:0 auto;display:flex;justify-content:space-between;font-size:13px}
+  .top{max-width:640px;margin:0 auto;display:flex;justify-content:space-between;font-size: var(--fs-2)}
   .top a{color:var(--muted);text-decoration:none}.top a:hover{color:var(--ink)}
   .wrap{max-width:640px;margin:0 auto}
   .head{margin:20px 0}
-  .kicker{font-size:12px;letter-spacing:.06em;color:var(--green);margin-bottom:8px}
-  h1{font-family:var(--serif);font-size:28px;font-weight:600;letter-spacing:-.4px}
-  .sub{font-size:13px;color:var(--muted);margin-top:8px}
+  .kicker{font-size: var(--fs-1);letter-spacing:.06em;color:var(--green);margin-bottom:8px}
+  h1{font-family:var(--serif);font-size: var(--fs-4);font-weight:600;letter-spacing:-.4px}
+  .sub{font-size: var(--fs-2);color:var(--muted);margin-top:8px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:8px}
   .row{display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
   .row:last-child{border-bottom:none}
-  .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--on-accent)}
+  .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size: var(--fs-1);font-weight:700;color:var(--on-accent)}
   .ic.ok{background:var(--green)}.ic.no{background:var(--amber)}.ic.na{background:var(--faint)}
-  .lbl{font-size:13.5px;font-weight:600}
-  .det{font-size:12px;color:var(--muted);margin-top:2px}
-  .val{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+  .lbl{font-size: var(--fs-3);font-weight:600}
+  .det{font-size: var(--fs-1);color:var(--muted);margin-top:2px}
+  .val{font-size: var(--fs-2);color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
   .foot{padding:14px 18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}
-  .btn{border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:13px;font-weight:600;
+  .btn{border:1px solid var(--line);background:var(--card);color:var(--ink);font-size: var(--fs-2);font-weight:600;
     padding:8px 15px;border-radius:9px;cursor:pointer;font-family:inherit}
   .btn:hover{border-color:var(--green);color:var(--green)}
-  .hint{font-size:12px;color:var(--faint)}
+  .hint{font-size: var(--fs-1);color:var(--faint)}
   .err{color:var(--err)}
   .card .row{opacity:0}
   .card.enter .row{animation:rowin .3s cubic-bezier(0.23,1,0.32,1) both}

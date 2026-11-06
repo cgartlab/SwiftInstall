@@ -29,7 +29,8 @@
 
 ## 字号 / 节奏 / 无障碍（规则 7）
 - ✅ 主界面（`styles.css`）已建立 4 级字号 token：`--fs-xs 12 / sm 13 / md 15 / lg 20`，全量 font-size 收敛为这 4 级（KPI 数字=lg，区块标题=md，正文=md/sm，元信息=xs）。前后对比：`gui-main-before-typography.png` ↔ `gui-main.png`。
-- 待办：audit/toollists/swap/share/health 各页仍多字号（12–15 种），后续逐页收敛到 4 级；统一行高/段距，核对对比度 ≥ 4.5:1。
+- ✅ audit/toollists/swap/share/health 各页字号均已收敛为 4 级（各自按分布取 4 档：如 audit 11/13.5/16/44、share 10.5/12/13.5/34）。
+- 待办：统一行高/段距（节奏），核对对比度 ≥ 4.5:1。
 
 ## 斜体 / 大写 / 等宽 / 中间点 / 动词（规则 8）
 - ✅ 去掉过滤框占位符**斜体**；去掉 kicker/section 标题的**全大写**（`text-transform:uppercase`）。
