@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SwiftInstall，逐条决策</title>
 <style>
-  :root{ --fs-1: 11px; --fs-2: 12.5px; --fs-3: 17px; --fs-4: 28px;
+  :root{ --r-xs:6px;--r-sm:9px;--r-md:12px;--r-lg:16px;--r-pill:999px; --fs-1: 11px; --fs-2: 12.5px; --fs-3: 17px; --fs-4: 28px;
     --paper:#F4EFE6; --card:#FBF8F1; --ink:#1C1B17; --muted:#6E6B60; --faint:#9A9384;
     --line:#DDD6C7; --green:#3F6B52; --green-soft:#E6EEE7; --amber:#7C7568; --amber-soft:#EFE9DC;
     --serif:"Iowan Old Style","Palatino Linotype","Songti SC","Noto Serif SC",Georgia,serif;
@@ -28,7 +28,7 @@
   h1{font-family:var(--serif);font-size: var(--fs-4);font-weight:600;letter-spacing:-.4px}
   .sub{font-size: var(--fs-2);color:var(--muted);margin-top:8px}
   .stage{position:relative;height:420px;margin:0 auto}
-  .card{position:absolute;inset:0;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px 26px 20px;
+  .card{position:absolute;inset:0;background:var(--card);border:1px solid var(--line);border-radius: var(--r-lg);padding:26px 26px 20px;
     box-shadow:0 1px 2px rgba(30,26,18,.05),0 14px 40px rgba(30,26,18,.10);
     transform-style:preserve-3d;will-change:transform;user-select:none;touch-action:none}
   .card.c1{transform:translateY(14px) scale(.97);opacity:.75;pointer-events:none}
@@ -41,7 +41,7 @@
   .face{position:absolute;inset:0;backface-visibility:hidden;display:flex;flex-direction:column}
   .back{transform:rotateY(180deg)}
   .chips{display:flex;align-items:center;gap:10px;font-size: var(--fs-2);color:var(--muted)}
-  .chip{font-size: var(--fs-1);font-weight:600;padding:2px 8px;border-radius:20px}
+  .chip{font-size: var(--fs-1);font-weight:600;padding:2px 8px;border-radius: var(--r-lg)}
   .chip.paid{background:var(--amber-soft);color:var(--amber)}
   .chip.free{background:var(--green-soft);color:var(--green)}
   .names{display:flex;align-items:baseline;gap:12px;margin:22px 0 6px;font-family:var(--serif)}
@@ -50,15 +50,15 @@
   .why{font-size: var(--fs-2);color:var(--muted);line-height:1.6;margin-top:16px;max-width:44ch}
   .spacer{flex:1}
   .hint{font-size: var(--fs-2);color:var(--faint);border-top:1px solid var(--line);padding-top:12px;display:flex;justify-content:space-between;align-items:center}
-  .flipbtn{border:1px solid var(--line);background:transparent;color:var(--green);font-size: var(--fs-2);padding:5px 12px;border-radius:9px;cursor:pointer;font-family:inherit}
+  .flipbtn{border:1px solid var(--line);background:transparent;color:var(--green);font-size: var(--fs-2);padding:5px 12px;border-radius: var(--r-sm);cursor:pointer;font-family:inherit}
   .back h3{font-family:var(--serif);font-size: var(--fs-3);font-weight:600;margin-bottom:12px}
-  .fid{background:var(--green-soft);color:var(--on-moss);border-radius:10px;padding:10px 12px;font-size: var(--fs-2);margin-bottom:12px}
+  .fid{background:var(--green-soft);color:var(--on-moss);border-radius: var(--r-sm);padding:10px 12px;font-size: var(--fs-2);margin-bottom:12px}
   @media (prefers-color-scheme:dark){.fid{color:var(--ink)}}
   .step{font-size: var(--fs-2);color:var(--muted);line-height:1.55}.step b{color:var(--ink)}
   .src{font-size: var(--fs-1);color:var(--green);text-decoration:none;margin-top:8px;display:inline-block}
   .controls{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:18px}
   .btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);color:var(--ink);
-    font-size: var(--fs-2);font-weight:600;padding:10px 18px;border-radius:11px;cursor:pointer;font-family:inherit;
+    font-size: var(--fs-2);font-weight:600;padding:10px 18px;border-radius: var(--r-sm);cursor:pointer;font-family:inherit;
     transition:transform var(--dur-2) var(--ease),border-color var(--dur-2)}
   @media (hover:hover) and (pointer:fine){.btn:hover{transform:translateY(-1px)}}
   .btn:active{transform:scale(0.97)}
@@ -77,7 +77,7 @@
   :root{--on-accent:#FFFFFF;--red:#A24B3B;--red-soft:#F5E3DE;--err:#9a3d30;--on-moss:#2c4d3c}
   @media (prefers-color-scheme:dark){:root{--red:#D97757;--red-soft:#2A2620;--err:#D97757;--on-moss:#ECE7DC}}
 
-  :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:3px}
+  :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius: var(--r-xs)}
   :focus:not(:focus-visible){outline:none}
 </style>
 </head>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SwiftInstall — 软件清单</title>
 <style>
-  :root{ --fs-1: 11px; --fs-2: 13px; --fs-3: 19px; --fs-4: 38px;
+  :root{ --r-xs:6px;--r-sm:9px;--r-md:12px;--r-lg:16px;--r-pill:999px; --fs-1: 11px; --fs-2: 13px; --fs-3: 19px; --fs-4: 38px;
     --paper:#F4EFE6; --card:#FBF8F1; --ink:#1C1B17; --muted:#6E6B60;
     --faint:#9A9384; --line:#DDD6C7; --line2:#E8E2D5;
     --green:#3F6B52; --green-soft:#E6EEE7; --amber:#7C7568; --amber-soft:#EFE9DC;
@@ -21,7 +21,7 @@
   body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size: var(--fs-2);
     -webkit-font-smoothing:antialiased;line-height:1.6}
   a{color:inherit}
-  :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:3px}
+  :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius: var(--r-xs)}
 
   .app{display:grid;grid-template-columns:246px 1fr;min-height:100vh}
   /* rail — the single remembered thing: a ledger index */
@@ -51,13 +51,13 @@
   .meta dd{font-size: var(--fs-2);margin-top:2px}
   .head-actions{display:flex;gap:10px;margin-top:22px}
   .ai{display:flex;gap:8px;margin-top:14px;max-width:640px}
-  .ai input{flex:1;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size: var(--fs-2);background:var(--card);color:var(--ink);font-family:inherit;outline:0}
+  .ai input{flex:1;border:1px solid var(--line);border-radius: var(--r-sm);padding:9px 12px;font-size: var(--fs-2);background:var(--card);color:var(--ink);font-family:inherit;outline:0}
   .ai input:focus{border-color:var(--green)}
   .aiout{display:none;margin-top:12px;max-width:70ch;white-space:pre-wrap;font-size: var(--fs-2);color:var(--ink);border-left:3px solid var(--green);padding:10px 14px;background:var(--card);border-radius:0 8px 8px 0;line-height:1.6}
   .aiout.on{display:block}
   .aiout .note{color:var(--faint);font-size: var(--fs-1)}
   .btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);
-    color:var(--ink);font-size: var(--fs-2);font-weight:550;padding:8px 15px;border-radius:9px;cursor:pointer;
+    color:var(--ink);font-size: var(--fs-2);font-weight:550;padding:8px 15px;border-radius: var(--r-sm);cursor:pointer;
     text-decoration:none;font-family:inherit;transition:border-color .14s,background .14s}
   @media (hover:hover) and (pointer:fine){.btn:hover{border-color:var(--green);color:var(--green)}}
   .btn:active{transform:scale(0.97)}
@@ -68,11 +68,11 @@
   .cat{font-family:var(--serif);font-size: var(--fs-3);font-weight:600;margin:38px 0 4px;display:flex;align-items:baseline;gap:10px}
   .cat .n{font-size: var(--fs-1);color:var(--faint);font-family:var(--sans);font-weight:400}
   .item{display:grid;grid-template-columns:34px 1fr;gap:14px;padding:16px 2px;border-bottom:1px solid var(--line2)}
-  .tile{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--on-accent);font-weight:700;font-size: var(--fs-2);flex:none}
+  .tile{width:34px;height:34px;border-radius: var(--r-sm);display:grid;place-items:center;color:var(--on-accent);font-weight:700;font-size: var(--fs-2);flex:none}
   .item-top{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
   .name{font-size: var(--fs-2);font-weight:600}
   .role{font-size: var(--fs-2);color:var(--faint)}
-  .chip{font-size: var(--fs-1);font-weight:600;padding:1px 8px;border-radius:20px;white-space:nowrap}
+  .chip{font-size: var(--fs-1);font-weight:600;padding:1px 8px;border-radius: var(--r-lg);white-space:nowrap}
   .chip.oss,.chip.free{background:var(--green-soft);color:var(--green)}
   .chip.freemium{background:var(--amber-soft);color:var(--amber)}
   .chip.warn{background:var(--red-soft);color:var(--red)}
@@ -82,7 +82,7 @@
   .item-links a:hover{text-decoration:underline;text-underline-offset:3px}
 
   /* equivalences — handled as an expandable field-guide appendix */
-  .eq{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .eq{background:var(--card);border:1px solid var(--line);border-radius: var(--r-md);margin-bottom:10px;overflow:hidden}
   .eq summary{list-style:none;cursor:pointer;padding:15px 18px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
   .eq summary::-webkit-details-marker{display:none}
   .eq summary .from{font-weight:600}
@@ -92,7 +92,7 @@
   .eq[open] summary{border-bottom:1px solid var(--line)}
   .eq-body{padding:16px 18px}
   .eq-why{font-size: var(--fs-2);color:var(--muted);max-width:70ch;margin-bottom:12px}
-  .fid{background:var(--green-soft);color:var(--on-moss);border-radius:10px;padding:11px 13px;font-size: var(--fs-2);margin-bottom:12px}
+  .fid{background:var(--green-soft);color:var(--on-moss);border-radius: var(--r-sm);padding:11px 13px;font-size: var(--fs-2);margin-bottom:12px}
   @media (prefers-color-scheme:dark){.fid{color:var(--ink)}}
   .steps{margin:0 0 10px 20px;font-size: var(--fs-2)}
   .steps li{margin-bottom:11px}
@@ -108,15 +108,15 @@
     .app{grid-template-columns:1fr}
     .rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);flex-direction:row;flex-wrap:wrap;align-items:center;gap:14px;padding:16px 18px}
     .rail-list{flex-direction:row;margin:0;gap:6px;overflow-x:auto}
-    .rail-item{border-left:0;border-bottom:2px solid transparent;border-radius:8px 8px 0 0}
+    .rail-item{border-left:0;border-bottom:2px solid transparent;border-radius: var(--r-xs) 8px 0 0}
     .rail-item.active{border-left:0;border-bottom-color:var(--green)}
     .rail-foot{margin:0;border:0;padding:0;flex-direction:row}
     .pane{padding:28px 20px 60px}
     .head h1{font-size: var(--fs-4)}
   }
   @media (prefers-reduced-motion:reduce){.rail-item,.btn,.item,.aiout,.chip{transition-property:opacity,background-color,border-color,color!important}}
-  .banner{margin-top:12px;background:var(--amber-soft);color:var(--amber);border-radius:10px;padding:9px 13px;font-size: var(--fs-2)}
-  .filterin{border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size: var(--fs-2);background:var(--card);color:var(--ink);font-family:inherit;outline:0;min-width:180px}
+  .banner{margin-top:12px;background:var(--amber-soft);color:var(--amber);border-radius: var(--r-sm);padding:9px 13px;font-size: var(--fs-2)}
+  .filterin{border:1px solid var(--line);border-radius: var(--r-sm);padding:9px 12px;font-size: var(--fs-2);background:var(--card);color:var(--ink);font-family:inherit;outline:0;min-width:180px}
   .filterin:focus{border-color:var(--green)}
 
   :root{--on-accent:#FFFFFF;--red:#A24B3B;--red-soft:#F5E3DE;--err:#9a3d30;--on-moss:#2c4d3c}

@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SwiftInstall，分享卡片</title>
 <style>
-  :root{ --fs-1: 10.5px; --fs-2: 12px; --fs-3: 13.5px; --fs-4: 34px;--paper:#F4EFE6;--card:#FBF8F1;--ink:#1C1B17;--muted:#6E6B60;--faint:#9A9384;--line:#DDD6C7;
+  :root{ --r-xs:6px;--r-sm:9px;--r-md:12px;--r-lg:16px;--r-pill:999px; --fs-1: 10.5px; --fs-2: 12px; --fs-3: 13.5px; --fs-4: 34px;--paper:#F4EFE6;--card:#FBF8F1;--ink:#1C1B17;--muted:#6E6B60;--faint:#9A9384;--line:#DDD6C7;
     --green:#3F6B52;--green-soft:#E6EEE7;--amber:#7C7568;--amber-soft:#EFE9DC;
     --serif:"Iowan Old Style","Palatino Linotype","Songti SC","Noto Serif SC",Georgia,serif;
     --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",sans-serif}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;
     display:flex;flex-direction:column;align-items:center;padding:26px;gap:16px}
-  .poster{width:min(680px,100%);background:var(--card);border:1px solid var(--line);border-radius:20px;
+  .poster{width:min(680px,100%);background:var(--card);border:1px solid var(--line);border-radius: var(--r-lg);
     padding:40px 44px 30px}
   .kicker{font-size: var(--fs-2);letter-spacing:.12em;color:var(--green);margin-bottom:14px}
   h1{font-family:var(--serif);font-size: var(--fs-4);line-height:1.2;font-weight:600;letter-spacing:-.5px}
@@ -20,7 +20,7 @@
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 22px;margin-top:24px}
   .it{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);min-width:0}
   .it .nm{font-size: var(--fs-3);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .chip{font-size: var(--fs-1);font-weight:600;padding:1px 7px;border-radius:20px;flex:none}
+  .chip{font-size: var(--fs-1);font-weight:600;padding:1px 7px;border-radius: var(--r-lg);flex:none}
   .chip.oss,.chip.free{background:var(--green-soft);color:var(--green)}
   .chip.freemium{background:var(--amber-soft);color:var(--amber)}
   .more{font-size: var(--fs-2);color:var(--faint);margin-top:12px}
@@ -29,18 +29,18 @@
   .tag{font-size: var(--fs-2);color:var(--muted);margin-top:4px}
   .controls{display:flex;gap:10px}
   .btn{border:1px solid var(--line);background:var(--card);color:var(--ink);font-size: var(--fs-3);font-weight:600;
-    padding:9px 16px;border-radius:9px;cursor:pointer;font-family:inherit}
+    padding:9px 16px;border-radius: var(--r-sm);cursor:pointer;font-family:inherit}
   .btn:hover{border-color:var(--green);color:var(--green)}
   .btn.primary{background:var(--green);border-color:var(--green);color:var(--on-accent)}
   .out{max-width:680px;width:100%;white-space:pre-wrap;font-size: var(--fs-2);color:var(--muted);
-    background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:none}
+    background:var(--card);border:1px solid var(--line);border-radius: var(--r-md);padding:14px 16px;display:none}
   .out.on{display:block}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
   :root{--on-accent:#FFFFFF;--red:#A24B3B;--red-soft:#F5E3DE;--err:#9a3d30;--on-moss:#2c4d3c}
   @media (prefers-color-scheme:dark){:root{--red:#D97757;--red-soft:#2A2620;--err:#D97757;--on-moss:#ECE7DC}}
 
-  :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:3px}
+  :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius: var(--r-xs)}
   :focus:not(:focus-visible){outline:none}
 </style>
 </head>

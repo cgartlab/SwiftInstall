@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SwiftInstall，系统自检</title>
 <style>
-  :root{ --fs-1: 12px; --fs-2: 12.5px; --fs-3: 13.5px; --fs-4: 28px;--paper:#F4EFE6;--card:#FBF8F1;--ink:#1C1B17;--muted:#6E6B60;--faint:#9A9384;--line:#DDD6C7;
+  :root{ --r-xs:6px;--r-sm:9px;--r-md:12px;--r-lg:16px;--r-pill:999px; --fs-1: 12px; --fs-2: 12.5px; --fs-3: 13.5px; --fs-4: 28px;--paper:#F4EFE6;--card:#FBF8F1;--ink:#1C1B17;--muted:#6E6B60;--faint:#9A9384;--line:#DDD6C7;
     --green:#3F6B52;--green-soft:#E6EEE7;--amber:#7C7568;--amber-soft:#EFE9DC;
     --serif:"Iowan Old Style","Palatino Linotype","Songti SC","Noto Serif SC",Georgia,serif;
     --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",sans-serif}
@@ -20,7 +20,7 @@
   .kicker{font-size: var(--fs-1);letter-spacing:.06em;color:var(--green);margin-bottom:8px}
   h1{font-family:var(--serif);font-size: var(--fs-4);font-weight:600;letter-spacing:-.4px}
   .sub{font-size: var(--fs-2);color:var(--muted);margin-top:8px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius: var(--r-md);overflow:hidden;margin-top:8px}
   .row{display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
   .row:last-child{border-bottom:none}
   .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size: var(--fs-1);font-weight:700;color:var(--on-accent)}
@@ -30,7 +30,7 @@
   .val{font-size: var(--fs-2);color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
   .foot{padding:14px 18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}
   .btn{border:1px solid var(--line);background:var(--card);color:var(--ink);font-size: var(--fs-2);font-weight:600;
-    padding:8px 15px;border-radius:9px;cursor:pointer;font-family:inherit}
+    padding:8px 15px;border-radius: var(--r-sm);cursor:pointer;font-family:inherit}
   .btn:hover{border-color:var(--green);color:var(--green)}
   .hint{font-size: var(--fs-1);color:var(--faint)}
   .err{color:var(--err)}
@@ -42,7 +42,7 @@
   :root{--on-accent:#FFFFFF;--red:#A24B3B;--red-soft:#F5E3DE;--err:#9a3d30;--on-moss:#2c4d3c}
   @media (prefers-color-scheme:dark){:root{--red:#D97757;--red-soft:#2A2620;--err:#D97757;--on-moss:#ECE7DC}}
 
-  :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:3px}
+  :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius: var(--r-xs)}
   :focus:not(:focus-visible){outline:none}
 </style>
 </head>
