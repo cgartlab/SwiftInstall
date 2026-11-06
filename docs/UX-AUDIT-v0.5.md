@@ -57,3 +57,8 @@
 - 快速看：`docs/design/palette-compare.png`。
 - ✅ **已按 A 青瓷绿全站落地**：`--moss #3F6B52`、暗色 `#86AE92`；原 `--copper/--amber`（橙/陶土）语义改为绿或中性暖灰 `#7C7568`，全站已无橙色 hex。换 B/C 只需改各页 `:root` 的这几个 token 值。
 - 选定后我按该色板替换 `--copper` 等语义色并全站落地（含暗色）。
+
+## 设计升级前后对比（规则 11）
+- PDF：`docs/design/ux-before-after.pdf`（Before v0.3.0 ↔ After 当前）。
+- 缩览：`docs/design/ux-before-after.png`。
+- 配色三选对比：`docs/design/palette-options.pdf`（现状 / A / B / C）。

@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **设计升级前后对比 PDF（规则11）**：`docs/design/ux-before-after.pdf`（v0.3.0 ↔ 当前主界面）与配色三选 `palette-options.pdf`。
+
 - **规则3 精简（第二批）**：压缩 LLM 配置说明与保存预设说明；其余长文案均确有必要。规则3 收尾。
 
 - **规则9 圆角全站 token 化**：audit/toollists/swap/share/health 圆角统一为 4 档 token（6/9/12/16/999），各页 ≤4 种。
