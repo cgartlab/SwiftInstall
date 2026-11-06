@@ -1,6 +1,6 @@
 # Windows 线：看齐 macOS 进度并做得更好
 
-> 2026-11-07。分支 `windows/parity-v0.3`，基于共享基线 `core/shared`（提交 `20f9daf`）。
+> 2026-11-07。分支 `feat/windows-parity`，基于共享基线 `baseline/shared`（提交 `20f9daf`）。
 
 ## 1. 看齐（从基线同步）
 

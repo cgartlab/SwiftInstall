@@ -6,7 +6,7 @@
 
 ### Added
 
-- **Windows 线对齐共享基线**：从 `core/shared` 同步全部公共能力（16 个 CLI 命令、GUI/TUI、可插拔后端注册表、12 个包测试、设计系统文档），版本 `0.3.0`。
+- **Windows 线对齐共享基线**：从 `baseline/shared` 同步全部公共能力（16 个 CLI 命令、GUI/TUI、可插拔后端注册表、12 个包测试、设计系统文档），版本 `0.3.0`。
 - **Windows CI 跑全量测试**：`windows-latest` job 从「仅编译 winget 路径」升级为 `go build ./...` + `go vet ./...` + `go test ./...` + 冒烟 + 上传产物，与 Linux 对齐（含 Homebrew 后端测试）。
 - **发布基础设施补强**（修 #29）：新增 `workflow_dispatch`（可指定 tag）、Windows arm64 产物、`SHA256SUMS` 校验和；发布矩阵扩至 5 个目标。
 - **winget 后端可测试化 + 单测**：`WingetBackend` 新增可注入的 `lookPath` / `run`（生产行为不变），新增 `winget_test.go` 覆盖 Detect（含 fallback 与友好报错）、IsInstalled 三种分支、Install/Uninstall 参数（含 `--proxy`）与命令输出捕获；Windows 线从此在任意 CI runner 上都能测 winget 路径，macOS 线无此覆盖。
