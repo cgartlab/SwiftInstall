@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SwiftInstall · 逐条决策</title>
+<style>
+  :root{
+    --paper:#F4EFE6; --card:#FBF8F1; --ink:#1C1B17; --muted:#6E6B60; --faint:#9A9384;
+    --line:#DDD6C7; --green:#2F5D46; --green-soft:#E7EEE8; --amber:#A9762A; --amber-soft:#F4EAD8;
+    --serif:"Iowan Old Style","Palatino Linotype","Songti SC","Noto Serif SC",Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",sans-serif;
+    --dur-2:200ms; --dur-3:320ms; --ease:cubic-bezier(.22,.61,.36,1);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--paper:#16140F;--card:#1D1A13;--ink:#ECE7DC;--muted:#A39B89;--faint:#6F6858;
+      --line:#2E2A20;--green:#8FB89B;--green-soft:#1E2A22;--amber:#D6A45E;--amber-soft:#3A2C18;}
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px;-webkit-font-smoothing:antialiased}
+  .top{max-width:560px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;font-size:13px}
+  .top a{color:var(--muted);text-decoration:none}
+  .top a:hover{color:var(--ink)}
+  .wrap{width:min(560px,100%);margin:0 auto}
+  .head{text-align:center;margin:18px 0 20px}
+  .kicker{font-size:12px;letter-spacing:.06em;color:var(--green);margin-bottom:8px}
+  h1{font-family:var(--serif);font-size:28px;font-weight:600;letter-spacing:-.4px}
+  .sub{font-size:13px;color:var(--muted);margin-top:8px}
+  .stage{position:relative;height:420px;margin:0 auto}
+  .card{position:absolute;inset:0;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px 26px 20px;
+    box-shadow:0 1px 2px rgba(30,26,18,.05),0 14px 40px rgba(30,26,18,.10);
+    transform-style:preserve-3d;will-change:transform;user-select:none;touch-action:none}
+  .card.c1{transform:translateY(14px) scale(.97);opacity:.75;pointer-events:none}
+  .card.c2{transform:translateY(28px) scale(.94);opacity:.5;pointer-events:none}
+  .card.c0{cursor:grab}.card.dragging{cursor:grabbing;transition:none}
+  .card.leaving{transition:transform var(--dur-3) var(--ease),opacity var(--dur-3) var(--ease)}
+  .inner{position:relative;height:100%;transform-style:preserve-3d;transition:transform 520ms var(--ease)}
+  .card.flipped .inner{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;display:flex;flex-direction:column}
+  .back{transform:rotateY(180deg)}
+  .chips{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+  .chip{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+  .chip.paid{background:var(--amber-soft);color:var(--amber)}
+  .chip.free{background:var(--green-soft);color:var(--green)}
+  .names{display:flex;align-items:baseline;gap:12px;margin:22px 0 6px;font-family:var(--serif)}
+  .from{font-size:28px;font-weight:600}.arrow{color:var(--green);font-size:24px}.to{font-size:28px;font-weight:600;color:var(--green)}
+  .role{font-size:12.5px;color:var(--faint)}
+  .why{font-size:14px;color:var(--muted);line-height:1.6;margin-top:16px;max-width:44ch}
+  .spacer{flex:1}
+  .hint{font-size:12px;color:var(--faint);border-top:1px solid var(--line);padding-top:12px;display:flex;justify-content:space-between;align-items:center}
+  .flipbtn{border:1px solid var(--line);background:transparent;color:var(--green);font-size:12px;padding:5px 12px;border-radius:9px;cursor:pointer;font-family:inherit}
+  .back h3{font-family:var(--serif);font-size:17px;font-weight:600;margin-bottom:12px}
+  .fid{background:var(--green-soft);color:var(--on-moss);border-radius:10px;padding:10px 12px;font-size:12.5px;margin-bottom:12px}
+  @media (prefers-color-scheme:dark){.fid{color:var(--ink)}}
+  .step{font-size:12.5px;color:var(--muted);line-height:1.55}.step b{color:var(--ink)}
+  .src{font-size:11.5px;color:var(--green);text-decoration:none;margin-top:8px;display:inline-block}
+  .controls{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:18px}
+  .btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);color:var(--ink);
+    font-size:13.5px;font-weight:600;padding:10px 18px;border-radius:11px;cursor:pointer;font-family:inherit;
+    transition:transform var(--dur-2) var(--ease),border-color var(--dur-2)}
+  @media (hover:hover) and (pointer:fine){.btn:hover{transform:translateY(-1px)}}
+  .btn:active{transform:scale(0.97)}
+  .btn.keep{color:var(--muted)}
+  .btn.swap{background:var(--green);border-color:var(--green);color:var(--on-accent)}.btn.ghost{background:transparent}
+  .tally{display:flex;justify-content:center;gap:22px;margin-top:16px;font-size:12.5px;color:var(--muted)}
+  .tally b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .done{text-align:center;padding:40px 20px;display:none}
+  .done h2{font-family:var(--serif);font-size:23px;margin-bottom:10px}
+  .done p{color:var(--muted);font-size:14px;margin-bottom:16px}
+  .out{max-width:70ch;margin:12px auto 0;white-space:pre-wrap;font-size:13px;color:var(--green);display:none}
+  .out.on{display:block}
+  .empty{text-align:center;color:var(--muted);padding:80px 20px;font-size:14px}
+  @media (prefers-reduced-motion:reduce){.card,.inner,.btn,.flipbtn{transition-property:opacity,background-color,border-color,color!important}.card{box-shadow:none}}
+
+  :root{--on-accent:#FFFFFF;--red:#A24B3B;--red-soft:#F5E3DE;--err:#9a3d30;--on-moss:#2c4d3c}
+  @media (prefers-color-scheme:dark){:root{--red:#D97757;--red-soft:#3A2C18;--err:#D97757;--on-moss:#ECE7DC}}
+
+  :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:3px}
+  :focus:not(:focus-visible){outline:none}
+</style>
+</head>
+<body>
+  <div class="top">
+    <a href="/">← 返回</a>
+    <a href="/toollists" id="listsLink">软件清单</a>
+  </div>
+  <div class="wrap">
+    <div class="head">
+      <div class="kicker">逐条决策 · 平替滑卡</div>
+      <h1 id="title">这些平替，值得换吗？</h1>
+      <p class="sub">拖一下：← 保留、→ 换；点卡片翻面看"数据保真 + 迁移第一步"。也支持键盘 ←/→/Enter/Z。</p>
+    </div>
+    <div class="stage" id="stage" aria-live="polite"><div class="empty" id="loading">正在读取…</div></div>
+    <div class="controls" id="controls" style="display:none">
+      <button class="btn keep" id="keepBtn">← 保留</button>
+      <button class="btn swap" id="swapBtn">换 →</button>
+      <button class="btn ghost" id="flipBtn">详情</button>
+      <button class="btn ghost" id="undoBtn">撤销</button>
+    </div>
+    <div class="tally" id="tally" style="display:none">已换 <b id="nSwap">0</b> · 已留 <b id="nKeep">0</b> · 剩余 <b id="nLeft">0</b></div>
+    <div class="done" id="done">
+      <h2>这一轮翻完了</h2>
+      <p id="doneP">可把"已换"的这批存成安装清单，去主界面一键装。</p>
+      <button class="btn swap" id="saveBtn">把已换的存成安装清单</button>
+      <button class="btn ghost" id="resetBtn">再来一轮</button>
+      <div class="out" id="out"></div>
+    </div>
+  </div>
+
+<script>
+const $=s=>document.querySelector(s);
+const LIC={oss:"开源",free:"免费",freemium:"免费版够用",paid:"付费"};
+const qp=k=>new URLSearchParams(location.search).get(k);
+const id=qp("toollist")||"mac-designers";
+let CARDS=[], deck=[], swapN=0, keepN=0, hist=[], swaps=[], title="";
+
+function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+async function load(){
+  try{
+    const r=await fetch("/api/toollist?toollist="+encodeURIComponent(id));
+    const c=await r.json();
+    if(!r.ok) throw new Error(c.error||"读取失败");
+    title=c.title||"";
+    CARDS=(c.equivalences||[]).map(eq=>{
+      const pb=eq.playbook||null;
+      const step = pb && pb.steps && pb.steps.length ? (pb.steps[0].title + (pb.steps[0].detail?("："+pb.steps[0].detail):"")) : "可参考官方文档手动切换";
+      return {
+        from:(eq.from&&eq.from[0])||"", to:eq.to.name, lic:eq.to.license, brew:eq.to.brew,
+        role:eq.from_role||"", why:eq.why||"",
+        fid:pb&&pb.data_fidelity?pb.data_fidelity:"（暂无数据保真说明）",
+        step:step,
+        src:(pb&&pb.steps&&pb.steps[0]&&pb.steps[0].source_url)||(eq.sources&&eq.sources[0])||""
+      };
+    });
+    if(!CARDS.length){ $("#loading").textContent="这份清单暂无平替可逐条决策。"; return; }
+    deck=[...CARDS]; render();
+  }catch(e){ $("#loading").textContent="读取失败："+e.message; }
+}
+function front(c){return `<div class="face front">
+  <div class="chips"><span>你现在</span><span class="chip paid">付费</span><span class="role">${esc(c.role)}</span></div>
+  <div class="names"><span class="from">${esc(c.from)}</span><span class="arrow">→</span><span class="to">${esc(c.to)}</span></div>
+  <div class="chips"><span>更好的</span><span class="chip free">${LIC[c.lic]||esc(c.lic)}</span></div>
+  <p class="why">${esc(c.why)}</p><div class="spacer"></div>
+  <div class="hint"><span>拖动决定 · 点卡片翻面</span><button class="flipbtn" type="button">详情</button></div>
+</div>`;}
+function back(c){return `<div class="face back">
+  <h3>${esc(c.from)} → ${esc(c.to)} · 怎么换</h3>
+  <div class="fid"><b>数据保真</b>：${esc(c.fid)}</div>
+  <div class="step"><b>第一步</b>：${esc(c.step)}</div>
+  ${c.src?`<a class="src" href="${esc(c.src)}" target="_blank" rel="noopener">官方来源 ↗</a>`:""}
+  <div class="spacer"></div>
+  <div class="hint"><span>只给指导，不自动安装/卸载</span><button class="flipbtn" type="button">返回</button></div>
+</div>`;}
+
+function render(){
+  const stage=$("#stage"); stage.innerHTML="";
+  $("#controls").style.display = deck.length? "flex":"none";
+  $("#tally").style.display = deck.length? "flex":"none";
+  $("#done").style.display = deck.length? "none":"block";
+  if(!deck.length){ $("#doneP").textContent = swapN>0 ? "可把已换的这批存成安装清单，去主界面一键装。" : "这一轮没有选择要换的。"; }
+  const vis=deck.slice(0,3);
+  for(let k=vis.length-1;k>=0;k--){
+    const depth=vis.length-1-k; const c=vis[k];
+    const el=document.createElement("div");
+    el.className="card"+(depth===1?" c1":depth===2?" c2":" c0");
+    el.innerHTML=`<div class="inner">${front(c)}${back(c)}</div>`;
+    if(depth===0) bindTop(el,c);
+    stage.appendChild(el);
+  }
+  $("#nSwap").textContent=swapN; $("#nKeep").textContent=keepN; $("#nLeft").textContent=deck.length;
+}
+function bindTop(el,c){
+  let sx=0,sy=0,dragging=false,moved=false,dx=0,dy=0,st=0;
+  el.addEventListener("pointerdown",e=>{
+    if(e.target.closest(".flipbtn")){e.preventDefault();el.classList.toggle("flipped");return;}
+    dragging=true;moved=false;sx=e.clientX;sy=e.clientY;st=performance.now();el.setPointerCapture(e.pointerId);el.classList.add("dragging");
+  });
+  el.addEventListener("pointermove",e=>{ if(!dragging)return; dx=e.clientX-sx;dy=e.clientY-sy; if(Math.abs(dx)+Math.abs(dy)>6)moved=true; el.style.transform=`translate(${dx}px,${dy*0.25}px) rotate(${dx*0.03}deg)`; });
+  const end=()=>{ if(!dragging)return;dragging=false;el.classList.remove("dragging");
+    if(!moved){el.style.transform="";el.classList.toggle("flipped");return;}
+    const dt=Math.max(1,performance.now()-st), v=Math.abs(dx)/dt;
+    if(dx>110 || (v>0.11 && dx>0)) go(el,"swap");
+    else if(dx<-110 || (v>0.11 && dx<0)) go(el,"keep");
+    else {el.style.transform="";} };
+  el.addEventListener("pointerup",end); el.addEventListener("pointercancel",end);
+}
+function go(el,kind){
+  const c=deck[0]; el.classList.add("leaving");
+  el.style.transform=`translate(${kind==="swap"?700:-700}px,60px) rotate(${kind==="swap"?18:-18}deg)`; el.style.opacity="0";
+  hist.push({c,kind}); if(kind==="swap"){swapN++;swaps.push(c);} else keepN++;
+  deck.shift(); setTimeout(render,320);
+}
+function act(kind){ if(deck.length){ const el=$(".card.c0"); if(el) go(el,kind); } }
+function undo(){ const last=hist.pop(); if(!last)return; deck.unshift(last.c); if(last.kind==="swap"){swapN=Math.max(0,swapN-1); const i=swaps.lastIndexOf(last.c); if(i>=0)swaps.splice(i,1);} else keepN=Math.max(0,keepN-1); render(); }
+$("#swapBtn").onclick=()=>act("swap"); $("#keepBtn").onclick=()=>act("keep");
+$("#undoBtn").onclick=undo;
+$("#flipBtn").onclick=()=>{ const c=$(".card.c0"); if(c) c.classList.toggle("flipped"); };
+$("#resetBtn").onclick=()=>{ deck=[...CARDS];swapN=keepN=0;hist=[];swaps=[];$("#out").classList.remove("on");render(); };
+$("#saveBtn").onclick=async()=>{
+  const pkgs=swaps.filter(c=>c.brew).map(c=>({id:c.brew,category:c.role||""}));
+  const out=$("#out"); out.classList.add("on");
+  if(!pkgs.length){ out.textContent="没有可安装的条目。"; return; }
+  const name="swap-"+id;
+  try{
+    const r=await fetch("/api/preset?action=save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,packages:pkgs})});
+    const j=await r.json();
+    if(!r.ok){ out.textContent="保存失败："+(j.error||""); return; }
+    out.innerHTML=`已保存安装清单 <b>${esc(name)}</b>（${j.total} 个）。<a href="/" style="color:var(--green)">去主界面安装 →</a>`;
+  }catch(e){ out.textContent="保存失败："+e.message; }
+};
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowLeft"){e.preventDefault();act("keep");}
+  else if(e.key==="ArrowRight"){e.preventDefault();act("swap");}
+  else if(e.key==="Enter"){e.preventDefault();const c=$(".card.c0");if(c)c.classList.toggle("flipped");}
+  else if(e.key==="z"||e.key==="Z"){e.preventDefault();undo();}
+});
+load();
+</script>
+  <script src="cmdk.js"></script>
+</body>
+</html>

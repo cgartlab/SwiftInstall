@@ -5,6 +5,25 @@ type Package struct {
 	ID       string `yaml:"id" json:"id"`
 	Category string `yaml:"category,omitempty" json:"category,omitempty"`
 	Optional bool   `yaml:"optional,omitempty" json:"optional,omitempty"`
+
+	// Source selects the installation source:
+	//   "" / "brew" — Homebrew (formula or cask, see Kind)
+	//   "npm"       — npm global package
+	//   "github"    — GitHub release binary (ID is owner/repo, Asset names the
+	//                 release asset pattern, e.g. "magpie-darwin-arm64")
+	Source string `yaml:"source,omitempty" json:"source,omitempty"`
+
+	// Kind selects the package-manager channel. It is backend-specific:
+	//   - Homebrew: "formula" or "cask"
+	//   - winget:   ignored
+	// An empty value asks the backend to auto-detect (Homebrew tries the
+	// formula channel first, then the cask channel). GUI apps installed
+	// through Homebrew need the "cask" channel.
+	Kind string `yaml:"kind,omitempty" json:"kind,omitempty"`
+
+	// Asset is the GitHub release asset name (or substring) to download,
+	// used when Source == "github". May contain {os}/{arch} placeholders.
+	Asset string `yaml:"asset,omitempty" json:"asset,omitempty"`
 }
 
 // Settings holds manifest-level configuration that affects installation behavior.
@@ -17,8 +36,8 @@ type Settings struct {
 
 // Manifest is the top-level structure describing what to install and how.
 type Manifest struct {
-	Settings Settings  `json:"settings,omitempty"`
-	Packages []Package `json:"packages"`
+	Settings Settings  `yaml:"settings,omitempty" json:"settings,omitempty"`
+	Packages []Package `yaml:"packages" json:"packages"`
 }
 
 // Dedupe removes duplicate packages by ID, keeping the first occurrence.

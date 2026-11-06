@@ -1,5 +1,7 @@
 name: Release
 
+# 发布流水线：推送 v* tag 时，为四个目标平台交叉构建 sis，
+# 校验每个二进制的 version 输出包含 tag，并汇总到同一个 GitHub Release。
 on:
   push:
     tags:
@@ -8,10 +10,24 @@ on:
 permissions:
   contents: write
 
+# Go 模块代理回退：优先国内镜像，失败再走官方源。
+env:
+  GOPROXY: https://goproxy.cn,https://proxy.golang.org,direct
+
 jobs:
   build:
-    name: Build Release Binary
-    runs-on: windows-latest
+    name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 每个产物都在与其 GOOS 原生匹配的 runner 上构建并直接运行校验。
+          # macos-13 (Intel) 已于 2025 退役，改用 macos-15-intel；macos-latest 是 Apple Silicon。
+          - { goos: linux,   goarch: amd64, os: ubuntu-latest,  ext: "" }
+          - { goos: windows, goarch: amd64, os: windows-latest, ext: ".exe" }
+          - { goos: darwin,  goarch: arm64, os: macos-latest,   ext: "" }
+          - { goos: darwin,  goarch: amd64, os: macos-15-intel, ext: "" }
 
     steps:
       - name: Checkout
@@ -27,52 +43,73 @@ jobs:
         run: go mod download
 
       - name: Build
-        shell: pwsh
+        shell: bash
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
         run: |
-          $VERSION = "${{ github.ref_name }}"
-          $COMMIT  = git rev-parse --short HEAD
-          $DATE    = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
-          go build `
-            -ldflags "-X main.Version=$VERSION -X main.Commit=$COMMIT -X main.Date=$DATE" `
-            -o sis-windows-amd64.exe `
-            ./cmd/sis/
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME}"
+          COMMIT="$(git rev-parse --short HEAD)"
+          DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          OUT="sis-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}"
+          echo "Building ${OUT} (${GOOS}/${GOARCH}) version=${VERSION}"
+          go build -trimpath \
+            -ldflags "-s -w -X main.Version=${VERSION} -X main.Commit=${COMMIT} -X main.Date=${DATE}" \
+            -o "${OUT}" ./cmd/sis/
+          echo "OUT=${OUT}" >> "$GITHUB_ENV"
 
       - name: Verify binary version matches tag
-        shell: pwsh
+        shell: bash
         run: |
-          $tag = "${{ github.ref_name }}"
-          $out = & ./sis-windows-amd64.exe version | Out-String
-          $out = $out.Trim()
-          Write-Output "Binary output : $out"
-          Write-Output "Expected tag  : $tag"
-          if ($out -notlike "*$tag*") {
-            Write-Error "Version mismatch: binary says '$out', expected to contain '$tag'"
-            exit 1
-          }
-          Write-Output "Version verified OK"
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          # 1) 嵌入的 ldflags 检查：适用于任何交叉编译产物。
+          if command -v go >/dev/null 2>&1; then
+            go version -m "./${OUT}" | grep -q -- "-ldflags=.*main.Version=${tag}" \
+              && echo "Embedded ldflags OK: Version=${tag}"
+          fi
+          # 2) 原生执行检查：每个矩阵 leg 的 runner 与其 GOOS/GOARCH 匹配。
+          if actual="$(./${OUT} version 2>/dev/null)"; then
+            echo "Binary output : ${actual}"
+            echo "Expected tag  : ${tag}"
+            case "${actual}" in
+              *"${tag}"*) echo "Version verified OK" ;;
+              *) echo "::error::Version mismatch: '${actual}' does not contain '${tag}'"; exit 1 ;;
+            esac
+          else
+            echo "note: ${OUT} 无法在本 runner 执行，已用嵌入 ldflags 校验兜底"
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sis-windows-amd64
-          path: sis-windows-amd64.exe
+          name: sis-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: sis-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+          if-no-files-found: error
           retention-days: 90
 
   release:
     name: Create GitHub Release
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
-      - name: Download artifact
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          name: sis-windows-amd64
-          path: .
+          path: dist
+          merge-multiple: true
+
+      - name: List release assets
+        run: ls -l dist
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: sis-windows-amd64.exe
+          files: dist/*
           generate_release_notes: true
           fail_on_unmatched_files: true

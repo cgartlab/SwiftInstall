@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SwiftInstall · 换前 / 换后 对比（交互原型）</title>
+<style>
+  :root{
+    --paper:#F4EFE6; --card:#FBF8F1; --ink:#1C1B17; --muted:#6E6B60; --faint:#9A9384;
+    --line:#DDD6C7; --green:#2F5D46; --green-soft:#E7EEE8; --amber:#A9762A; --amber-soft:#F4EAD8;
+    --serif:"Iowan Old Style","Palatino Linotype","Songti SC","Noto Serif SC",Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--paper:#16140F;--card:#1D1A13;--ink:#ECE7DC;--muted:#A39B89;--faint:#6F6858;
+      --line:#2E2A20;--green:#8FB89B;--green-soft:#1E2A22;--amber:#D6A45E;--amber-soft:#3A2C18;}
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;
+    display:grid;place-items:center;padding:28px;-webkit-font-smoothing:antialiased}
+  .wrap{width:min(660px,100%)}
+  .head{text-align:center;margin-bottom:20px}
+  .kicker{font-size:12px;letter-spacing:.06em;color:var(--green);margin-bottom:8px}
+  h1{font-family:var(--serif);font-size:27px;font-weight:600;letter-spacing:-.4px}
+  .sub{font-size:13px;color:var(--muted);margin-top:8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+    box-shadow:0 1px 2px rgba(30,26,18,.05),0 14px 40px rgba(30,26,18,.08)}
+  .cols{display:grid;grid-template-columns:1fr 1px 1fr}
+  .col{padding:22px 24px}
+  .split{background:var(--line)}
+  .app{display:flex;align-items:center;gap:9px;margin-bottom:16px}
+  .app .nm{font-family:var(--serif);font-size:21px;font-weight:600}
+  .chip{font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px}
+  .chip.paid{background:var(--amber-soft);color:var(--amber)}
+  .chip.free{background:var(--green-soft);color:var(--green)}
+  .r{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .r:last-child{border-bottom:none}
+  .k{font-size:12.5px;color:var(--faint)}
+  .v{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+  .v.bad{color:var(--amber)} .v.good{color:var(--green)} .v.mut{color:var(--muted);font-weight:500}
+  .foot{padding:14px 24px;border-top:1px solid var(--line);background:var(--green-soft);
+    color:#2c4d3c;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;gap:14px}
+  @media (prefers-color-scheme:dark){.foot{color:var(--ink)}}
+  .foot b{color:var(--green)}
+  .cap{text-align:center;font-size:12.5px;color:var(--muted);margin-top:14px}
+  .cap b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="kicker">交互原型 · 换前 / 换后</div>
+    <h1>把"差在哪"摆到同一行</h1>
+    <p class="sub">文字维度用并排最清楚（滑块留给"截图前后对比"）。同一维度左右对齐，一眼看出代价与收益。</p>
+  </div>
+
+  <div class="card">
+    <div class="cols">
+      <div class="col">
+        <div class="app"><span class="nm">CleanShot X</span><span class="chip paid">付费</span></div>
+        <div class="r"><span class="k">价格</span><span class="v bad">¥69 / 年</span></div>
+        <div class="r"><span class="k">开源</span><span class="v bad">否</span></div>
+        <div class="r"><span class="k">免费版是否够用</span><span class="v mut">—</span></div>
+        <div class="r"><span class="k">数据可导出 / 迁移</span><span class="v mut">部分</span></div>
+      </div>
+      <div class="split"></div>
+      <div class="col">
+        <div class="app"><span class="nm">Capso</span><span class="chip free">开源 · 免费</span></div>
+        <div class="r"><span class="k">价格</span><span class="v good">免费</span></div>
+        <div class="r"><span class="k">开源</span><span class="v good">是</span></div>
+        <div class="r"><span class="k">免费版是否够用</span><span class="v good">完全够用</span></div>
+        <div class="r"><span class="k">数据可导出 / 迁移</span><span class="v good">是（偏好设置手动）</span></div>
+      </div>
+    </div>
+    <div class="foot"><span>结论：免费、开源、数据可迁移；日常截图 / 录屏够用。</span><b>查看迁移指导 →</b></div>
+  </div>
+
+  <p class="cap">配色只做信息编码（琥珀=代价、绿=收益），不靠颜色单独传达含义——文字本身已说清。可访问：正文对比度达标、无动效依赖。</p>
+</div>
+</body>
+</html>

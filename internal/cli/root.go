@@ -20,6 +20,9 @@ func newRootCmd(version, commit, date string) *cobra.Command {
 内置国内镜像加速和代理支持，开箱即用。
 
 常用命令:
+  sis gui              图形界面：浏览器窗口中浏览、勾选、一键安装/卸载
+  sis tui              交互式终端界面：浏览清单、勾选、批量安装/卸载
+  sis search <词>      在 Homebrew 仓库中搜索软件包
   sis install          从清单批量安装软件
   sis uninstall        从清单批量卸载软件
   sis list             查看清单中的软件列表
@@ -34,11 +37,23 @@ func newRootCmd(version, commit, date string) *cobra.Command {
 	}
 
 	// Global flags
+	cmd.PersistentFlags().StringP("preset", "p", "", "使用已保存的预设清单（名称；可用 sis preset list 查看）")
 	cmd.PersistentFlags().StringP("file", "f", "", "清单文件路径 (默认自动查找 sis.yaml / software_list.txt)")
 	cmd.PersistentFlags().String("format", "table", "输出格式: table, json, silent")
 	cmd.PersistentFlags().Bool("no-color", false, "禁用彩色输出")
 
 	// Register subcommands
+	cmd.AddCommand(newGUICmd())
+	cmd.AddCommand(newTUICmd())
+	cmd.AddCommand(newSearchCmd())
+	cmd.AddCommand(newAuditCmd())
+	cmd.AddCommand(newGuideCmd())
+	cmd.AddCommand(newToollistCmd())
+	cmd.AddCommand(newExplainCmd())
+	cmd.AddCommand(newDoctorCmd())
+	cmd.AddCommand(newPresetCmd())
+	cmd.AddCommand(newMirrorCmd())
+	cmd.AddCommand(newLLMCmd())
 	cmd.AddCommand(newInstallCmd())
 	cmd.AddCommand(newUninstallCmd())
 	cmd.AddCommand(newListCmd())

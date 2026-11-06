@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>SwiftInstall</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="mast">
+        <div class="wordmark">SwiftInstall</div>
+        <div class="meta">
+          <span id="backend" class="backend">…</span>
+          <span id="source" class="source mono">…</span>
+        </div>
+      </div>
+
+      <section class="block">
+        <h2 class="block-h">预设</h2>
+        <ul id="presetList" class="presets"></ul>
+        <button id="presetSave" class="linkbtn">＋ 另存为预设</button>
+      </section>
+
+      <section class="block stats">
+        <div class="stat"><span class="stat-n" id="statTotal">0</span><span class="stat-l">总数</span></div>
+        <div class="stat"><span class="stat-n" id="statInstalled">–</span><span class="stat-l">已安装</span></div>
+        <div class="stat"><span class="stat-n" id="statSelected">0</span><span class="stat-l">已选</span></div>
+      </section>
+
+      <section class="block">
+        <h2 class="block-h">入门</h2>
+        <a href="/toollists" class="linkbtn" style="display:inline-flex;align-items:center;gap:6px">◍ 软件清单 · 精选免费/开源</a>
+        <a href="/audit" class="linkbtn" style="display:inline-flex;align-items:center;gap:6px">◎ 环境体检 · 看看该装什么</a>
+        <a href="/health" class="linkbtn" style="display:inline-flex;align-items:center;gap:6px">✚ 系统自检 · 环境是否健康</a>
+        <p style="font-size:11.5px;color:var(--faint);line-height:1.5;margin-top:2px">第一次用？从「软件清单」挑工具，或先做「环境体检」看看该装什么。</p>
+      </section>
+
+      <div class="side-actions">
+        <button id="openLLM" class="sidebtn">AI / LLM 设置</button>
+        <button id="refresh" class="sidebtn iconbtn" title="重新检测安装状态" aria-label="重新检测状态">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>
+        </button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="bar">
+        <div class="filter">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+          <input id="search" type="text" placeholder="过滤当前清单…" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="bar-right">
+          <button class="btn ghost" onclick="window.__cmdkOpen&&window.__cmdkOpen()" title="命令面板（⌘K）" aria-label="打开命令面板">⌘K</button>
+          <button id="checkUpdates" class="btn ghost" title="检查已安装软件的更新" aria-label="检查已安装软件的更新">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>
+            检查更新
+          </button>
+          <label class="selectall">
+            <input type="checkbox" id="selectAll">
+            <span>全选</span>
+          </label>
+        </div>
+      </div>
+
+      <div id="list" class="list" aria-live="polite"></div>
+      <div id="repoResults" class="repo-results" hidden></div>
+      <div id="empty" class="empty" hidden>
+        <div>没有匹配的软件</div>
+      </div>
+    </main>
+
+    <footer class="actionbar">
+      <div class="selinfo" id="selInfo">已选 <b>0</b></div>
+      <div class="actions">
+        <button id="uninstall" class="btn danger" disabled>卸载所选</button>
+        <button id="install" class="btn primary" disabled>安装所选</button>
+      </div>
+    </footer>
+  </div>
+
+  <div id="overlay" class="overlay" hidden>
+    <div class="panel" role="dialog" aria-modal="true">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title" id="progTitle">正在安装</div>
+          <div class="panel-sub" id="progSub">0 / 0</div>
+        </div>
+        <div class="panel-badge" id="progBadge"></div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+      <ul class="proglist" id="progList"></ul>
+      <div class="panel-foot">
+        <div id="progSummary" class="summary"></div>
+        <button id="closeProgress" class="btn primary" hidden>完成</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="llmOverlay" class="overlay" hidden>
+    <div class="panel save-panel" role="dialog" aria-modal="true">
+      <div class="panel-title">AI / LLM 设置</div>
+      <div class="search-hint" style="margin:6px 0 12px">配置一个 OpenAI 兼容端点，用于为信息不全的软件/字体生成简介。兼容 OpenAI、DeepSeek、GLM、magpie 网关等。</div>
+      <label class="llm-l">Base URL</label>
+      <input id="llmBase" type="text" placeholder="https://api.deepseek.com/v1" autocomplete="off" spellcheck="false">
+      <label class="llm-l">Model</label>
+      <input id="llmModel" type="text" placeholder="deepseek-chat" autocomplete="off" spellcheck="false">
+      <label class="llm-l">API Key</label>
+      <input id="llmKey" type="password" placeholder="sk-…" autocomplete="off" spellcheck="false">
+      <div class="panel-foot">
+        <span id="llmError" class="summary" style="color:var(--red)"></span>
+        <div class="actions">
+          <button id="llmCancel" class="btn">取消</button>
+          <button id="llmSave" class="btn primary">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="saveOverlay" class="overlay" hidden>
+    <div class="panel save-panel" role="dialog" aria-modal="true">
+      <div class="panel-title">保存为预设</div>
+      <div class="search-hint" style="margin:6px 0 12px">把当前清单（含搜索添加的软件）保存为预设，随时切换加载。</div>
+      <input id="saveName" type="text" placeholder="预设名称，如 work / design" autocomplete="off" spellcheck="false">
+      <div class="panel-foot">
+        <span id="saveError" class="summary" style="color:var(--red)"></span>
+        <div class="actions">
+          <button id="saveCancel" class="btn">取消</button>
+          <button id="saveConfirm" class="btn primary">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="cmdk" class="cmdk" hidden>
+    <div class="cmdk-box" role="dialog" aria-modal="true" aria-label="命令面板">
+      <input id="cmdkInput" class="cmdk-input" type="text" placeholder="搜索命令…（体检 / 软件清单 / 逐条决策）" autocomplete="off" spellcheck="false">
+      <ul id="cmdkList" class="cmdk-list"></ul>
+      <div class="cmdk-foot">↑↓ 选择 · ↵ 执行 · Esc 关闭</div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+
+  <script>
+  (function(){
+    const $=s=>document.querySelector(s);
+    const CMDS=[
+      {t:"环境体检", d:"扫描已装软件，看该装 / 该换什么", run:()=>location.href="/audit"},
+      {t:"软件清单", d:"浏览精选免费 / 开源清单", run:()=>location.href="/toollists"},
+      {t:"逐条决策 · 设计师清单", d:"用平替滑卡逐条决定", run:()=>location.href="/swap?toollist=mac-designers"},
+      {t:"逐条决策 · 开发者清单", d:"用平替滑卡逐条决定", run:()=>location.href="/swap?toollist=developers"},
+      {t:"过滤当前清单", d:"聚焦顶部搜索框", run:()=>{ close(); const el=$("#search"); if(el) el.focus(); }},
+      {t:"检查已安装更新", d:"Homebrew outdated", run:()=>{ close(); const b=$("#checkUpdates"); if(b) b.click(); }},
+      {t:"刷新状态", d:"重新加载页面", run:()=>location.reload()},
+    ];
+    let shown=[...CMDS], sel=0;
+    const ov=$("#cmdk"), inp=$("#cmdkInput"), list=$("#cmdkList");
+    function open(){ ov.hidden=false; inp.value=""; filter(""); inp.focus(); }
+    function close(){ ov.hidden=true; }
+    function filter(q){ q=(q||"").trim().toLowerCase(); shown=CMDS.filter(c=>!q||(c.t+" "+c.d).toLowerCase().includes(q)); sel=0; paint(); }
+    function paint(){ list.innerHTML=shown.length?shown.map((c,i)=>`<li class="cmdk-item ${i===sel?'on':''}" data-i="${i}"><div><div class="ct">${c.t}</div><div class="cd">${c.d}</div></div><span class="ck">↵</span></li>`).join(""):'<li class="cmdk-empty">没有匹配的命令</li>';
+      list.querySelectorAll(".cmdk-item").forEach(li=>li.onclick=()=>{sel=+li.dataset.i; exec();}); }
+    function exec(){ const c=shown[sel]; if(c){ close(); c.run(); } }
+    inp.addEventListener("input",e=>filter(e.target.value));
+    inp.addEventListener("keydown",e=>{
+      if(e.key==="ArrowDown"){e.preventDefault();sel=Math.min(shown.length-1,sel+1);paint();}
+      else if(e.key==="ArrowUp"){e.preventDefault();sel=Math.max(0,sel-1);paint();}
+      else if(e.key==="Enter"){e.preventDefault();exec();}
+      else if(e.key==="Escape"){e.preventDefault();close();}
+    });
+    ov.addEventListener("click",e=>{ if(e.target===ov) close(); });
+    document.addEventListener("keydown",e=>{
+      if((e.metaKey||e.ctrlKey)&&(e.key==="k"||e.key==="K")){e.preventDefault(); ov.hidden?open():close();}
+      else if(e.key==="Escape" && !ov.hidden){close();}
+    });
+    window.__cmdkOpen=open;
+  })();
+  </script>
+</body>
+</html>

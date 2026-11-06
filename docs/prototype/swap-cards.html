@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SwiftInstall · 平替滑卡（交互原型）</title>
+<style>
+  :root{
+    --paper:#F4EFE6; --card:#FBF8F1; --ink:#1C1B17; --muted:#6E6B60; --faint:#9A9384;
+    --line:#DDD6C7; --green:#2F5D46; --green-soft:#E7EEE8; --amber:#A9762A; --amber-soft:#F4EAD8;
+    --serif:"Iowan Old Style","Palatino Linotype","Songti SC","Noto Serif SC",Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",sans-serif;
+    --dur-2:200ms; --dur-3:320ms; --ease:cubic-bezier(.22,.61,.36,1);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--paper:#16140F;--card:#1D1A13;--ink:#ECE7DC;--muted:#A39B89;--faint:#6F6858;
+      --line:#2E2A20;--green:#8FB89B;--green-soft:#1E2A22;--amber:#D6A45E;--amber-soft:#3A2C18;}
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);
+    display:grid;place-items:center;min-height:100vh;padding:28px;-webkit-font-smoothing:antialiased}
+  .wrap{width:min(560px,100%)}
+  .head{text-align:center;margin-bottom:22px}
+  .kicker{font-size:12px;letter-spacing:.06em;color:var(--green);margin-bottom:10px}
+  h1{font-family:var(--serif);font-size:30px;font-weight:600;letter-spacing:-.4px}
+  .sub{font-size:13.5px;color:var(--muted);margin-top:8px}
+  .stage{position:relative;height:430px;margin:0 auto}
+  .card{position:absolute;inset:0;background:var(--card);border:1px solid var(--line);
+    border-radius:18px;padding:26px 26px 20px;box-shadow:0 1px 2px rgba(30,26,18,.05),0 14px 40px rgba(30,26,18,.10);
+    transform-style:preserve-3d;will-change:transform;user-select:none;touch-action:none}
+  .card.c1{transform:translateY(14px) scale(.97);opacity:.75;pointer-events:none}
+  .card.c2{transform:translateY(28px) scale(.94);opacity:.5;pointer-events:none}
+  .card.c0{cursor:grab}
+  .card.dragging{cursor:grabbing;transition:none}
+  .card.leaving{transition:transform var(--dur-3) var(--ease),opacity var(--dur-3) var(--ease)}
+  .inner{position:relative;height:100%;transform-style:preserve-3d;transition:transform 520ms var(--ease)}
+  .card.flipped .inner{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;display:flex;flex-direction:column}
+  .back{transform:rotateY(180deg)}
+  .chips{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+  .chip{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+  .chip.paid{background:var(--amber-soft);color:var(--amber)}
+  .chip.free{background:var(--green-soft);color:var(--green)}
+  .names{display:flex;align-items:baseline;gap:12px;margin:22px 0 6px;font-family:var(--serif)}
+  .from{font-size:28px;font-weight:600;color:var(--ink)}
+  .arrow{color:var(--green);font-size:24px}
+  .to{font-size:28px;font-weight:600;color:var(--green)}
+  .role{font-size:12.5px;color:var(--faint)}
+  .why{font-size:14px;color:var(--muted);line-height:1.6;margin-top:16px;max-width:44ch}
+  .spacer{flex:1}
+  .hint{font-size:12px;color:var(--faint);border-top:1px solid var(--line);padding-top:12px;display:flex;justify-content:space-between;align-items:center}
+  .flipbtn{border:1px solid var(--line);background:transparent;color:var(--green);font-size:12px;padding:5px 12px;border-radius:9px;cursor:pointer;font-family:inherit}
+  /* back */
+  .back h3{font-family:var(--serif);font-size:17px;font-weight:600;margin-bottom:12px}
+  .fid{background:var(--green-soft);color:#2c4d3c;border-radius:10px;padding:10px 12px;font-size:12.5px;margin-bottom:12px}
+  @media (prefers-color-scheme:dark){.fid{color:var(--ink)}}
+  .step{font-size:12.5px;color:var(--muted);line-height:1.55}
+  .step b{color:var(--ink)}
+  .src{font-size:11.5px;color:var(--green);text-decoration:none;margin-top:8px;display:inline-block}
+  /* controls */
+  .controls{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:20px}
+  .btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);
+    color:var(--ink);font-size:13.5px;font-weight:600;padding:10px 18px;border-radius:11px;cursor:pointer;font-family:inherit;transition:transform var(--dur-2) var(--ease),border-color var(--dur-2)}
+  .btn:hover{transform:translateY(-1px)}
+  .btn.keep{color:var(--muted)}
+  .btn.swap{background:var(--green);border-color:var(--green);color:#fff}
+  .btn.ghost{background:transparent}
+  .tally{display:flex;justify-content:center;gap:22px;margin-top:16px;font-size:12.5px;color:var(--muted)}
+  .tally b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .done{text-align:center;padding:60px 20px;display:none}
+  .done h2{font-family:var(--serif);font-size:24px;margin-bottom:10px}
+  .done p{color:var(--muted);font-size:14px;margin-bottom:20px}
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important} .card{box-shadow:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="kicker">交互原型 · 平替滑卡</div>
+    <h1>换软件，翻张卡</h1>
+    <p class="sub">拖一下：← 保留、→ 换；点卡片翻面看"数据保真 + 迁移第一步"。也支持键盘。</p>
+  </div>
+  <div class="stage" id="stage" aria-live="polite"></div>
+  <div class="controls">
+    <button class="btn keep" id="keepBtn">← 保留</button>
+    <button class="btn swap" id="swapBtn">换 →</button>
+    <button class="btn ghost" id="flipBtn">详情</button>
+    <button class="btn ghost" id="undoBtn">撤销</button>
+  </div>
+  <div class="tally">已换 <b id="nSwap">0</b> · 已留 <b id="nKeep">0</b> · 剩余 <b id="nLeft">0</b></div>
+  <div class="done" id="done">
+    <h2>这一轮翻完了</h2>
+    <p>可把"已换"的这批存成安装清单，去主界面一键装。</p>
+    <button class="btn swap" id="resetBtn">再来一轮</button>
+  </div>
+</div>
+
+<script>
+const CARDS = [
+  {from:"CleanShot X", to:"Capso", lic:"oss", role:"截图 / 录屏",
+   why:"CleanShot X 的开源平替，滚动截图、4K 录屏、GIF 都覆盖，免费版够用。",
+   fid:"截图/录屏产物是普通文件，不受影响；应用内历史与偏好设置需手动处理。",
+   step:"先在应用内导出旧历史 → 安装 Capso → 重设快捷键", src:"https://github.com/lzhgus/Capso"},
+  {from:"Sketch", to:"Figma", lic:"freemium", role:"界面设计",
+   why:"免费版即可完成个人与小型协作设计，重度依赖插件生态时再评估。",
+   fid:"Sketch 文件可直接导入 Figma；插件与部分交互原型可能不完整。",
+   step:"备份 .sketch → Figma 导入 → 重建 Symbol/样式", src:"https://help.figma.com"},
+  {from:"Alfred", to:"Raycast", lic:"free", role:"启动器 / 效率",
+   why:"免费版覆盖启动器、剪贴板、窗口管理与脚本命令，多数付费功能免费即可。",
+   fid:"Alfred Workflow 与主题无法直接导入，快捷键需重设。",
+   step:"列出常用 Workflow → 装 Raycast 扩展 → 重设热键", src:"https://manual.raycast.com"},
+  {from:"Typora", to:"Obsidian", lic:"free", role:"Markdown 写作",
+   why:"本地 Markdown、免费个人使用；只求简洁写作，Obsidian 免费版足够。",
+   fid:"Markdown 可直接打开；主题与自定义 CSS 需重新配置。",
+   step:"找到 .md 文件夹 → 作为库打开 → 纳入图片附件", src:"https://help.obsidian.md"}
+];
+const LIC = {oss:"开源", free:"免费", freemium:"免费版够用"};
+const $=s=>document.querySelector(s);
+let deck=[...CARDS], swapN=0, keepN=0, hist=[];
+
+function frontHTML(c){return `
+  <div class="face front">
+    <div class="chips"><span>你现在</span><span class="chip paid">付费</span><span class="role">${c.role}</span></div>
+    <div class="names"><span class="from">${c.from}</span><span class="arrow">→</span><span class="to">${c.to}</span></div>
+    <div class="chips"><span>更好的</span><span class="chip free">${LIC[c.lic]||c.lic}</span></div>
+    <p class="why">${c.why}</p>
+    <div class="spacer"></div>
+    <div class="hint"><span>拖动决定 · 点卡片翻面</span><button class="flipbtn" type="button">详情</button></div>
+  </div>`;}
+function backHTML(c){return `
+  <div class="face back">
+    <h3>${c.from} → ${c.to} · 怎么换</h3>
+    <div class="fid"><b>数据保真</b>：${c.fid}</div>
+    <div class="step"><b>第一步</b>：${c.step}</div>
+    <a class="src" href="${c.src}" target="_blank" rel="noopener">官方来源 ↗</a>
+    <div class="spacer"></div>
+    <div class="hint"><span>只给指导，不自动安装/卸载</span><button class="flipbtn" type="button">返回</button></div>
+  </div>`;}
+
+function render(){
+  const stage=$("#stage");
+  stage.innerHTML="";
+  if(!deck.length){ $("#done").style.display="block"; }
+  else { $("#done").style.display="none"; }
+  deck.slice(0,3).reverse().forEach((c,idx)=>{
+    const depth = deck.slice(0,3).length-1-idx; // 0 top
+    const el=document.createElement("div");
+    el.className="card"+(depth===1?" c1":depth===2?" c2":" c0");
+    el.innerHTML=`<div class="inner">${frontHTML(c)}${backHTML(c)}</div>`;
+    if(depth===0) bindTop(el,c);
+    stage.appendChild(el);
+  });
+  $("#nSwap").textContent=swapN; $("#nKeep").textContent=keepN; $("#nLeft").textContent=deck.length;
+}
+
+function bindTop(el,c){
+  let sx=0,sy=0,dragging=false,moved=false,dx=0,dy=0;
+  const flip=()=>el.classList.toggle("flipped");
+  el.addEventListener("pointerdown",e=>{
+    if(e.target.closest(".flipbtn")){ e.preventDefault(); flip(); return; }
+    dragging=true; moved=false; sx=e.clientX; sy=e.clientY; el.setPointerCapture(e.pointerId); el.classList.add("dragging");
+  });
+  el.addEventListener("pointermove",e=>{
+    if(!dragging) return;
+    dx=e.clientX-sx; dy=e.clientY-sy;
+    if(Math.abs(dx)+Math.abs(dy)>6) moved=true;
+    el.style.transform=`translate(${dx}px,${dy*0.25}px) rotate(${dx*0.03}deg)`;
+  });
+  const end=e=>{
+    if(!dragging) return; dragging=false; el.classList.remove("dragging");
+    if(!moved){ el.style.transform=""; flip(); return; }
+    if(dx>110) decide(el,"swap"); else if(dx<-110) decide(el,"keep");
+    else { el.classList.add("leaving"); el.style.transform=""; setTimeout(()=>el.classList.remove("leaving"),200); }
+  };
+  el.addEventListener("pointerup",end);
+  el.addEventListener("pointercancel",end);
+}
+
+function decide(el,kind){
+  const c=deck[0];
+  el.classList.add("leaving");
+  el.style.transform=`translate(${kind==="swap"?700:-700}px, 60px) rotate(${kind==="swap"?18:-18}deg)`;
+  el.style.opacity="0";
+  hist.push({c,kind});
+  if(kind==="swap") swapN++; else keepN++;
+  deck.shift();
+  setTimeout(render, 190);
+}
+
+function act(kind){ if(!deck.length) return; const el=$(".card.c0"); decide(el,kind); }
+function undo(){ const last=hist.pop(); if(!last) return; deck.unshift(last.c); if(last.kind==="swap") swapN=Math.max(0,swapN-1); else keepN=Math.max(0,keepN-1); render(); }
+
+$("#swapBtn").onclick=()=>act("swap");
+$("#keepBtn").onclick=()=>act("keep");
+$("#undoBtn").onclick=undo;
+$("#flipBtn").onclick=()=>{ const c=$(".card.c0"); if(c) c.classList.toggle("flipped"); };
+$("#resetBtn").onclick=()=>{ deck=[...CARDS]; swapN=keepN=0; hist=[]; render(); };
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowLeft"){e.preventDefault();act("keep");}
+  else if(e.key==="ArrowRight"){e.preventDefault();act("swap");}
+  else if(e.key==="Enter"){e.preventDefault(); const c=$(".card.c0"); if(c) c.classList.toggle("flipped");}
+  else if(e.key==="z"||e.key==="Z"){e.preventDefault(); undo();}
+});
+render();
+</script>
+</body>
+</html>

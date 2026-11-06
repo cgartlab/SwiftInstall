@@ -51,17 +51,35 @@ type ProgressFunc func(index int, total int, result Result)
 
 // Engine orchestrates batch install/uninstall operations.
 type Engine struct {
-	backend    backend.Backend
+	backend    backend.Backend            // default backend (source "" or "brew")
+	backends   map[string]backend.Backend // optional per-source backends (npm, github)
 	opts       Options
 	onProgress ProgressFunc
 }
 
-// New creates an Engine with the given backend and options.
+// New creates an Engine with the given default backend and options.
+// Per-source backends (npm, github) can be added with SetBackends.
 func New(be backend.Backend, opts Options) *Engine {
 	return &Engine{
 		backend: be,
 		opts:    opts,
 	}
+}
+
+// SetBackends registers non-default backends keyed by source ("npm", "github").
+func (e *Engine) SetBackends(bs map[string]backend.Backend) {
+	e.backends = bs
+}
+
+// backendFor returns the backend for a package's source, falling back to the
+// default backend.
+func (e *Engine) backendFor(pkg manifest.Package) backend.Backend {
+	if e.backends != nil {
+		if be, ok := e.backends[pkg.Source]; ok {
+			return be
+		}
+	}
+	return e.backend
 }
 
 // OnProgress sets the progress callback. Must be called before Install/Uninstall.
@@ -146,10 +164,11 @@ func (e *Engine) Uninstall(ctx context.Context, m *manifest.Manifest) (*Summary,
 // installOne handles a single package: skip-existing check, dry-run, and retry loop.
 func (e *Engine) installOne(ctx context.Context, pkg manifest.Package) Result {
 	pkgStart := time.Now()
+	be := e.backendFor(pkg)
 
 	// Skip if already installed
 	if e.opts.SkipExisting && !e.opts.DryRun {
-		installed, err := e.backend.IsInstalled(ctx, pkg.ID)
+		installed, err := be.IsInstalled(ctx, pkg.ID)
 		if err == nil && installed {
 			return Result{
 				Package:  pkg,
@@ -170,8 +189,10 @@ func (e *Engine) installOne(ctx context.Context, pkg manifest.Package) Result {
 
 	// Actual install with retry
 	err := e.retry(ctx, func() error {
-		_, installErr := e.backend.Install(ctx, pkg.ID, backend.InstallOptions{
+		_, installErr := be.Install(ctx, pkg.ID, backend.InstallOptions{
 			Proxy: e.opts.Proxy,
+			Kind:  pkg.Kind,
+			Asset: pkg.Asset,
 		})
 		return installErr
 	})
@@ -199,6 +220,7 @@ func (e *Engine) installOne(ctx context.Context, pkg manifest.Package) Result {
 // uninstallOne handles a single package uninstall with retry.
 func (e *Engine) uninstallOne(ctx context.Context, pkg manifest.Package) Result {
 	pkgStart := time.Now()
+	be := e.backendFor(pkg)
 
 	if e.opts.DryRun {
 		return Result{
@@ -209,7 +231,7 @@ func (e *Engine) uninstallOne(ctx context.Context, pkg manifest.Package) Result 
 	}
 
 	// Check if installed first — skip if not present
-	installed, err := e.backend.IsInstalled(ctx, pkg.ID)
+	installed, err := be.IsInstalled(ctx, pkg.ID)
 	if err == nil && !installed {
 		return Result{
 			Package:  pkg,
@@ -219,7 +241,7 @@ func (e *Engine) uninstallOne(ctx context.Context, pkg manifest.Package) Result 
 	}
 
 	err = e.retry(ctx, func() error {
-		_, uninstallErr := e.backend.Uninstall(ctx, pkg.ID)
+		_, uninstallErr := be.Uninstall(ctx, pkg.ID)
 		return uninstallErr
 	})
 

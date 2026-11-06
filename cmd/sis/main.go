@@ -7,7 +7,10 @@ import (
 )
 
 var (
-	Version = "dev"
+	// Version is the product version. Release builds override it via
+	// -ldflags "-X main.Version=<tag>"; a plain `go build` reports the
+	// current development version.
+	Version = "0.2.3"
 	Commit  = "none"
 	Date    = "unknown"
 )

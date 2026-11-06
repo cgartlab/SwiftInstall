@@ -38,14 +38,10 @@ func newInstallCmd() *cobra.Command {
 }
 
 func runInstall(cmd *cobra.Command, args []string) error {
-	// Resolve manifest path
-	manifestPath, _ := cmd.Flags().GetString("file")
-	if manifestPath == "" {
-		manifestPath = resolveManifest()
-	}
-	if manifestPath == "" {
-		return fmt.Errorf("未找到清单文件\n\n" +
-			"请使用 -f 指定文件路径，或在当前目录创建 sis.yaml / software_list.txt")
+	// Resolve manifest path (--preset > --file > auto-discovery)
+	manifestPath, err := manifestPathFrom(cmd)
+	if err != nil {
+		return err
 	}
 
 	// Parse manifest
@@ -57,8 +53,12 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("清单文件校验失败: %w", err)
 	}
 
-	// Detect backend
-	be := backend.NewWingetBackend()
+	// Select and detect the backend for this OS (Homebrew on macOS,
+	// winget on Windows).
+	be, err := backend.ForCurrentOS()
+	if err != nil {
+		return err
+	}
 	if err := be.Detect(); err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	// Run
-	eng := engine.New(be, opts)
+	eng := newEngine(be, opts)
 	renderer.Header(len(m.Packages), manifestPath, "Installing")
 
 	eng.OnProgress(func(index int, total int, result engine.Result) {

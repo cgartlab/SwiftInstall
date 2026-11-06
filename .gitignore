@@ -41,6 +41,10 @@ Thumbs.db
 *.exe
 *.zip
 *.tar.gz
+# Go build output (local `go build -o sis ...` / cross-compiled release binaries)
+/sis
+/sis-*
+!sis-*.go
 
 # Test
 .pytest_cache/

@@ -1,14 +1,15 @@
 # SwiftInstall
 
 <p align="center">
-  <b>跨平台软件批量安装工具</b><br>
-  <sub>基于 Windows <code>winget</code> 的一键自动化装机方案（macOS Homebrew 支持开发中）</sub>
+  <b>macOS 与 Windows 的批量软件安装工具</b><br>
+  <sub>一条命令装好一整台新机器 — macOS 用 Homebrew，Windows 用 winget</sub>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" alt="Platform">
+  <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows-blue?style=flat-square" alt="Platform">
+  <img src="https://img.shields.io/badge/backend-Homebrew%20%7C%20winget-orange?style=flat-square" alt="Backend">
   <img src="https://img.shields.io/badge/license-GPL--3.0-green?style=flat-square" alt="License">
-  <img src="https://img.shields.io/badge/language-Go%20%7C%20Batch-orange?style=flat-square" alt="Language">
+  <img src="https://img.shields.io/badge/language-Go-00ADD8?style=flat-square" alt="Language">
 </p>
 
 ---
@@ -16,21 +17,22 @@
 ## 目录
 
 - [项目概述](#项目概述)
-- [核心功能特性](#核心功能特性)
+- [核心特性](#核心特性)
 - [快速开始](#快速开始)
   - [环境要求](#环境要求)
   - [一键安装](#一键安装)
   - [手动安装](#手动安装)
 - [使用指南](#使用指南)
-  - [CLI 命令总览](#cli-命令总览)
+  - [命令总览](#命令总览)
+  - [gui — 图形界面](#gui--图形界面)
+  - [tui — 交互式终端界面](#tui--交互式终端界面)
   - [install — 批量安装](#install--批量安装)
   - [uninstall — 批量卸载](#uninstall--批量卸载)
   - [list — 查看软件清单](#list--查看软件清单)
   - [status — 检查安装状态](#status--检查安装状态)
   - [version — 版本信息](#version--版本信息)
+- [Homebrew 后端与 formula / cask](#homebrew-后端与-formula--cask)
 - [Manifest 文件格式](#manifest-文件格式)
-  - [YAML 格式](#yaml-格式)
-  - [TXT 格式](#txt-格式)
 - [项目结构](#项目结构)
 - [贡献指南](#贡献指南)
 - [许可证](#许可证)
@@ -39,25 +41,43 @@
 
 ## 项目概述
 
-**SwiftInstall** 是一个开源的批量软件安装工具，提供现代化的 Go CLI（`sis`）以及传统的脚本方案，帮助用户在新系统环境或重装系统后，通过简单的命令快速、自动化地安装日常开发所需的全部软件。
+**SwiftInstall** 是一个开源的批量软件安装工具。核心是一个现代化的 Go CLI —— `sis`，按清单文件把新系统所需的软件一次装好。
 
-目前针对 **Windows** 提供了基于 `winget` 的完整解决方案，并内置了中国大陆网络环境的镜像加速与代理支持，无需复杂配置即可开箱即用。**macOS Homebrew 后端正在开发中。**
+> **第一次用？** 把它想成一份「软件清单」：我们只收免费或开源、免费版就够用的工具，并告诉你每款适不适合你——帮你把新电脑一次配好，不装用不上的收费软件。
+
+- **macOS** 是一等公民：基于 [Homebrew](https://brew.sh/)，同时支持 **formula** 与 **cask**（GUI 应用）。
+- **Windows** 继续支持：基于原生 `winget`。
+- 后端按操作系统**自动选择**，同一份清单在两端都能用（包 ID 各自适配）。
+- 竞争定位与差异化（我们赢在哪、还差在哪）：[docs/POSITIONING.md](docs/POSITIONING.md)
+- 交互体验与样式设计方案（含平替滑卡原型）：[docs/INTERACTION-DESIGN.md](docs/INTERACTION-DESIGN.md)
+- 设计系统（token + 组件规范 + 无障碍门槛）：[docs/DESIGN-SYSTEM.md](docs/DESIGN-SYSTEM.md)
+- 发布就绪清单（版本/回归/发布步骤）：[docs/RELEASE-CHECKLIST.md](docs/RELEASE-CHECKLIST.md)
+- 增长与获客（GTM：渠道矩阵/发布清单/漏斗）：[docs/GTM.md](docs/GTM.md)
+
+设计上追求**简单、克制、可预期**：一个二进制、一份清单、几条命令，没有配置文件，没有隐藏状态。
 
 ---
 
-## 核心功能特性
+## 核心特性
 
 | 特性 | 说明 |
 |------|------|
-| **Windows 完整支持** | 基于原生 `winget` 包管理器，覆盖安装/卸载/查询全生命周期 |
-| **现代化 CLI** | 基于 Go + Cobra 的命令行工具，子命令 + 多种输出格式（table/json/silent） |
-| **批量安装/卸载** | 基于 Manifest 文件自动遍历安装或卸载，失败不中断 |
-| **镜像加速安装** | 安装脚本支持 `$env:SIS_MIRROR` 镜像加速下载；安装时可指定 `--proxy` |
-| **代理支持** | 通过 `--proxy` 或清单中的 `proxy:` 指定 HTTP/HTTPS 代理 |
-| **前置检查** | 安装前校验 Manifest 内容，并确认 `winget` 可用 |
-| **去重与跳过** | 自动去重清单中的重复包，可跳过已安装软件 |
-| **重试机制** | 安装失败自动重试，可配置重试次数与间隔 |
-| **高度可定制** | 通过 YAML/TXT 清单调整要安装的软件与行为 |
+| **macOS 完整支持** | Homebrew 后端，formula 与 cask 双通道 |
+| **Windows 支持** | 原生 `winget` 后端，覆盖安装 / 卸载 / 查询 |
+| **后端自动选择** | 按操作系统自动选用 Homebrew 或 winget，无需手动切换 |
+| **图形界面 (GUI)** | `sis gui` 在浏览器窗口内可视化浏览、勾选并一键安装/卸载，实时状态与进度 |
+| **交互式 TUI** | `sis tui` 在终端内提供可视化的清单浏览与安装界面 |
+| **环境体检 (`sis audit`)** | 扫描已装软件，按可核验维度给出评价，并指出可替换为免费/开源平替的项（只给建议，不自动安装/卸载） |
+| **软件清单 (`sis toollist`)** | 新手/设计/开发/创作者/隐私 5 份精选清单，只收免费或开源、免费版够用；可导出分享、导入加载 |
+| **迁移指导 (`sis guide`)** | 从付费软件换到免费/开源平替的分步手册，带版本日期与来源（只读不代办） |
+| **AI 补全 (`sis explain` / GUI)** | 对清单外的软件用 LLM 给出简介与免费平替建议（可选，需配置 LLM） |
+| **自检 (`sis doctor`)** | 一键检查包管理器、已装扫描、清单新鲜度、LLM 配置 |
+| **批量安装 / 卸载** | 遍历清单逐条执行，单个失败不中断整批 |
+| **多格式输出** | `table` / `json` / `silent`，适配脚本与人读 |
+| **去重与跳过** | 自动去重重复包，可跳过已安装软件 |
+| **重试机制** | 失败自动重试，可配置次数与间隔 |
+| **镜像加速** | 安装脚本与下载支持 `SIS_MIRROR` 镜像 |
+| **零配置** | 纯 flag 驱动，无配置文件、无持久化 |
 
 ---
 
@@ -65,91 +85,107 @@
 
 ### 环境要求
 
-#### Windows
-- **操作系统**：Windows 10 版本 1809 或更高版本 / Windows 11
-- **依赖工具**：[Windows Package Manager (winget)](https://learn.microsoft.com/zh-cn/windows/package-manager/winget/)（Windows 11 已预装，Windows 10 需手动安装）
-- **权限要求**：部分操作需要**管理员权限**运行
+#### macOS
 
-#### macOS（开发中）
-- **操作系统**：macOS 10.15 (Catalina) 或更高版本
+- **操作系统**：macOS 11 (Big Sur) 或更高版本
 - **依赖工具**：[Homebrew](https://brew.sh/)
-- **状态**：Homebrew 后端尚未实现，敬请期待
+- 未安装 Homebrew？执行 `sis install` 时会提示；也可先用官方脚本安装：
+
+  ```sh
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  ```
+
+#### Windows
+
+- **操作系统**：Windows 10 1809+ / Windows 11
+- **依赖工具**：[Windows Package Manager (winget)](https://learn.microsoft.com/zh-cn/windows/package-manager/winget/)（Windows 11 已预装）
 
 ---
 
 ### 一键安装
 
-#### Windows（PowerShell）
+#### macOS
 
-在管理员 PowerShell 中执行以下命令，自动下载并安装最新版 `sis`：
+```sh
+curl -fsSL https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/install.sh | sh
+```
+
+中国大陆网络可加镜像加速（任选其一）：
+
+```sh
+# 通过 ghproxy 镜像
+SIS_MIRROR=https://ghproxy.com sh -c "$(curl -fsSL https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/install.sh)"
+
+# 指定版本安装
+SIS_VERSION=v0.2.3 sh -c "$(curl -fsSL https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/install.sh)"
+```
+
+安装脚本会自动检测 Apple Silicon / Intel 架构，下载对应的 `sis-darwin-<arch>`，安装到 `/usr/local/bin`（不可写时回退到 `~/bin`），并验证 `sis version`。
+
+#### Windows（PowerShell）
 
 ```powershell
 irm https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/install.ps1 | iex
 ```
 
-**中国大陆用户加速安装（任选其一）：**
+中国大陆用户可设置镜像：
 
 ```powershell
-# 方式 1：使用 jsDelivr CDN（国内有 CDN 节点）
-irm https://cdn.jsdelivr.net/gh/cgartlab/SwiftInstall@main/install.ps1 | iex
-
-# 方式 2：使用 ghproxy 镜像
 $env:SIS_MIRROR='ghproxy.com'; irm https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/install.ps1 | iex
-
-# 方式 3：镜像直接代理
-irm https://ghproxy.com/https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/install.ps1 | iex
-```
-
-安装完成后，重新打开终端即可使用 `sis` 命令。
-
-#### 一键装机（带默认软件清单）
-
-如果你已经准备好 `sis.yaml` 或 `software_list.txt`，可以一键完成全部软件安装：
-
-```powershell
-# 下载示例清单并执行安装
-irm https://raw.githubusercontent.com/cgartlab/SwiftInstall/main/Windows/software_list.txt -OutFile software_list.txt
-sis install
 ```
 
 ---
 
 ### 手动安装
 
-#### 方式一：直接下载预编译二进制
+#### 方式一：下载预编译二进制
 
-从 [Releases](https://github.com/cgartlab/SwiftInstall/releases) 页面下载对应平台的 `sis.exe`，放入系统 `PATH` 中。
+从 [Releases](https://github.com/cgartlab/SwiftInstall/releases) 下载对应平台的文件，放入 `PATH`：
+
+| 平台 | 文件 |
+|------|------|
+| macOS (Apple Silicon) | `sis-darwin-arm64` |
+| macOS (Intel) | `sis-darwin-amd64` |
+| Windows | `sis-windows-amd64.exe` |
+| Linux | `sis-linux-amd64`（暂无可用的包后端，仅供构建/试用） |
 
 #### 方式二：从源码编译
 
-```powershell
+```bash
 git clone https://github.com/cgartlab/SwiftInstall.git
 cd SwiftInstall
-go build -o sis.exe ./cmd/sis/
+go build -ldflags "-X main.Version=$(cat VERSION)" -o sis ./cmd/sis/
 ```
 
-编译完成后，将生成的 `sis.exe` 放入系统 `PATH`。
+#### 方式三：传统脚本（遗留方案）
 
-#### 方式三：使用传统脚本（遗留方案）
+项目仍保留原始脚本，适用于不想安装 CLI 的场景：
 
-项目仍保留原始的脚本，适用于无需 CLI 的场景：
+- **macOS**：`macOS/install_packages.sh`（读取同目录 `packages.txt`）
+- **Windows**：`Windows/software_install.bat`（读取同目录 `software_list.txt`）
 
-- **Windows**：运行 `Windows/software_install.bat`（读取同目录的 `software_list.txt`）
-- **macOS**：运行 `macOS/install_packages.sh`（读取同目录的 `packages.txt`）
-
-两个脚本都已支持 YAML 清单与纯 TXT 列表两种格式。
+两个脚本同时接受 YAML 清单与纯 TXT 列表。
 
 ---
 
 ## 使用指南
 
-### CLI 命令总览
+### 命令总览
 
 ```text
-sis install    从 Manifest 文件批量安装软件
-sis uninstall  从 Manifest 文件批量卸载软件
-sis list       查看 Manifest 中的软件清单
-sis status     检查 Manifest 中各软件的安装状态
+sis gui        图形界面（浏览器窗口内浏览、勾选、一键安装/卸载）
+sis tui        交互式终端界面（浏览清单、选择并安装）
+sis preset     保存 / 列出 / 切换 / 删除软件清单预设
+sis search     在 Homebrew 仓库中搜索软件包
+sis audit      体检已装软件：可核验评价 + 免费/开源平替建议（--toollist 选内置软件清单）
+sis guide      查看迁移指导（从软件换到免费/开源平替的步骤，只读）
+sis toollist    查看 / 导出软件清单（导出 YAML 分享，别人可 sis audit --catalog 加载）
+sis explain    用 AI 简介某软件并找免费/开源平替（需 sis llm set 配置）
+sis doctor     自检：包管理器 / 已装扫描 / 软件清单新鲜度 / LLM 配置
+sis install    按清单批量安装软件
+sis uninstall  按清单批量卸载软件
+sis list       查看清单中的软件
+sis status     检查各软件的安装状态
 sis version    显示版本信息
 ```
 
@@ -163,46 +199,109 @@ sis version    显示版本信息
 
 ---
 
+### gui — 图形界面
+
+```bash
+sis gui                       # 启动后自动在浏览器打开（仅本机 127.0.0.1）
+sis gui --no-open             # 只启动服务，不自动开浏览器
+sis gui -f macOS/packages.txt
+sis gui --lan --port 8787     # 局域网预览：同网段设备可访问（仅限可信网络）
+```
+
+`--lan` 会把监听地址从 `127.0.0.1` 改为 `0.0.0.0`，并在启动时打印本机所有可访问的 URL（含局域网 IP），方便用手机或另一台电脑预览。此时安装/卸载会真实修改本机软件，**请只在可信网络中使用**。
+
+启动一个**本地图形界面**：服务只监听本机回环地址（`127.0.0.1` 随机端口），不暴露到网络；在浏览器窗口中浏览按分类分组的软件清单，勾选后一键**安装/卸载**，安装状态与逐条进度实时刷新。每个软件显示对应的**品牌图标**（内嵌 SVG，缺失时用字母色块回退）。支持浅色/深色主题、搜索过滤、全选、已安装统计。
+
+界面资源（HTML/CSS/JS）通过 `go:embed` 内嵌在二进制里，运行时不依赖外部文件；状态探测对 Homebrew 走一次性批量查询，数十个包也能秒级完成。技术栈为零依赖的原生 Web（无前端框架），按 `Ctrl+C` 关闭服务。
+
+![SwiftInstall 图形界面](docs/screenshots/gui-main.png)
+
+![安装进度](docs/screenshots/gui-progress.png)
+
+---
+
+### tui — 交互式终端界面
+
+```bash
+sis tui
+```
+
+打开终端交互界面，直接浏览清单、勾选软件并执行安装，适合纯终端环境或 SSH 场景。基于 [Bubble Tea](https://github.com/charmbracelet/bubbletea) 构建。
+
+---
+
+### search — 搜索 Homebrew 仓库
+
+```bash
+sis search figma            # 搜索全部 formula / cask
+sis search python --format json
+```
+
+在 Homebrew 全仓库（所有 tap 的 formula 与 cask）中搜索，结果标注频道与是否已安装。GUI 里点顶部「搜索 Homebrew」按钮可在浏览器中实时搜索，结果可一键加入清单再安装。
+
+---
+
+## 预设（Presets）：按你的习惯保存软件清单
+
+可以把当前软件清单（含搜索添加的包）保存成**预设**，随时切换加载。预设是普通的 manifest YAML，存在系统配置目录（macOS: `~/Library/Application Support/sis/presets`），方便备份与同步。
+
+![预设与搜索](docs/screenshots/gui-presets.png)
+
+**GUI**：顶部预设栏可「加载 / 另存为 / 删除」预设；切换后界面立即换成该预设的软件列表。
+
+**CLI**：
+
+```bash
+sis preset save work -f macOS/packages.txt   # 把某清单另存为预设 work
+sis preset list                               # 列出预设
+sis preset show work                          # 查看预设内容
+sis preset delete work                        # 删除预设
+
+# 用预设直接安装 / 查看 / 启动界面（--preset / -p）
+sis install --preset work
+sis list --preset work
+sis gui --preset work
+```
+
+---
+
 ### install — 批量安装
 
 ```bash
-# 使用默认 Manifest（自动查找 sis.yaml / sis.yml / software_list.txt / packages.txt）
+# 使用默认清单（自动查找 sis.yaml / sis.yml / software_list.txt / packages.txt）
 sis install
 
-# 指定 Manifest 文件
-sis install -f software_list.txt
+# 指定清单文件
+sis install -f packages.txt
 
 # 仅预览，不实际安装
 sis install --dry-run
 
-# 使用代理
-sis install --proxy http://127.0.0.1:10809
-
 # 跳过已安装软件
 sis install --skip-existing
+
+# 使用代理
+sis install --proxy http://127.0.0.1:10809
 
 # 失败重试 3 次，间隔 5 秒
 sis install --retry 3 --retry-delay 5
 ```
 
-安装过程中会逐条输出进度，最后给出汇总：
+安装过程中逐条输出进度，最后给出汇总：
 
 ```text
-Installing 4 packages from software_list.txt
+Installing 4 packages from packages.txt
 
-  [1/4] ✓ Microsoft.VisualStudioCode (dev)
-  [2/4] ✓ Git.Git (dev)
-  [3/4] ⚠ 7zip.7zip (utils) — winget exited with code -1978335189: No package found matching input criteria.
-  [4/4] ✗ ObsProject.OBSStudio (utils) — winget exited with code -1978335189: No package found matching input criteria.
+  [1/4] ✓ git (dev)
+  [2/4] ✓ python@3.12 (dev)
+  [3/4] ⚠ visual-studio-code (dev) — already installed
+  [4/4] ✗ figma (design) — brew exited with code 1: No available formula or cask
 
   ────────────────────────────────────────
-  Total: 4  |  2 succeeded  1 skipped  1 failed (45.2s)
-
-  Failed packages:
-    ✗ ObsProject.OBSStudio — winget exited with code -1978335189: No package found matching input criteria.
+  Total: 4  |  2 succeeded  1 skipped  1 failed (38.1s)
 ```
 
-> **注意**：安装失败不会中断整个批次，错误会在最后的汇总中报告。标记为 `optional: true` 的包失败时计入 `skipped`，不影响退出码。
+> 安装失败不会中断整批，错误在最后汇总。标记 `optional: true` 的包失败时计入 `skipped`，不影响退出码。
 
 ---
 
@@ -210,10 +309,10 @@ Installing 4 packages from software_list.txt
 
 ```bash
 # 卸载清单中所有软件（必须加 --yes 确认）
-sis uninstall -f software_list.txt --yes
+sis uninstall -f packages.txt --yes
 
 # 预览卸载（不实际执行）
-sis uninstall -f software_list.txt --yes --dry-run
+sis uninstall -f packages.txt --yes --dry-run
 ```
 
 ---
@@ -224,8 +323,8 @@ sis uninstall -f software_list.txt --yes --dry-run
 # 表格形式列出所有软件
 sis list
 
-# 指定 Manifest
-sis list -f sis.yaml
+# 指定清单
+sis list -f packages.txt
 
 # 按分类过滤
 sis list --category dev
@@ -237,17 +336,16 @@ sis list --format json
 示例输出：
 
 ```text
-Packages from software_list.txt
+Packages from packages.txt
 
   dev
-    Microsoft.VisualStudioCode
-    Git.Git
+    git
+    python@3.12
 
-  utils
-    7zip.7zip
-    ObsProject.OBSStudio
+  design
+    figma (optional)
 
-  Total: 4 packages
+  Total: 3 packages
 ```
 
 ---
@@ -256,20 +354,19 @@ Packages from software_list.txt
 
 ```bash
 sis status
-sis status -f software_list.txt
+sis status -f packages.txt
 ```
 
 示例输出：
 
 ```text
-Checking status of 4 packages from software_list.txt
+Checking status of 3 packages from packages.txt
 
-  [1/4] ✓ Microsoft.VisualStudioCode
-  [2/4] ✗ Git.Git
-  [3/4] ✓ 7zip.7zip
-  [4/4] ✗ ObsProject.OBSStudio
+  [1/3] ✓ git
+  [2/3] ✓ python@3.12
+  [3/3] ✗ figma
 
-  2 installed, 2 missing
+  2 installed, 1 missing
 ```
 
 ---
@@ -283,68 +380,85 @@ sis version
 示例输出：
 
 ```text
-sis 1.0.0 (a1b2c3d, 2024-01-15)
+sis 0.2.3 (a1b2c3d, 2026-11-03)
+```
+
+---
+
+## Homebrew 后端与 formula / cask
+
+macOS 上 `sis` 使用 Homebrew。Homebrew 有两类包，通过清单里的 `kind` 字段区分：
+
+| `kind` | 说明 | 例子 |
+|--------|------|------|
+| `formula` | 命令行工具、语言、库 | `git`、`python@3.12`、`oh-my-posh` |
+| `cask` | GUI 应用与字体（`.app` / 字体） | `visual-studio-code`、`figma`、`font-hack-nerd-font` |
+| 留空 | 自动探测：先按 formula，找不到再按 cask | 大多数情况可直接留空 |
+
+> GUI 应用与字体请显式标注 `kind: cask`，避免与同名 formula 混淆或探测失败。
+
+macOS 示例清单见 [`macOS/packages.txt`](macOS/packages.txt)，其中使用真实的 Homebrew 小写 token，并为 GUI 应用标注 `kind: cask`。可直接：
+
+```bash
+sis install -f macOS/packages.txt
 ```
 
 ---
 
 ## Manifest 文件格式
 
-`sis` 支持 **YAML** 和 **TXT** 两种格式的 Manifest 文件，默认按以下顺序自动查找：
+`sis` 支持 **YAML** 与 **TXT** 两种清单，默认按以下顺序自动查找：
 
 1. `sis.yaml`
 2. `sis.yml`
 3. `software_list.txt`
 4. `packages.txt`
 
-文件格式以**内容**为准：`.yaml` / `.yml` 一律按 YAML 解析；其余扩展名只要包含 `packages:` 或 `settings:` 键就按 YAML 解析，否则按 TXT 列表解析（所以 YAML 内容可以叫 `.txt`）。清单中的重复包 ID 会被自动去重。
+格式以**内容**为准：含 `packages:` 或 `settings:` 键即按 YAML 解析，否则按 TXT 列表解析（所以 YAML 内容可以叫 `.txt`）。重复包 ID 会自动去重。
 
 ### YAML 格式
 
-推荐格式，支持分类、代理、重试等高级配置：
-
-```yaml
-proxy: http://127.0.0.1:10809
-
-packages:
-  - id: Microsoft.VisualStudioCode
-    category: dev
-  - id: Git.Git
-    category: dev
-  - id: 7zip.7zip
-    category: utils
-```
-
-清单级可选设置（写在顶层或 `settings:` 块内均可）：
-
 ```yaml
 settings:
-  proxy: http://127.0.0.1:10809   # HTTP/HTTPS 代理
-  skip_existing: true             # 跳过已安装软件
-  retry_count: 2                  # 失败重试次数
-  retry_delay: 3                  # 重试间隔（秒）
+  proxy: http://127.0.0.1:7890   # HTTPS 代理（可选）
+  skip_existing: true            # 跳过已安装软件
+  retry_count: 2                 # 失败重试次数
+  retry_delay: 3                 # 重试间隔（秒）
+
+packages:
+  - id: git
+    category: Dev
+  - id: python@3.12
+    category: Dev
+  - id: visual-studio-code
+    category: Dev
+    kind: cask                   # macOS GUI 应用
+  - id: figma
+    category: Design
+    kind: cask
+    optional: true               # 失败不计入 failed
 ```
 
-包级可选字段：
+包级字段：
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `id` | string | 包 ID（必填） |
+| `id` | string | 包 ID / Homebrew token（必填） |
 | `category` | string | 分类，仅用于 `sis list` 分组展示 |
-| `optional` | bool | 为 `true` 时，该包安装失败不计入 `failed`，也不影响退出码 |
+| `kind` | string | `formula` 或 `cask`；留空自动探测（仅 Homebrew 后端使用） |
+| `optional` | bool | `true` 时安装失败不计入 `failed`，不影响退出码 |
 
 ### TXT 格式
 
-兼容传统脚本，每行一个包 ID，`#` 开头的行为注释，可作为分类标题：
+兼容传统脚本，每行一个包 ID，`#` 开头的行为注释（可作分类标题）：
 
 ```text
 # dev
-Microsoft.VisualStudioCode
-Git.Git
+git
+python@3.12
 
-# utils
-7zip.7zip
-ObsProject.OBSStudio
+# design
+figma
 ```
 
 ---
@@ -354,37 +468,35 @@ ObsProject.OBSStudio
 ```text
 SwiftInstall/
 ├── cmd/sis/
-│   └── main.go                     # CLI 入口（ldflags 注入版本信息）
+│   └── main.go                     # CLI 入口（ldflags 注入版本）
 ├── internal/
-│   ├── cli/                        # Cobra 命令实现
+│   ├── cli/                        # Cobra 命令
 │   │   ├── root.go                 # 根命令与全局标志
-│   │   ├── install.go              # install 子命令
-│   │   ├── uninstall.go            # uninstall 子命令
-│   │   ├── list.go                 # list 子命令
-│   │   ├── status.go               # status 子命令
-│   │   ├── helpers.go              # 清单自动查找与 Renderer 选择
-│   │   └── version.go              # version 子命令
+│   │   ├── install.go / uninstall.go / list.go / status.go
+│   │   ├── gui.go / tui.go         # 图形 / 终端界面
+│   │   ├── audit.go                # 环境体检（sis audit）
+│   │   ├── guide.go                # 迁移指导（sis guide）
+│   │   ├── toollist.go             # 软件清单 list/show/export/verify
+│   │   ├── explain.go              # AI 补全（sis explain）
+│   │   ├── doctor.go               # 自检（sis doctor）
+│   │   ├── preset.go / mirror.go / llm.go / search.go
+│   │   └── helpers.go / version.go
+│   ├── audit/                      # 已装扫描 + 名称归一 + 报告
+│   ├── toollist/                   # 软件清单/平替/迁移指导 + builtin/*.yaml
+│   ├── advice/                     # AI 补全 Explain（可注入 Chatter）
+│   ├── llm/                        # OpenAI 兼容客户端 + 配置
 │   ├── engine/                     # 批量安装/卸载编排（跳过、干跑、重试）
-│   │   └── engine.go
-│   ├── manifest/                   # YAML/TXT 清单解析、去重与校验
-│   │   ├── manifest.go             # Manifest/Package/Settings 结构
-│   │   ├── parser.go               # 格式识别与解析
-│   │   └── validate.go             # 清单校验
-│   ├── backend/                    # 后端接口 + winget 实现
-│   │   ├── backend.go              # Backend 接口与 Output/InstallOptions
-│   │   └── winget.go               # winget 后端实现
-│   └── ui/                         # 输出渲染器
-│       ├── renderer.go             # Renderer 接口
-│       ├── terminal.go             # 终端彩色输出
-│       ├── json.go                 # JSON 输出
-│       └── silent.go               # 静默输出
-├── Windows/
-│   ├── software_install.bat        # Windows 安装脚本（遗留）
-│   └── software_list.txt           # Windows 软件清单示例（YAML 内容）
-├── macOS/
-│   ├── install_packages.sh         # macOS 安装脚本（遗留，待迁移到 Go CLI）
-│   └── packages.txt                # macOS 软件清单示例（YAML 内容）
+│   ├── manifest/                   # YAML/TXT 解析、去重、校验
+│   ├── backend/                    # 后端接口 + 平台注册 + 实现（homebrew/winget/npm/github）
+│   ├── gui/                        # 本地 Web GUI：HTTP + SSE API + 内嵌前端（index/audit/toollists）
+│   ├── tui/                        # 终端界面（bubbletea/lipgloss）
+│   ├── preset/ / mirror/           # 预设 / 国内镜像配置
+│   └── ui/                         # terminal / json / silent 渲染器
+├── Windows/                        # 遗留 .bat 安装器 + 清单示例
+├── macOS/                          # 遗留 .sh 安装器 + 清单示例
+├── install.sh                      # macOS 一键安装脚本
 ├── install.ps1                     # Windows 一键安装脚本
+├── VERSION                         # 当前产品版本
 ├── README.md
 ├── LICENSE
 └── AGENTS.md
@@ -394,25 +506,25 @@ SwiftInstall/
 
 ## 贡献指南
 
-欢迎提交 Issue 和 Pull Request！
+欢迎提交 Issue 与 Pull Request。
 
-1. **Fork** 本仓库。
-2. 在您的分支上进行修改：`git checkout -b feature/YourFeature`。
-3. 提交更改：`git commit -m 'Add some feature'`。
-4. 推送分支：`git push origin feature/YourFeature`。
-5. 新建一个 **Pull Request**。
+1. Fork 本仓库。
+2. 新建分支：`git checkout -b feature/YourFeature`。
+3. 提交改动：`git commit -m 'Add some feature'`。
+4. 推送：`git push origin feature/YourFeature`。
+5. 新建 Pull Request。
 
 ### 提交规范
 
-- 保持代码简洁，遵循 Go 官方代码规范。
-- 修改 CLI 命令时，请同步更新 `README.md` 使用说明。
+- 保持代码简洁，遵循 Go 官方规范。
+- 修改 CLI 命令或清单字段时，同步更新 `README.md` 与 `docs/CLI_USAGE.md`。
 - 新增功能请补充必要的测试与文档。
 
 ---
 
 ## 许可证
 
-本项目采用 [GNU General Public License v3.0](LICENSE) 开源许可证。
+本项目采用 [GNU General Public License v3.0](LICENSE)。
 
 ```text
 SwiftInstall — Cross-platform batch software installer
@@ -434,4 +546,4 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ---
 
-<p align="center">如果本项目对您有帮助，欢迎点亮 ⭐ Star 支持我们！</p>
+<p align="center">如果本项目对你有帮助，欢迎点亮 ⭐ Star 支持。</p>

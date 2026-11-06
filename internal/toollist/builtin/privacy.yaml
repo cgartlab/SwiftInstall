@@ -1,0 +1,184 @@
+id: privacy
+title: 隐私与安全软件清单
+audience: 重视隐私 / 数据主权的人
+curator: cgartlab
+updated: "2026-11"
+standard:
+  - free-or-oss
+  - free-tier-sufficient
+  - mature
+
+items:
+  # 网络
+  - name: Firefox
+    brew: firefox
+    role: 浏览器
+    category: 网络
+    license: free
+    free_tier_enough: true
+    alternative_to: Google Chrome
+    why: 免费开源内核，隐私控制与扩展完善，可作为主浏览器。
+    verified_at: "2026-11-05"
+    sources: [https://www.mozilla.org/firefox/]
+  - name: LibreWolf
+    brew: librewolf
+    role: 隐私浏览器
+    category: 网络
+    license: oss
+    free_tier_enough: true
+    why: 基于 Firefox 的隐私加固版，默认去遥测、强跟踪保护。
+    verified_at: "2026-11-05"
+    sources: [https://librewolf.net]
+  - name: Signal
+    brew: signal
+    role: 私密通讯
+    category: 网络
+    license: free
+    free_tier_enough: true
+    why: 端到端加密的开源通讯，免费且无广告。
+    verified_at: "2026-11-05"
+    sources: [https://signal.org]
+  - name: Thunderbird
+    brew: thunderbird
+    role: 邮件
+    category: 网络
+    license: oss
+    free_tier_enough: true
+    why: 开源邮件客户端，本地管理多账户，免费够用。
+    verified_at: "2026-11-05"
+    sources: [https://www.thunderbird.net]
+  - name: OnionShare
+    brew: onionshare
+    role: 匿名传输
+    category: 网络
+    license: oss
+    free_tier_enough: true
+    why: 开源，经 Tor 匿名分享文件/网站，无需账号。
+    verified_at: "2026-11-05"
+    sources: [https://onionshare.org]
+  # 安全
+  - name: KeePassXC
+    brew: keepassxc
+    role: 密码管理
+    category: 安全
+    license: oss
+    free_tier_enough: true
+    alternative_to: 1Password / LastPass
+    why: 开源、离线、本地加密数据库；免费且数据完全自持。
+    verified_at: "2026-11-05"
+    sources: [https://keepassxc.org]
+  - name: Cryptomator
+    brew: cryptomator
+    role: 文件加密
+    category: 安全
+    license: oss
+    free_tier_enough: true
+    why: 开源，为云盘文件做透明加密，免费版够用。
+    verified_at: "2026-11-05"
+    sources: [https://cryptomator.org]
+  - name: VeraCrypt
+    brew: veracrypt
+    role: 磁盘加密
+    category: 安全
+    license: oss
+    free_tier_enough: true
+    why: 开源磁盘/容器加密，跨平台，免费。
+    verified_at: "2026-11-05"
+    sources: [https://www.veracrypt.fr]
+  - name: LuLu
+    brew: lulu
+    role: 防火墙
+    category: 安全
+    license: oss
+    free_tier_enough: true
+    why: 开源的 macOS 出站防火墙，免费。
+    verified_at: "2026-11-05"
+    sources: [https://objective-see.org/products/lulu.html]
+  # 文件
+  - name: LocalSend
+    brew: localsend
+    role: 局域网传输
+    category: 文件
+    license: oss
+    free_tier_enough: true
+    why: 开源、端到端加密的跨平台局域网传输，不经云。
+    verified_at: "2026-11-05"
+    sources: [https://localsend.org]
+  - name: Keka
+    brew: keka
+    role: 压缩 / 解压
+    category: 文件
+    license: oss
+    free_tier_enough: true
+    why: 开源，支持常见压缩格式。
+    verified_at: "2026-11-05"
+    sources: [https://www.keka.io]
+  # 系统 / 效率
+  - name: Stats
+    brew: stats
+    role: 系统监控
+    category: 系统
+    license: oss
+    free_tier_enough: true
+    why: 开源，菜单栏查看 CPU/内存/网络/电池。
+    verified_at: "2026-11-05"
+    sources: [https://github.com/exelban/stats]
+  - name: Raycast
+    brew: raycast
+    role: 启动器 / 效率
+    category: 效率
+    license: free
+    free_tier_enough: true
+    why: 免费版覆盖启动器、剪贴板、窗口与脚本命令。
+    verified_at: "2026-11-05"
+    sources: [https://www.raycast.com/pricing]
+
+equivalences:
+  - from: ["Google Chrome", "Chrome", "chrome"]
+    from_role: 浏览器
+    to:
+      name: Firefox
+      brew: firefox
+      license: free
+    free_tier_enough: true
+    why: "Firefox 免费开源、隐私控制更强；日常浏览与扩展够用。"
+    verified_at: "2026-11-05"
+    sources: [https://www.mozilla.org/firefox/]
+    playbook:
+      summary: "从 Chrome 迁移到 Firefox（免费 / 开源）"
+      data_fidelity: "书签与密码可导入；扩展需在 Firefox 重新安装。"
+      verified_at: "2026-11-05"
+      steps:
+        - title: "在 Chrome 导出"
+          detail: "书签管理器 → 导出书签为 HTML；密码在设置里导出 CSV。"
+          source_url: https://support.google.com/chrome/answer/96816
+        - title: "在 Firefox 导入"
+          detail: "书签 → 管理书签 → 导入；密码 → 设置 → 隐私与安全 → 导入。"
+          source_url: https://support.mozilla.org/kb/import-bookmarks-data-another-browser
+        - title: "重装常用扩展"
+          detail: "在 Firefox 扩展商店安装等价扩展，核对同步。"
+          source_url: https://addons.mozilla.org
+  - from: ["LastPass", "lastpass"]
+    from_role: 密码管理
+    to:
+      name: KeePassXC
+      brew: keepassxc
+      license: oss
+    free_tier_enough: true
+    why: "KeePassXC 开源离线、本地加密，免费且数据自持。"
+    verified_at: "2026-11-05"
+    sources: [https://keepassxc.org]
+    playbook:
+      summary: "从 LastPass 迁移到 KeePassXC（开源）"
+      data_fidelity: "可导出 CSV 再导入；TOTP 与附件需手工核对。"
+      verified_at: "2026-11-05"
+      steps:
+        - title: "在 LastPass 导出"
+          detail: "Advanced Options → Export，导出 CSV。"
+          source_url: https://support.lastpass.com
+        - title: "在 KeePassXC 导入"
+          detail: "Database → Import → CSV，核对条目。"
+          source_url: https://keepassxc.org/docs/
+        - title: "删除明文 CSV"
+          detail: "迁移完成后安全删除导出的 CSV。"
+          source_url: https://keepassxc.org/docs/

@@ -1,6 +1,6 @@
 # LESSONS — SwiftInstall
 
-> 跨平台批量软件安装器：Go CLI `sis`（Cobra，flag-driven，无配置文件）逐步取代遗留 winget/brew 脚本；Windows 优先，仅 winget backend，CI 发布 Windows amd64 binary。
+> 跨平台批量软件安装器：Go CLI `sis`（Cobra，flag-driven，无配置文件）逐步取代遗留 winget/brew 脚本；macOS（Homebrew，formula+cask）与 Windows（winget）双后端，按 OS 自动选择；release 矩阵发布 darwin/arm64·amd64、windows/amd64、linux/amd64。
 > 本仓库从真实失误沉淀的「教训→规则」清单。**会话开始先全文阅读并遵循其中所有规则**；出现新失误按 §维护 追加。
 > 权威依据：Anthropic Claude Code memory/best practices（<200 行、具体可验证、第二次犯同样错即写入）；社区 lessons.md 惯例（Boris Cherny，Anthropic）。
 > 来源：本仓库 AGENTS.md 的 Gotchas + 已验证 fix 提交；预填为种子，后续由 Agent 在真实工作中增长。
@@ -21,7 +21,7 @@
 
 - 失误：重新引入 config/mirror/proxy/log 子命令 → 规则：已作为死重删除，`sis` 是纯 flag-driven，无配置文件无持久化；无具体需求不要复活（见 AGENTS.md「Architecture」）
 - 失误：把 `bin/` 预编译二进制当源码保留 → 规则：`bin/` 已删除（无源可溯），`.gitignore` 覆盖 `*.exe`；不要重新提交二进制（见 AGENTS.md「Gotchas」）
-- 失误：DESIGN_ISSUES.md / TEST_REPORT.md 声称有 preflight/admin 检测 → 规则：实际不存在，唯一环境检查是 `backend.Detect()` 找 winget；两份文档视为历史（见 AGENTS.md「Gotchas」）
+- 失误：DESIGN_ISSUES.md / TEST_REPORT.md 声称有 preflight/admin 检测 → 规则：实际不存在，唯一环境检查是 `backend.Detect()` 选择包管理器（winget / brew）；两份文档视为历史（见 AGENTS.md「Gotchas」）
 - 失误：给 sis 加配置文件 → 规则：flags 优先于 manifest 设置，优先于内置默认值（`cmd.Flags().Changed`），没有 config 文件（见 AGENTS.md「Config precedence」）
 - 失误：list/status 忽略 `--no-color` 与 `--format silent` → 规则：所有命令都要尊重输出开关（commit ca07283）
 
@@ -32,5 +32,13 @@
 - 失误：README / AGENTS.md / CLI_USAGE 与实际 CLI 脱节 → 规则：文档必须与真实 CLI 命令同步（commit cab23d7）
 - 失误：CI 里 git 身份未配 + CRLF 损坏 → 规则：Actions 显式配 git identity 并处理行尾（commit 29683cf）
 - 失误：构建产物与死配置文件入库 → 规则：清理 tracked 构建产物与死配置（commit d95abf3）
-- 失误：假设 push 触发 CI 已覆盖 vet/测试 → 规则：当前 CI 只跑 build + version/help smoke，`go vet` 与测试尚未接入，不要假设已覆盖（见 AGENTS.md「CI/CD」）
+- 失误：假设 push 触发 CI 已覆盖 vet/测试 → 规则：`ci.yml` 在 `ubuntu-latest` 跑 `go build ./...` + `go vet ./...` + `go test ./...` + version/help 冒烟，`windows-latest` 只验证 winget 路径可编译；不要再写成 Windows-only（见 AGENTS.md「CI/CD」）
+- 失误：默认 Go 模块代理 proxy.golang.org 在本环境超时导致 `go mod download` 卡死 → 规则：CI 与本地构建统一 `GOPROXY=https://goproxy.cn,direct`
+- 失误：文档漏掉新命令 `tui` 或清单 `kind` 字段 → 规则：命令/清单字段变更时同步 README + `docs/CLI_USAGE.md`，必须包含 `sis tui` 与 `kind: formula|cask`
 - 失误：跳过本地校验 → 规则：改 Go 代码后 `go build -o sis.exe ./cmd/sis/` + `go vet ./...` 双跑（见 AGENTS.md「Build」）
+
+## macOS / Homebrew
+
+- 失误：macOS 清单用显示名/大写 token（如 `Visual-Studio-Code`）导致 `brew` 找不到包 → 规则：`macOS/packages.txt` 必须用真实小写 Homebrew token（`git`、`python@3.12`、`font-hack-nerd-font`）
+- 失误：GUI 应用按 formula 安装失败 → 规则：GUI 应用在清单标 `kind: cask`；`kind` 留空时后端按 formula 优先、再 cask 自动探测
+- 失误：发布只产出 Windows amd64 → 规则：release 矩阵覆盖 darwin/arm64、darwin/amd64、windows/amd64、linux/amd64，产物命名 `sis-<os>-<arch>[.exe]`，并校验 `sis version` 含 tag

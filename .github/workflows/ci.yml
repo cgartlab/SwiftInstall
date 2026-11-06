@@ -1,5 +1,7 @@
 name: CI
 
+# push / PR 触发：Linux 上跑完整的 build + vet + test + 冒烟测试；
+# Windows 上额外验证 winget 后端仍可编译。不再局限于 Windows-only。
 on:
   push:
     branches: ["**"]
@@ -9,9 +11,63 @@ on:
 permissions:
   contents: read
 
+# Go 模块代理回退：优先国内镜像。
+env:
+  GOPROXY: https://goproxy.cn,https://proxy.golang.org,direct
+
 jobs:
-  build:
-    name: Build & Verify
+  linux:
+    name: Build & Test (ubuntu)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Build all packages
+        run: go build ./...
+
+      - name: go vet（静态检查门禁）
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build binary
+        run: |
+          set -euo pipefail
+          COMMIT="$(git rev-parse --short HEAD)"
+          DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          go build -ldflags "-X main.Version=dev -X main.Commit=${COMMIT} -X main.Date=${DATE}" \
+            -o sis-linux-amd64 ./cmd/sis/
+
+      - name: Smoke test — version
+        run: |
+          out="$(./sis-linux-amd64 version)"
+          echo "Binary output: ${out}"
+          if [ -z "${out}" ]; then echo "::error::version produced no output"; exit 1; fi
+
+      - name: Smoke test — help
+        run: ./sis-linux-amd64 --help
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sis-linux-amd64-${{ github.sha }}
+          path: sis-linux-amd64
+          retention-days: 7
+
+  windows:
+    name: Build (windows / winget)
     runs-on: windows-latest
 
     steps:
@@ -27,10 +83,11 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      - name: go vet（静态检查门禁，修 #27）
-        run: go vet ./...
+      # 确保 winget 后端路径仍可编译（macOS 目标在 release 矩阵中构建）。
+      - name: Build all packages
+        run: go build ./...
 
-      - name: Build
+      - name: Build binary
         shell: pwsh
         run: |
           $COMMIT = git rev-parse --short HEAD
@@ -40,20 +97,13 @@ jobs:
             -o sis-windows-amd64.exe `
             ./cmd/sis/
 
-      - name: Smoke test — version flag
+      - name: Smoke test — version
         shell: pwsh
         run: |
           $out = & ./sis-windows-amd64.exe version
           Write-Output "Binary output: $out"
           if (-not $out) { Write-Error "version command produced no output"; exit 1 }
 
-      - name: Smoke test — help flag
+      - name: Smoke test — help
         shell: pwsh
         run: ./sis-windows-amd64.exe --help
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sis-windows-amd64-${{ github.sha }}
-          path: sis-windows-amd64.exe
-          retention-days: 7

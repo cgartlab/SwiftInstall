@@ -28,12 +28,9 @@ func newStatusCmd() *cobra.Command {
 }
 
 func runStatus(cmd *cobra.Command, args []string) error {
-	manifestPath, _ := cmd.Flags().GetString("file")
-	if manifestPath == "" {
-		manifestPath = resolveManifest()
-	}
-	if manifestPath == "" {
-		return fmt.Errorf("未找到清单文件")
+	manifestPath, err := manifestPathFrom(cmd)
+	if err != nil {
+		return err
 	}
 
 	m, err := manifest.ParseManifest(manifestPath)
@@ -41,7 +38,10 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("解析清单文件失败: %w", err)
 	}
 
-	be := backend.NewWingetBackend()
+	be, err := backend.ForCurrentOS()
+	if err != nil {
+		return err
+	}
 	if err := be.Detect(); err != nil {
 		return err
 	}

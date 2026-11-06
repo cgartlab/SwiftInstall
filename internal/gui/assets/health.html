@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SwiftInstall · 系统自检</title>
+<style>
+  :root{--paper:#F4EFE6;--card:#FBF8F1;--ink:#1C1B17;--muted:#6E6B60;--faint:#9A9384;--line:#DDD6C7;
+    --green:#2F5D46;--green-soft:#E7EEE8;--amber:#A9762A;--amber-soft:#F4EAD8;
+    --serif:"Iowan Old Style","Palatino Linotype","Songti SC","Noto Serif SC",Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",sans-serif}
+  @media (prefers-color-scheme:dark){:root{--paper:#16140F;--card:#1D1A13;--ink:#ECE7DC;--muted:#A39B89;
+    --faint:#6F6858;--line:#2E2A20;--green:#8FB89B;--green-soft:#1E2A22;--amber:#D6A45E;--amber-soft:#3A2C18}}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px}
+  .top{max-width:640px;margin:0 auto;display:flex;justify-content:space-between;font-size:13px}
+  .top a{color:var(--muted);text-decoration:none}.top a:hover{color:var(--ink)}
+  .wrap{max-width:640px;margin:0 auto}
+  .head{margin:20px 0}
+  .kicker{font-size:12px;letter-spacing:.06em;color:var(--green);margin-bottom:8px}
+  h1{font-family:var(--serif);font-size:28px;font-weight:600;letter-spacing:-.4px}
+  .sub{font-size:13px;color:var(--muted);margin-top:8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:8px}
+  .row{display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:none}
+  .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--on-accent)}
+  .ic.ok{background:var(--green)}.ic.no{background:var(--amber)}.ic.na{background:var(--faint)}
+  .lbl{font-size:13.5px;font-weight:600}
+  .det{font-size:12px;color:var(--muted);margin-top:2px}
+  .val{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+  .foot{padding:14px 18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .btn{border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:13px;font-weight:600;
+    padding:8px 15px;border-radius:9px;cursor:pointer;font-family:inherit}
+  .btn:hover{border-color:var(--green);color:var(--green)}
+  .hint{font-size:12px;color:var(--faint)}
+  .err{color:var(--err)}
+  .card .row{opacity:0}
+  .card.enter .row{animation:rowin .3s cubic-bezier(0.23,1,0.32,1) both}
+  @keyframes rowin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.card .row{opacity:1}.card.enter .row{animation:none!important}}
+
+  :root{--on-accent:#FFFFFF;--red:#A24B3B;--red-soft:#F5E3DE;--err:#9a3d30;--on-moss:#2c4d3c}
+  @media (prefers-color-scheme:dark){:root{--red:#D97757;--red-soft:#3A2C18;--err:#D97757;--on-moss:#ECE7DC}}
+
+  :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:3px}
+  :focus:not(:focus-visible){outline:none}
+</style>
+</head>
+<body>
+  <div class="top"><a href="/">← 返回</a><a href="/toollists">软件清单</a></div>
+  <div class="wrap">
+    <div class="head">
+      <div class="kicker">系统自检</div>
+      <h1>环境是否健康，一眼看清</h1>
+      <p class="sub">包管理器 / 已装扫描 / 软件清单新鲜度 / AI 配置。只读检查，不改动任何东西。</p>
+    </div>
+    <div class="card" id="rows"><div class="row"><div class="ic na">…</div><div class="lbl">正在检查…</div><div class="val"></div></div></div>
+    <div class="foot"><span class="hint" id="hint"></span><button class="btn" id="copyBtn">复制诊断 JSON</button></div>
+  </div>
+<script>
+const $=s=>document.querySelector(s);
+let RAW=null;
+function row(ok,label,det,val){
+  const cls = ok===true?"ok":ok===false?"no":"na";
+  const mark = ok===true?"✓":ok===false?"!":"·";
+  return `<div class="row"><div class="ic ${cls}">${mark}</div><div><div class="lbl">${label}</div>${det?`<div class="det">${det}</div>`:""}</div><div class="val">${val||""}</div></div>`;
+}
+async function load(){
+  try{
+    const r=await fetch("/api/health"); const j=await r.json(); RAW=j;
+    const pm=j.package_manager||{}, ins=j.installed||{}, tt=j.toollists_total||{}, llm=j.llm||{};
+    let h="";
+    h+=row(true,"平台", "", (j.goos||"")+"/"+(j.goarch||""));
+    h+=row(pm.ok===true,"包管理器 "+((pm.name)||""), pm.ok===false?(pm.error||""):"", pm.ok?"可用":"不可用");
+    h+=row(ins.ok===true,"已装扫描", ins.ok===false?(ins.error||""):"", ins.ok?("识别 "+ins.count+" 个"):"失败");
+    h+=row((tt.stale||0)===0,"软件清单", (tt.lists||0)+" 份 · "+(tt.items||0)+" 项", tn(tt));
+    h+=row(true,"AI / LLM", llm.configured?(llm.model||"已配置"):"未配置（可选）", llm.configured?"已配置":"○");
+    $("#rows").innerHTML=h;
+    { const c=$("#rows"); c.classList.remove("enter"); void c.offsetWidth;
+      Array.prototype.forEach.call(c.querySelectorAll(".row"),(r,i)=>{ r.style.animationDelay=(i*45)+"ms"; });
+      c.classList.add("enter"); }
+    $("#hint").textContent="检查于 "+new Date().toLocaleString("zh-CN");
+  }catch(e){ $("#rows").innerHTML=row(false,"自检失败", e.message, ""); }
+}
+function tn(tt){ return "新鲜 "+(tt.fresh||0)+" · 需复核 "+(tt.stale||0); }
+$("#copyBtn").onclick=()=>{ if(RAW) navigator.clipboard.writeText(JSON.stringify(RAW,null,2)).then(()=>{ $("#copyBtn").textContent="已复制 ✓"; }); };
+load();
+</script>
+  <script src="cmdk.js"></script>
+</body>
+</html>
