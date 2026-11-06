@@ -213,6 +213,7 @@ func TestHandleLLM_Get(t *testing.T) {
 // chain against a local mock endpoint (config written to a temp HOME).
 func TestHandleExplain_Configured(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, `{"choices":[{"message":{"content":"可用 Capso 直接替代。"}}]}`)

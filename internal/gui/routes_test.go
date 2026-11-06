@@ -58,6 +58,7 @@ func TestRoutes(t *testing.T) {
 // saved as a preset via POST /api/preset?action=save.
 func TestPresetSaveFromToollist(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	srv := testServer()
 	rec := httptest.NewRecorder()
 	body := `{"name":"toollist-x","packages":[{"id":"keka","category":"文件"},{"id":"raycast","category":"效率"}]}`
