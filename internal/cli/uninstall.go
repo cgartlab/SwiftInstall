@@ -14,6 +14,7 @@ import (
 func newUninstallCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "uninstall",
+		Args:  cobra.NoArgs,
 		Short: "从清单文件批量卸载软件",
 		Long: `根据清单文件批量卸载已安装的软件包。
 

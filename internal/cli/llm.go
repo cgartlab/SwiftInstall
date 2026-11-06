@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -56,6 +57,16 @@ func newLLMCmd() *cobra.Command {
 			cfg, err := llm.Load()
 			if err != nil {
 				return err
+			}
+			format, _ := cmd.Flags().GetString("format")
+			if format == "silent" {
+				return nil
+			}
+			if format == "json" {
+				return json.NewEncoder(os.Stdout).Encode(map[string]any{
+					"base_url": cfg.BaseURL, "model": cfg.Model,
+					"api_key": cfg.MaskedKey(), "configured": cfg.Configured(),
+				})
 			}
 			printCfg(cfg)
 			return nil

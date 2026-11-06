@@ -4,6 +4,44 @@
 
 ## [Unreleased]
 
+- **空状态引导**：主界面区分「清单为空」（引导去软件清单挑选）与「过滤无匹配」，附 CTA 按钮，新手更易上手。
+
+- **LLM 接口回归测试**：覆盖 `/api/llm` 保存后 GET 返回脱敏 key（绝不回显明文）、字段往返、非法 JSON→400。
+
+- **列表行 hover 打磨**：hover 底色过渡 120ms；用 `@media (hover:hover)` 门控，触屏不出现粘滞 hover（保留 `:active` 按压反馈）。
+
+- **⌘K 分组标题**：命令面板按「导航 / 动作」分组显示（最近使用仍置顶），信息层级更清晰。
+
+- **端到端回归脚本**：新增 `scripts/regression.sh`（CLI 退出码矩阵 + GUI 路由/E2E，23 项，exit 0=全过）；本轮全线回归 `go test -race ./...` 全绿、脚本 23/23。
+
+- **修正 + 交互**：修正上一轮误给 `/api/preset` 加 GET 守卫（POST 保存预设恢复可用，补全量测试通过）；`/swap` 松手未达阈值时回弹带轻微弹簧（cubic-bezier 过冲，reduced-motion 下不位移）。
+
+- **只读 API 方法校验**：state/status/audit/explain/health/toollists/toollist/export/info/search/presets/preset/outdated 仅接受 GET，其它方法返回 405；导入等 POST 接口不受影响。补测试。
+
+- **修帮助浮层穿透 + gg/G**：帮助/命令浮层打开时不再响应 `j/k/空格/Enter`（修复上轮引入的穿透）；新增 `gg` 回顶、`G` 到底，并写入快捷键卡片。
+
+- **键盘快捷键帮助浮层**：主界面顶栏加 `?` 按钮，按 `?` 弹出快捷键卡片（j/k、空格、Enter、⌘K、Esc），`Esc`/点遮罩关闭。
+
+- **导入/导出安全加固**：`/api/toollist/import` 校验清单 id 字符集（防注入/异常 key）；`/export` 文件名净化（`safeFilename`，防 Content-Disposition 头注入）。补测试。
+
+- **`install`/`uninstall` 参数校验**：加 `cobra.NoArgs`，多余位置参数报错（之前被静默忽略，`sis install foo` 会误装整份清单）；补测试。
+
+- **`--format` 校验**：非法值（如 `--format xml`）现在明确报错（exit 1），不再静默回退表格；补 CLI 测试。
+
+- **⌘K 最近使用 + 容错测试**：命令面板把最近执行的命令置顶（内存态，重启即失，无持久化）；新增 preset 损坏文件容错回归测试（List 不崩、Load 报错）。
+
+- **边界回归测试 + 行按压反馈**：新增 CRLF/BOM 清单解析、`/api/run` 参数校验回归测试；列表行加 `:active` 按压底色。
+
+- **列表键盘导航**：主界面支持 `j/k` 上下选择行、`空格` 勾选、`Enter` 打开详情（输入框/命令面板/按钮聚焦时自动让路），选中行有绿底+左标高亮。
+
+- **安全回归测试 + 顶栏现代化**：补 preset 路径穿越拒绝、清单导入→回读 回归测试；顶栏加镜面高光边并补 `prefers-reduced-transparency` 实心兜底。
+
+- **更多命令尊重 `--format`**：`sis doctor`、`sis guide --list`、`sis llm show`、`sis mirror show` 支持 `json|silent`（之前忽略输出开关）。
+
+- **修复/优化**：`sis toollist list/show/verify` 尊重 `--format`（json/silent，之前恒打印表格）；`sis status` 改用批量 `InstalledSet`（43 包 >20s → ~3s）。
+
+- **UI 成功案例 + ⌘K 模糊排序**：新增 `docs/UI-CASES.md`（Raycast/Linear/Apple Liquid Glass 提炼）；`cmdk.js` 过滤升级为模糊排序（标题子串优先、子序列次之），命令面板加镜面高光边。
+
 - **前端评审报告 + 二轮色值收敛**：新增 `docs/REVIEW-2026-11.md`（人工按 Argus 口径补做）；第二遍把 styles.css/audit 的 `#fff`、npm 品牌红、遮罩黑、品牌渐变绿收敛为 token；设计系统补充「暗色用 prefers-color-scheme」说明。
 
 暂无。

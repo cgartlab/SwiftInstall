@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/cgartlab/SwiftInstall/internal/backend"
@@ -107,5 +108,189 @@ func TestCapPerSource(t *testing.T) {
 	}
 	if bySrc["brew"] != 1 || bySrc["npm"] != 1 {
 		t.Errorf("per-source counts = %v, want brew=1 npm=1", bySrc)
+	}
+}
+
+func TestCatalogNotFound_404(t *testing.T) {
+	ts := newTestServer(t)
+	defer ts.Close()
+	for _, u := range []string{
+		"/api/toollist?toollist=bogus",
+		"/api/toollist/export?toollist=bogus",
+		"/api/audit?toollist=bogus",
+	} {
+		resp, err := http.Get(ts.URL + u)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusNotFound {
+			t.Errorf("%s = %d, want 404", u, resp.StatusCode)
+		}
+	}
+}
+
+func TestPresetTraversalRejected(t *testing.T) {
+	ts := newTestServer(t)
+	defer ts.Close()
+	for _, name := range []string{"../../etc/passwd", "../x", "a/../../b"} {
+		resp, err := http.Get(ts.URL + "/api/preset?name=" + name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode == http.StatusOK {
+			t.Errorf("preset name %q should be rejected, got 200", name)
+		}
+	}
+}
+
+func TestImportThenFetch(t *testing.T) {
+	ts := newTestServer(t)
+	defer ts.Close()
+	body := "id: clitest\ntitle: 测试清单\nitems:\n  - name: Foo\n    why: reason\n    license: oss\n    category: 效率\n"
+	resp, err := http.Post(ts.URL+"/api/toollist/import", "application/x-yaml", strings.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("import = %d, want 200", resp.StatusCode)
+	}
+	var imp struct {
+		Imported bool   `json:"imported"`
+		ID       string `json:"id"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&imp); err != nil {
+		t.Fatal(err)
+	}
+	if !imp.Imported || imp.ID != "clitest" {
+		t.Fatalf("import result = %+v", imp)
+	}
+	// Fetch it back by id.
+	resp2, err := http.Get(ts.URL + "/api/toollist?toollist=clitest")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp2.Body.Close()
+	if resp2.StatusCode != 200 {
+		t.Errorf("fetch imported toollist = %d, want 200", resp2.StatusCode)
+	}
+}
+
+func TestHandleRunValidation(t *testing.T) {
+	ts := newTestServer(t)
+	defer ts.Close()
+	for _, u := range []string{
+		"/api/run?action=bogus&ids=git",
+		"/api/run?action=install",
+		"/api/run?action=install&ids=,,",
+	} {
+		resp, err := http.Get(ts.URL + u)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("%s = %d, want 400", u, resp.StatusCode)
+		}
+	}
+}
+
+func TestSafeFilename(t *testing.T) {
+	for _, in := range []string{`evil"x`, "../../etc/passwd", "<script>", "", "正常-id_1"} {
+		out := safeFilename(in)
+		if out == "" {
+			t.Errorf("safeFilename(%q) empty", in)
+		}
+		if strings.ContainsAny(out, "\"\\/\r\n<>") {
+			t.Errorf("safeFilename(%q) = %q contains unsafe char", in, out)
+		}
+		if len(out) > 64 {
+			t.Errorf("safeFilename(%q) too long: %d", in, len(out))
+		}
+	}
+}
+
+func TestImportRejectsUnsafeID(t *testing.T) {
+	ts := newTestServer(t)
+	defer ts.Close()
+	body := "id: <script>x</script>\nitems:\n  - name: a\n    why: b\n    license: oss\n    category: 效率\n"
+	resp, err := http.Post(ts.URL+"/api/toollist/import", "application/x-yaml", strings.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("unsafe id import = %d, want 400", resp.StatusCode)
+	}
+}
+
+func TestReadOnlyMethodGuard(t *testing.T) {
+	ts := newTestServer(t)
+	defer ts.Close()
+	for _, u := range []string{"/api/state", "/api/toollists", "/api/health", "/api/status", "/api/audit"} {
+		resp, err := http.Post(ts.URL+u, "application/json", strings.NewReader("{}"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusMethodNotAllowed {
+			t.Errorf("POST %s = %d, want 405", u, resp.StatusCode)
+		}
+		// GET should still work (200 or 502 depending on backend, but not 405)
+		gr, err := http.Get(ts.URL + u)
+		if err != nil {
+			t.Fatal(err)
+		}
+		gr.Body.Close()
+		if gr.StatusCode == http.StatusMethodNotAllowed {
+			t.Errorf("GET %s = 405, should be allowed", u)
+		}
+	}
+}
+
+func TestHandleLLM_PostAndMaskedKey(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	srv := testServer()
+
+	body := `{"base_url":"http://127.0.0.1:9/v1","api_key":"sk-secret-123","model":"m1"}`
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/llm", strings.NewReader(body))
+	srv.handleLLM(rec, req)
+	if rec.Code != 200 {
+		t.Fatalf("save status=%d body=%s", rec.Code, rec.Body.String())
+	}
+	var out struct {
+		OK         bool `json:"ok"`
+		Configured bool `json:"configured"`
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &out)
+	if !out.OK || !out.Configured {
+		t.Fatalf("save result=%+v", out)
+	}
+
+	// GET must return a masked key, never the raw secret.
+	rec2 := httptest.NewRecorder()
+	srv.handleLLM(rec2, httptest.NewRequest(http.MethodGet, "/api/llm", nil))
+	var cfg struct {
+		APIKey  string `json:"api_key"`
+		BaseURL string `json:"base_url"`
+		Model   string `json:"model"`
+	}
+	_ = json.Unmarshal(rec2.Body.Bytes(), &cfg)
+	if cfg.APIKey == "sk-secret-123" || !strings.Contains(cfg.APIKey, "•") {
+		t.Errorf("api_key not masked: %q", cfg.APIKey)
+	}
+	if cfg.BaseURL != "http://127.0.0.1:9/v1" || cfg.Model != "m1" {
+		t.Errorf("roundtrip fields wrong: %+v", cfg)
+	}
+
+	// Invalid JSON → 400.
+	rec3 := httptest.NewRecorder()
+	srv.handleLLM(rec3, httptest.NewRequest(http.MethodPost, "/api/llm", strings.NewReader("not json")))
+	if rec3.Code != http.StatusBadRequest {
+		t.Errorf("invalid JSON = %d, want 400", rec3.Code)
 	}
 }

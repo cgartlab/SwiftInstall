@@ -118,7 +118,19 @@ function statusOf(id) {
 
 /* ---------------- rendering ---------------- */
 
+var kbIndex = -1;
+var lastG = 0;
+function visibleRows() { return Array.prototype.slice.call(document.querySelectorAll("#list .row")); }
+function setKb(i) {
+  var rows = visibleRows();
+  if (!rows.length) { kbIndex = -1; return; }
+  kbIndex = Math.max(0, Math.min(rows.length - 1, i));
+  rows.forEach(function (r, j) { r.classList.toggle("kb", j === kbIndex); });
+  rows[kbIndex].scrollIntoView({ block: "nearest" });
+}
+
 function render() {
+  kbIndex = -1;
   const q = state.query.trim().toLowerCase();
   const filtered = state.packages.filter(
     (p) =>
@@ -154,7 +166,20 @@ function render() {
     listEl.appendChild(sec);
   }
 
-  $("empty").hidden = filtered.length > 0;
+  const emptyEl = $("empty");
+  if (filtered.length === 0) {
+    if (state.packages.length === 0) {
+      emptyEl.innerHTML = '<div>当前清单还没有软件</div>' +
+        '<div class="empty-sub">去「软件清单」挑一批只收免费/开源的工具，或另存一份自己的清单。</div>' +
+        '<a class="btn" href="/toollists" style="margin-top:14px;display:inline-flex">去软件清单 →</a>';
+    } else {
+      emptyEl.innerHTML = '<div>没有匹配的软件</div>' +
+        '<div class="empty-sub">试试换个关键词，或清空过滤条件。</div>';
+    }
+    emptyEl.hidden = false;
+  } else {
+    emptyEl.hidden = true;
+  }
   syncSelectAll(filtered);
   updateActions();
 }
@@ -480,6 +505,33 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     if (!$("overlay").hidden && !state.running) $("overlay").hidden = true;
     else if (!$("saveOverlay").hidden) $("saveOverlay").hidden = true;
+    else if ($("kbdHelp") && !$("kbdHelp").hidden) $("kbdHelp").hidden = true;
+  }
+  // vim-style list navigation: j/k move, Space toggles, Enter opens detail.
+  const tag = (e.target && e.target.tagName || "").toLowerCase();
+  const typing = tag === "input" || tag === "textarea" || tag === "select" || (e.target && e.target.isContentEditable);
+  const cm = document.getElementById("cmdk");
+  const cmOpen = cm && !cm.hidden;
+  const active = document.activeElement;
+  const onControl = active && active !== document.body && !(active.classList && active.classList.contains("row"));
+  const helpOpen = $("kbdHelp") && !$("kbdHelp").hidden;
+  if (e.key === "?" && !typing && !cmOpen) { e.preventDefault(); if ($("kbdHelp")) $("kbdHelp").hidden = helpOpen; return; }
+  if (typing || cmOpen || helpOpen) return; // never act behind an open help/palette
+  if (kbIndex < 0 && onControl) return; // let buttons/links keep their native keys
+  if (e.key === "g") { const now = Date.now(); if (now - lastG < 600) { e.preventDefault(); setKb(0); lastG = 0; return; } lastG = now; return; }
+  if (e.key === "G") { e.preventDefault(); const rows = visibleRows(); if (rows.length) setKb(rows.length - 1); return; }
+  if (e.key === "j") { e.preventDefault(); setKb(kbIndex < 0 ? 0 : kbIndex + 1); }
+  else if (e.key === "k") { e.preventDefault(); setKb(kbIndex < 0 ? 0 : kbIndex - 1); }
+  else if (e.key === " " || e.key === "Spacebar") {
+    const rows = visibleRows();
+    if (kbIndex >= 0 && rows[kbIndex]) {
+      e.preventDefault();
+      const cb = rows[kbIndex].querySelector('input[type=checkbox]');
+      if (cb) { cb.checked = !cb.checked; cb.dispatchEvent(new Event("change")); }
+    }
+  } else if (e.key === "Enter") {
+    const rows = visibleRows();
+    if (kbIndex >= 0 && rows[kbIndex]) { e.preventDefault(); rows[kbIndex].click(); }
   }
 });
 
@@ -497,6 +549,8 @@ function toast(msg) {
 
 /* ---------------- LLM settings ---------------- */
 
+if ($("kbdBtn")) $("kbdBtn").addEventListener("click", () => { $("kbdHelp").hidden = false; });
+if ($("kbdHelp")) $("kbdHelp").addEventListener("click", (e) => { if (e.target === $("kbdHelp")) $("kbdHelp").hidden = true; });
 $("openLLM").addEventListener("click", openLLM);
 $("llmCancel").addEventListener("click", () => ($("llmOverlay").hidden = true));
 $("llmSave").addEventListener("click", saveLLM);

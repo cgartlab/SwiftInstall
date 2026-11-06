@@ -35,6 +35,7 @@
   .card.c2{transform:translateY(28px) scale(.94);opacity:.5;pointer-events:none}
   .card.c0{cursor:grab}.card.dragging{cursor:grabbing;transition:none}
   .card.leaving{transition:transform var(--dur-3) var(--ease),opacity var(--dur-3) var(--ease)}
+  .card.snapback{transition:transform 260ms cubic-bezier(.34,1.56,.64,1),opacity 260ms var(--ease)}
   .inner{position:relative;height:100%;transform-style:preserve-3d;transition:transform 520ms var(--ease)}
   .card.flipped .inner{transform:rotateY(180deg)}
   .face{position:absolute;inset:0;backface-visibility:hidden;display:flex;flex-direction:column}
@@ -183,7 +184,7 @@ function bindTop(el,c){
     const dt=Math.max(1,performance.now()-st), v=Math.abs(dx)/dt;
     if(dx>110 || (v>0.11 && dx>0)) go(el,"swap");
     else if(dx<-110 || (v>0.11 && dx<0)) go(el,"keep");
-    else {el.style.transform="";} };
+    else {el.classList.add("snapback");el.style.transform="";setTimeout(()=>el.classList.remove("snapback"),280);} };
   el.addEventListener("pointerup",end); el.addEventListener("pointercancel",end);
 }
 function go(el,kind){

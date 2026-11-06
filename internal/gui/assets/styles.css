@@ -135,6 +135,7 @@ html, body {
   display: flex; align-items: center; justify-content: space-between; gap: 14px;
   padding: 14px 28px; background: color-mix(in srgb, var(--paper) 88%, transparent);
   backdrop-filter: blur(12px); border-bottom: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
 }
 .filter {
   display: flex; align-items: center; gap: 8px; color: var(--faint);
@@ -166,7 +167,7 @@ html, body {
   padding: 9px 4px; border-bottom: 1px solid var(--line-2);
   cursor: pointer;
 }
-.row:hover { background: var(--panel); }
+@media (hover: hover) and (pointer: fine) { .row:hover { background: var(--panel); } }
 .row input[type="checkbox"] { accent-color: var(--moss); width: 15px; height: 15px; cursor: pointer; }
 
 .chev { margin-left: auto; color: var(--faint); font-size: 14px; transition: transform .15s; }
@@ -393,3 +394,20 @@ html, body {
 
 :focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; border-radius: 3px; }
 :focus:not(:focus-visible) { outline: none; }
+
+@media (prefers-reduced-transparency: reduce) {
+  .bar { background: var(--paper); backdrop-filter: none; }
+}
+
+/* vim-style keyboard focus row */
+.row.kb { background: var(--moss-soft); box-shadow: inset 2px 0 0 var(--moss); }
+.row:active { background: var(--panel-2); }
+.kbd-panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 22px 26px; min-width: 320px; box-shadow: var(--shadow); }
+.kbd-title { font-family: var(--serif); font-size: 18px; margin-bottom: 14px; }
+.kbd-list { list-style: none; display: grid; gap: 9px; }
+.kbd-list li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.kbd-list kbd { font-family: var(--mono); font-size: 11.5px; color: var(--ink);
+  border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 2px 7px; background: var(--panel-2); }
+.kbd-list span { margin-left: 4px; }
+.empty-sub { font-size: 12.5px; color: var(--muted); margin: 6px auto 0; max-width: 420px; line-height: 1.6; }

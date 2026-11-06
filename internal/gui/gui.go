@@ -10,6 +10,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -18,6 +19,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -253,7 +255,19 @@ type pkgView struct {
 	Optional bool   `json:"optional"`
 }
 
+// requireGET enforces that a read-only handler is only reached via GET.
+func requireGET(w http.ResponseWriter, r *http.Request) bool {
+	if r.Method != http.MethodGet {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"error": "method not allowed"})
+		return false
+	}
+	return true
+}
+
 func (s *server) handleState(w http.ResponseWriter, r *http.Request) {
+	if !requireGET(w, r) {
+		return
+	}
 	m := s.currentManifest()
 	pkgs := make([]pkgView, 0, len(m.Packages))
 	for _, p := range m.Packages {
@@ -273,6 +287,9 @@ func (s *server) handleState(w http.ResponseWriter, r *http.Request) {
 // the backend's bulk InstalledSet when available so the whole list resolves in
 // one call rather than one probe per package.
 func (s *server) handleStatus(w http.ResponseWriter, r *http.Request) {
+	if !requireGET(w, r) {
+		return
+	}
 	ctx := r.Context()
 
 	installed := map[string]bool{}
@@ -304,9 +321,12 @@ func (s *server) handleStatus(w http.ResponseWriter, r *http.Request) {
 // the built-in toollist and return replace / add / keep recommendations. Advisory
 // only — it never installs or uninstalls anything.
 func (s *server) handleAudit(w http.ResponseWriter, r *http.Request) {
+	if !requireGET(w, r) {
+		return
+	}
 	cat, err := s.catalogByName(r.URL.Query().Get("toollist"))
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		writeCatalogError(w, err)
 		return
 	}
 	rep, err := audit.Run(r.Context(), audit.SystemLister{}, cat)
@@ -320,6 +340,9 @@ func (s *server) handleAudit(w http.ResponseWriter, r *http.Request) {
 // handleExplain is the AI long-tail helper: describe an arbitrary app and
 // suggest free/open alternatives via the configured LLM.
 func (s *server) handleExplain(w http.ResponseWriter, r *http.Request) {
+	if !requireGET(w, r) {
+		return
+	}
 	app := strings.TrimSpace(r.URL.Query().Get("app"))
 	if app == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "缺少 app 参数"})
@@ -350,6 +373,9 @@ func (s *server) handleExplain(w http.ResponseWriter, r *http.Request) {
 // handleHealth is the GUI view of the CLI's `doctor`: platform, package
 // manager, installed-app scan, toollist freshness and LLM status as JSON.
 func (s *server) handleHealth(w http.ResponseWriter, r *http.Request) {
+	if !requireGET(w, r) {
+		return
+	}
 	out := map[string]any{"goos": runtime.GOOS, "goarch": runtime.GOARCH}
 
 	if be, err := backend.ForCurrentOS(); err != nil {
@@ -434,6 +460,9 @@ func catalogSummary(c *toollist.Catalog, imported bool) map[string]any {
 
 // handleToollists lists built-in toollists plus any imported this session.
 func (s *server) handleToollists(w http.ResponseWriter, r *http.Request) {
+	if !requireGET(w, r) {
+		return
+	}
 	names, err := toollist.EmbeddedNames()
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
@@ -453,6 +482,29 @@ func (s *server) handleToollists(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"toollists": out})
 }
 
+var toollistIDRe = regexp.MustCompile(`^[\p{L}\p{N}][\p{L}\p{N}._-]{0,63}$`)
+
+// safeFilename reduces an id to a conservative filename stem (no quotes,
+// slashes or control chars) so it is safe inside Content-Disposition.
+func safeFilename(id string) string {
+	var b strings.Builder
+	for _, r := range id {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '.' || r == '_' || r == '-' {
+			b.WriteRune(r)
+		} else {
+			b.WriteByte('-')
+		}
+	}
+	out := strings.Trim(b.String(), "-.")
+	if out == "" {
+		out = "toollist"
+	}
+	if len(out) > 64 {
+		out = out[:64]
+	}
+	return out
+}
+
 // handleToollistImport parses an uploaded toollist YAML and keeps it for this session.
 func (s *server) handleToollistImport(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -469,15 +521,31 @@ func (s *server) handleToollistImport(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
 		return
 	}
+	if !toollistIDRe.MatchString(cat.ID) {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "清单 id 非法：仅允许字母/数字/点/下划线/连字符，且不以符号开头（≤64）"})
+		return
+	}
 	s.addImported(cat)
 	writeJSON(w, http.StatusOK, catalogSummary(cat, true))
 }
 
 // handleToollist returns the full catalog (items + equivalences) for one toollist.
+// writeCatalogError maps "toollist not found" to 404 and everything else to 500.
+func writeCatalogError(w http.ResponseWriter, err error) {
+	if errors.Is(err, fs.ErrNotExist) || strings.Contains(err.Error(), "未找到") {
+		writeJSON(w, http.StatusNotFound, map[string]any{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+}
+
 func (s *server) handleToollist(w http.ResponseWriter, r *http.Request) {
+	if !requireGET(w, r) {
+		return
+	}
 	cat, err := s.catalogByName(r.URL.Query().Get("toollist"))
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		writeCatalogError(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, cat)
@@ -485,9 +553,12 @@ func (s *server) handleToollist(w http.ResponseWriter, r *http.Request) {
 
 // handleToollistExport streams a toollist as a shareable YAML file.
 func (s *server) handleToollistExport(w http.ResponseWriter, r *http.Request) {
+	if !requireGET(w, r) {
+		return
+	}
 	cat, err := s.catalogByName(r.URL.Query().Get("toollist"))
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		writeCatalogError(w, err)
 		return
 	}
 	b, err := toollist.Marshal(cat)
@@ -496,7 +567,7 @@ func (s *server) handleToollistExport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/x-yaml; charset=utf-8")
-	w.Header().Set("Content-Disposition", `attachment; filename="`+cat.ID+`.yaml"`)
+	w.Header().Set("Content-Disposition", `attachment; filename="`+safeFilename(cat.ID)+`.yaml"`)
 	_, _ = w.Write(b)
 }
 
@@ -550,6 +621,9 @@ func writeAICache(name, desc string) error {
 
 // handleOutdated lists installed packages with updates available.
 func (s *server) handleOutdated(w http.ResponseWriter, r *http.Request) {
+	if !requireGET(w, r) {
+		return
+	}
 	provider, ok := s.opts.Backend.(backend.OutdatedProvider)
 	if !ok {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "当前后端不支持检查更新"})
@@ -617,6 +691,9 @@ func isMasked(s string) bool { return strings.Contains(s, "•") }
 // handleInfo returns detailed metadata for one package (description, version,
 // homepage, update history) for the row-expand UI.
 func (s *server) handleInfo(w http.ResponseWriter, r *http.Request) {
+	if !requireGET(w, r) {
+		return
+	}
 	name := strings.TrimSpace(r.URL.Query().Get("name"))
 	if name == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "缺少 name"})
@@ -650,6 +727,9 @@ func (s *server) handleInfo(w http.ResponseWriter, r *http.Request) {
 // parallel and returns merged hits tagged with source, plus installed and
 // in-manifest flags so the UI can render add buttons.
 func (s *server) handleSearch(w http.ResponseWriter, r *http.Request) {
+	if !requireGET(w, r) {
+		return
+	}
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	if q == "" {
 		writeJSON(w, http.StatusOK, map[string]any{"hits": []any{}})
@@ -741,6 +821,9 @@ func capPerSource(hits []backend.SearchHit, n int) []backend.SearchHit {
 
 // handlePresets lists saved preset names.
 func (s *server) handlePresets(w http.ResponseWriter, r *http.Request) {
+	if !requireGET(w, r) {
+		return
+	}
 	names, err := preset.List()
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})

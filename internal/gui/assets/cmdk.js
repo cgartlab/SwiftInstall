@@ -10,7 +10,7 @@
     background:color-mix(in srgb,#0b0b0a 42%,transparent);backdrop-filter:blur(6px)}
   .cmdk[hidden]{display:none}
   .cmdk-box{width:min(560px,92vw);background:var(--card,var(--panel,#FBF8F1));
-    border:1px solid var(--line,#DDD6C7);border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.35);overflow:hidden}
+    border:1px solid var(--line,#DDD6C7);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 24px 70px rgba(0,0,0,.35);overflow:hidden}
   .cmdk-input{width:100%;border:0;border-bottom:1px solid var(--line,#DDD6C7);background:transparent;
     color:var(--ink,#1C1B17);font-size:15px;padding:15px 18px;outline:0;
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}
@@ -22,6 +22,7 @@
   .cmdk-item .cd{font-size:12px;color:var(--muted,#6E6B60);margin-top:1px}
   .cmdk-item .ck{font-size:11px;color:var(--faint,#9A9384)}
   .cmdk-empty{padding:16px 12px;color:var(--faint,#9A9384);font-size:13px}
+  .cmdk-grp{list-style:none;font-size:11px;letter-spacing:.04em;color:var(--faint,#9A9384);padding:9px 12px 3px}
   @media (prefers-reduced-transparency:reduce){.cmdk{background:rgba(11,11,10,.92);backdrop-filter:none}}
   .cmdk-foot{font-size:11px;color:var(--faint,#9A9384);padding:9px 16px;
     border-top:1px solid var(--line,#DDD6C7);text-align:right}
@@ -54,28 +55,61 @@
 
   var inp = ov.querySelector("#cmdkInput");
   var list = ov.querySelector("#cmdkList");
+  var recent = []; // in-memory only (no persistence), most-recently-run first
   var shown = CMDS.slice();
   var sel = 0;
 
+  function ordered() {
+    var r = [];
+    recent.forEach(function (c) { if (CMDS.indexOf(c) >= 0 && r.indexOf(c) < 0) r.push(c); });
+    CMDS.forEach(function (c) { if (r.indexOf(c) < 0) r.push(c); });
+    return r;
+  }
   function open() { ov.hidden = false; inp.value = ""; filter(""); inp.focus(); }
   function close() { ov.hidden = true; }
+  function fscore(hay, q) {
+    var h = (hay || "").toLowerCase();
+    var i = h.indexOf(q);
+    if (i >= 0) return 1000 - i; // substring: strongest, earlier is better
+    var hi = 0, s = 0;
+    for (var k = 0; k < q.length; k++) {
+      var p = h.indexOf(q[k], hi);
+      if (p < 0) return -1; // not a subsequence
+      s += (p === hi ? 2 : 1); // reward contiguity
+      hi = p + 1;
+    }
+    return s; // weaker but valid
+  }
   function filter(q) {
     q = (q || "").trim().toLowerCase();
-    shown = CMDS.filter(function (c) { return !q || (c.t + " " + c.d).toLowerCase().indexOf(q) >= 0; });
+    if (!q) { shown = ordered(); sel = 0; paint(); return; }
+    var scored = [];
+    for (var i = 0; i < CMDS.length; i++) {
+      var c = CMDS[i], st = fscore(c.t, q), sd = fscore(c.d, q);
+      var sc = st >= 0 ? st : (sd >= 0 ? sd - 300 : -1);
+      if (sc >= 0) scored.push({ c: c, s: sc });
+    }
+    scored.sort(function (a, b) { return b.s - a.s; });
+    shown = scored.map(function (x) { return x.c; });
     sel = 0; paint();
   }
+  function groupOf(c) { return (c.t === "回到顶部" || c.t === "刷新") ? "动作" : "导航"; }
   function paint() {
     if (!shown.length) { list.innerHTML = '<li class="cmdk-empty">没有匹配的命令</li>'; return; }
-    list.innerHTML = shown.map(function (c, i) {
-      return '<li class="cmdk-item ' + (i === sel ? "on" : "") + '" data-i="' + i + '">' +
+    var html = "", lastG = null;
+    shown.forEach(function (c, i) {
+      var g = groupOf(c);
+      if (g !== lastG) { html += '<li class="cmdk-grp">' + g + '</li>'; lastG = g; }
+      html += '<li class="cmdk-item ' + (i === sel ? "on" : "") + '" data-i="' + i + '">' +
         '<div><div class="ct">' + c.t + '</div><div class="cd">' + c.d + '</div></div>' +
         '<span class="ck">↵</span></li>';
-    }).join("");
+    });
+    list.innerHTML = html;
     Array.prototype.forEach.call(list.querySelectorAll(".cmdk-item"), function (li) {
       li.onclick = function () { sel = +li.dataset.i; exec(); };
     });
   }
-  function exec() { var c = shown[sel]; if (c) { close(); c.run(); } }
+  function exec() { var c = shown[sel]; if (c) { recent = [c].concat(recent.filter(function (x) { return x !== c; })).slice(0, 4); close(); c.run(); } }
 
   inp.addEventListener("input", function (e) { filter(e.target.value); });
   inp.addEventListener("keydown", function (e) {

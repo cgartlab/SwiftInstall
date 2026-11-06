@@ -21,6 +21,16 @@ func Validate(m *Manifest) error {
 		if strings.TrimSpace(pkg.ID) == "" {
 			return fmt.Errorf("package #%d has an empty ID", i+1)
 		}
+		switch strings.ToLower(strings.TrimSpace(pkg.Kind)) {
+		case "", "formula", "cask":
+		default:
+			return fmt.Errorf("package %q has invalid kind %q (want formula|cask)", pkg.ID, pkg.Kind)
+		}
+		switch strings.ToLower(strings.TrimSpace(pkg.Source)) {
+		case "", "brew", "npm", "github":
+		default:
+			return fmt.Errorf("package %q has invalid source %q (want brew|npm|github)", pkg.ID, pkg.Source)
+		}
 	}
 
 	if m.Settings.RetryCount < 0 {

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"text/tabwriter"
@@ -36,8 +37,14 @@ func newToollistListCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			tw := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
-			fmt.Fprintln(tw, "软件清单 id\t标题\t条目\t平替\t含迁移指导")
+			type row struct {
+				ID           string `json:"id"`
+				Title        string `json:"title"`
+				Items        int    `json:"items"`
+				Equivalences int    `json:"equivalences"`
+				Playbooks    int    `json:"playbooks"`
+			}
+			rows := make([]row, 0, len(names))
 			for _, n := range names {
 				c, err := toollist.LoadBuiltinNamed(n)
 				if err != nil {
@@ -49,7 +56,19 @@ func newToollistListCmd() *cobra.Command {
 						pb++
 					}
 				}
-				fmt.Fprintf(tw, "%s\t%s\t%d\t%d\t%d\n", c.ID, c.Title, len(c.Items), len(c.Equivalences), pb)
+				rows = append(rows, row{c.ID, c.Title, len(c.Items), len(c.Equivalences), pb})
+			}
+			format, _ := cmd.Flags().GetString("format")
+			if format == "json" {
+				return json.NewEncoder(os.Stdout).Encode(rows)
+			}
+			if format == "silent" {
+				return nil
+			}
+			tw := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
+			fmt.Fprintln(tw, "软件清单 id\t标题\t条目\t平替\t含迁移指导")
+			for _, r := range rows {
+				fmt.Fprintf(tw, "%s\t%s\t%d\t%d\t%d\n", r.ID, r.Title, r.Items, r.Equivalences, r.Playbooks)
 			}
 			tw.Flush()
 			return nil
@@ -69,6 +88,13 @@ func newToollistShowCmd() *cobra.Command {
 			c, err := toollist.LoadBuiltinNamed(id)
 			if err != nil {
 				return err
+			}
+			format, _ := cmd.Flags().GetString("format")
+			if format == "json" {
+				return json.NewEncoder(os.Stdout).Encode(c)
+			}
+			if format == "silent" {
+				return nil
 			}
 			fmt.Printf("\n%s（%s）\n", c.Title, c.ID)
 			fmt.Printf("面向：%s · 更新：%s · 条目：%d · 平替：%d\n", c.Audience, c.Updated, len(c.Items), len(c.Equivalences))
@@ -159,6 +185,9 @@ func newToollistVerifyCmd() *cobra.Command {
 			c, err := toollist.LoadBuiltinNamed(id)
 			if err != nil {
 				return err
+			}
+			if f, _ := cmd.Flags().GetString("format"); f == "silent" {
+				return nil
 			}
 			now := time.Now()
 			tw := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)

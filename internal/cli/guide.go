@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"text/tabwriter"
@@ -30,14 +31,21 @@ func newGuideCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			format, _ := cmd.Flags().GetString("format")
 			if list || len(args) == 0 {
-				return listGuides(cat)
+				return listGuides(cat, format)
 			}
 			name := args[0]
 			eq := audit.FindEquivalence(cat, name)
 			if eq == nil {
 				fmt.Fprintf(os.Stderr, "未找到 %q 的迁移指导。可用的有：\n", name)
-				return listGuides(cat)
+				return listGuides(cat, format)
+			}
+			if format == "silent" {
+				return nil
+			}
+			if format == "json" {
+				return json.NewEncoder(os.Stdout).Encode(eq)
 			}
 			printGuide(eq)
 			return nil
@@ -49,7 +57,28 @@ func newGuideCmd() *cobra.Command {
 	return cmd
 }
 
-func listGuides(cat *toollist.Catalog) error {
+func listGuides(cat *toollist.Catalog, format string) error {
+	if format == "silent" {
+		return nil
+	}
+	if format == "json" {
+		type row struct {
+			From        string `json:"from"`
+			To          string `json:"to"`
+			License     string `json:"license"`
+			HasPlaybook bool   `json:"has_playbook"`
+		}
+		rows := make([]row, 0, len(cat.Equivalences))
+		for i := range cat.Equivalences {
+			eq := &cat.Equivalences[i]
+			from := ""
+			if len(eq.From) > 0 {
+				from = eq.From[0]
+			}
+			rows = append(rows, row{from, eq.To.Name, eq.To.License, eq.Playbook != nil})
+		}
+		return json.NewEncoder(os.Stdout).Encode(rows)
+	}
 	tw := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
 	fmt.Fprintln(tw, "从\t→ 到\t许可\t含指导")
 	for i := range cat.Equivalences {
