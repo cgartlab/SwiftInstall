@@ -32,3 +32,14 @@ func TestValidFormatAccepted(t *testing.T) {
 		t.Errorf("valid --format json should succeed, got %v", err)
 	}
 }
+
+func TestRejectExtraArgs(t *testing.T) {
+	p := tempManifest(t)
+	for _, sub := range []string{"install", "uninstall"} {
+		cmd := newRootCmd("v", "c", "d")
+		cmd.SetArgs([]string{sub, "-f", p, "bogus-extra"})
+		if err := cmd.Execute(); err == nil {
+			t.Errorf("%s with extra arg should error, got nil", sub)
+		}
+	}
+}

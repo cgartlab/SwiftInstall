@@ -14,6 +14,7 @@ import (
 func newInstallCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "install",
+		Args:  cobra.NoArgs,
 		Short: "从清单文件批量安装软件",
 		Long: `从 YAML 或 TXT 清单文件批量安装所有软件包。
 

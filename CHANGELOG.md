@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **`install`/`uninstall` 参数校验**：加 `cobra.NoArgs`，多余位置参数报错（之前被静默忽略，`sis install foo` 会误装整份清单）；补测试。
+
 - **`--format` 校验**：非法值（如 `--format xml`）现在明确报错（exit 1），不再静默回退表格；补 CLI 测试。
 
 - **⌘K 最近使用 + 容错测试**：命令面板把最近执行的命令置顶（内存态，重启即失，无持久化）；新增 preset 损坏文件容错回归测试（List 不崩、Load 报错）。
