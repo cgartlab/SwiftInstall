@@ -4,7 +4,15 @@
 
 ## [Unreleased]
 
-暂无。
+### Added
+
+- **Windows 线对齐共享基线**：从 `core/shared` 同步全部公共能力（16 个 CLI 命令、GUI/TUI、可插拔后端注册表、12 个包测试、设计系统文档），版本 `0.3.0`。
+- **Windows CI 跑全量测试**：`windows-latest` job 从「仅编译 winget 路径」升级为 `go build ./...` + `go vet ./...` + `go test ./...` + 冒烟 + 上传产物，与 Linux 对齐（含 Homebrew 后端测试）。
+- **发布基础设施补强**（修 #29）：新增 `workflow_dispatch`（可指定 tag）、Windows arm64 产物、`SHA256SUMS` 校验和；发布矩阵扩至 5 个目标。
+
+### Fixed
+
+- **Windows 测试隔离**：`internal/preset`、`internal/mirror`、`internal/gui`（audit / routes）测试补 `APPDATA` 隔离，避免 `os.UserConfigDir()` 在 Windows 上把预设 / LLM 配置写进真实漫游目录（`%APPDATA%\sis\presets`），消除测试间污染与 `go test ./...` 红灯。
 
 ## [0.3.0] - 2026-11-05
 

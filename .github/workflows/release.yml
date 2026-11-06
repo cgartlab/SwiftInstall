@@ -1,11 +1,18 @@
 name: Release
 
-# 发布流水线：推送 v* tag 时，为四个目标平台交叉构建 sis，
-# 校验每个二进制的 version 输出包含 tag，并汇总到同一个 GitHub Release。
+# 发布流水线：推送 v* tag 或手动触发时，为五个目标平台交叉构建 sis，
+# 校验每个二进制的 version 输出包含 tag，生成 SHA256SUMS，
+# 并汇总到同一个 GitHub Release。
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "发布 tag（如 v0.3.0）；留空则用当前 ref 名"
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -13,6 +20,7 @@ permissions:
 # Go 模块代理回退：优先国内镜像，失败再走官方源。
 env:
   GOPROXY: https://goproxy.cn,https://proxy.golang.org,direct
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   build:
@@ -24,8 +32,11 @@ jobs:
         include:
           # 每个产物都在与其 GOOS 原生匹配的 runner 上构建并直接运行校验。
           # macos-13 (Intel) 已于 2025 退役，改用 macos-15-intel；macos-latest 是 Apple Silicon。
+          # windows/arm64 在 windows-latest 上交叉编译，无法原生执行，
+          # 由「嵌入 ldflags 校验」兜底。
           - { goos: linux,   goarch: amd64, os: ubuntu-latest,  ext: "" }
           - { goos: windows, goarch: amd64, os: windows-latest, ext: ".exe" }
+          - { goos: windows, goarch: arm64, os: windows-latest, ext: ".exe" }
           - { goos: darwin,  goarch: arm64, os: macos-latest,   ext: "" }
           - { goos: darwin,  goarch: amd64, os: macos-15-intel, ext: "" }
 
@@ -50,7 +61,7 @@ jobs:
           CGO_ENABLED: "0"
         run: |
           set -euo pipefail
-          VERSION="${GITHUB_REF_NAME}"
+          VERSION="${RELEASE_TAG}"
           COMMIT="$(git rev-parse --short HEAD)"
           DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           OUT="sis-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}"
@@ -64,13 +75,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tag="${GITHUB_REF_NAME}"
+          tag="${RELEASE_TAG}"
           # 1) 嵌入的 ldflags 检查：适用于任何交叉编译产物。
           if command -v go >/dev/null 2>&1; then
             go version -m "./${OUT}" | grep -q -- "-ldflags=.*main.Version=${tag}" \
               && echo "Embedded ldflags OK: Version=${tag}"
           fi
-          # 2) 原生执行检查：每个矩阵 leg 的 runner 与其 GOOS/GOARCH 匹配。
+          # 2) 原生执行检查：每个矩阵 leg 的 runner 与其 GOOS/GOARCH 匹配时可用。
           if actual="$(./${OUT} version 2>/dev/null)"; then
             echo "Binary output : ${actual}"
             echo "Expected tag  : ${tag}"
@@ -107,9 +118,18 @@ jobs:
       - name: List release assets
         run: ls -l dist
 
+      - name: Generate SHA256SUMS
+        run: |
+          set -euo pipefail
+          cd dist
+          sha256sum * > SHA256SUMS
+          echo "SHA256SUMS:"
+          cat SHA256SUMS
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
           files: dist/*
           generate_release_notes: true
           fail_on_unmatched_files: true

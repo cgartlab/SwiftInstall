@@ -214,6 +214,8 @@ func TestHandleLLM_Get(t *testing.T) {
 func TestHandleExplain_Configured(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	// Windows os.UserConfigDir() reads %APPDATA%; llm.Save writes there.
+	t.Setenv("APPDATA", t.TempDir())
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, `{"choices":[{"message":{"content":"可用 Capso 直接替代。"}}]}`)

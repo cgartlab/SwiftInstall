@@ -11,6 +11,8 @@ func TestApplyRestoreIdempotent(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv("HOME", dir)
 	t.Setenv("XDG_CONFIG_HOME", filepath.Join(dir, ".config"))
+	// Windows os.UserConfigDir() reads %APPDATA%, not HOME/XDG_CONFIG_HOME.
+	t.Setenv("APPDATA", filepath.Join(dir, "AppData", "Roaming"))
 	// Make zshrc exist so sourcing is exercised.
 	rc := filepath.Join(dir, ".zshrc")
 	if err := os.WriteFile(rc, []byte("# existing\n"), 0o644); err != nil {

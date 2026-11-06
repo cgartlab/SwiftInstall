@@ -27,8 +27,8 @@ go vet ./...
 ### CI/CD
 
 - **GitHub Actions**: `.github/workflows/` — `release.yml` (发布), `ci.yml` (push/PR 触发), `argus-review.yml` (PR 评审)
-- **Push 触发的 CI**（`ci.yml`）：`ubuntu-latest` 跑 `go build ./...` + `go vet ./...` + `go test ./...` + version/help 冒烟；`windows-latest` 仅验证 winget 路径仍可编译。不再 Windows-only。
-- **发布触发**（`release.yml`）：tag push `v*` → 矩阵构建 darwin/arm64、darwin/amd64、windows/amd64、linux/amd64 → 每个二进制校验 `sis version` 输出含 tag → 汇总发布到同一个 GitHub Release（softprops/action-gh-release）。
+- **Push / PR 触发的 CI**（`ci.yml`）：`ubuntu-latest` 与 `windows-latest` **都**跑 `go build ./...` + `go vet ./...` + `go test ./...` + version/help 冒烟 + 上传产物。Windows 线不再只验证「能编译」，全量测试（含 Homebrew 后端测试）在 Windows 上同样通过；所有后端跨平台可编译、不加 build tags。
+- **发布触发**（`release.yml`）：tag push `v*` **或** `workflow_dispatch`（可指定 tag）→ 矩阵构建 darwin/arm64、darwin/amd64、windows/amd64、windows/arm64、linux/amd64 → 每个二进制校验 `sis version` 输出含 tag（交叉编译无法原生执行时用嵌入 ldflags 兜底）→ 生成 `SHA256SUMS` → 汇总发布到同一个 GitHub Release（softprops/action-gh-release）。
 - **GOPROXY 回退**：CI 与本地下载统一 `GOPROXY=https://goproxy.cn,direct`（proxy.golang.org 在本环境常超时）。
 - **一键安装**：macOS `install.sh`（架构检测 + `SIS_VERSION` / `SIS_MIRROR`），Windows `install.ps1`。
 

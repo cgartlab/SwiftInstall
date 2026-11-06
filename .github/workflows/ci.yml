@@ -1,7 +1,8 @@
 name: CI
 
-# push / PR 触发：Linux 上跑完整的 build + vet + test + 冒烟测试；
-# Windows 上额外验证 winget 后端仍可编译。不再局限于 Windows-only。
+# push / PR 触发：Linux 与 Windows 都跑完整的 build + vet + test + 冒烟测试。
+# Windows 线不再只验证 winget 路径「能编译」，而是与 Linux 一样跑全量测试
+# （含 Homebrew 后端测试 —— 所有后端跨平台可编译、不加 build tags）。
 on:
   push:
     branches: ["**"]
@@ -67,7 +68,7 @@ jobs:
           retention-days: 7
 
   windows:
-    name: Build (windows / winget)
+    name: Build & Test (windows / winget)
     runs-on: windows-latest
 
     steps:
@@ -83,9 +84,14 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      # 确保 winget 后端路径仍可编译（macOS 目标在 release 矩阵中构建）。
       - name: Build all packages
         run: go build ./...
+
+      - name: go vet（静态检查门禁）
+        run: go vet ./...
+
+      - name: Test（Windows 全量，含 Homebrew 后端）
+        run: go test ./...
 
       - name: Build binary
         shell: pwsh
@@ -107,3 +113,10 @@ jobs:
       - name: Smoke test — help
         shell: pwsh
         run: ./sis-windows-amd64.exe --help
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sis-windows-amd64-${{ github.sha }}
+          path: sis-windows-amd64.exe
+          retention-days: 7
