@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **LLM 接口回归测试**：覆盖 `/api/llm` 保存后 GET 返回脱敏 key（绝不回显明文）、字段往返、非法 JSON→400。
+
 - **列表行 hover 打磨**：hover 底色过渡 120ms；用 `@media (hover:hover)` 门控，触屏不出现粘滞 hover（保留 `:active` 按压反馈）。
 
 - **⌘K 分组标题**：命令面板按「导航 / 动作」分组显示（最近使用仍置顶），信息层级更清晰。

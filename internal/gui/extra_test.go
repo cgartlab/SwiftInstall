@@ -249,3 +249,48 @@ func TestReadOnlyMethodGuard(t *testing.T) {
 		}
 	}
 }
+
+func TestHandleLLM_PostAndMaskedKey(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	srv := testServer()
+
+	body := `{"base_url":"http://127.0.0.1:9/v1","api_key":"sk-secret-123","model":"m1"}`
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/llm", strings.NewReader(body))
+	srv.handleLLM(rec, req)
+	if rec.Code != 200 {
+		t.Fatalf("save status=%d body=%s", rec.Code, rec.Body.String())
+	}
+	var out struct {
+		OK         bool `json:"ok"`
+		Configured bool `json:"configured"`
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &out)
+	if !out.OK || !out.Configured {
+		t.Fatalf("save result=%+v", out)
+	}
+
+	// GET must return a masked key, never the raw secret.
+	rec2 := httptest.NewRecorder()
+	srv.handleLLM(rec2, httptest.NewRequest(http.MethodGet, "/api/llm", nil))
+	var cfg struct {
+		APIKey  string `json:"api_key"`
+		BaseURL string `json:"base_url"`
+		Model   string `json:"model"`
+	}
+	_ = json.Unmarshal(rec2.Body.Bytes(), &cfg)
+	if cfg.APIKey == "sk-secret-123" || !strings.Contains(cfg.APIKey, "•") {
+		t.Errorf("api_key not masked: %q", cfg.APIKey)
+	}
+	if cfg.BaseURL != "http://127.0.0.1:9/v1" || cfg.Model != "m1" {
+		t.Errorf("roundtrip fields wrong: %+v", cfg)
+	}
+
+	// Invalid JSON → 400.
+	rec3 := httptest.NewRecorder()
+	srv.handleLLM(rec3, httptest.NewRequest(http.MethodPost, "/api/llm", strings.NewReader("not json")))
+	if rec3.Code != http.StatusBadRequest {
+		t.Errorf("invalid JSON = %d, want 400", rec3.Code)
+	}
+}
