@@ -23,7 +23,7 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:8px}
   .row{display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
   .row:last-child{border-bottom:none}
-  .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff}
+  .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--on-accent)}
   .ic.ok{background:var(--green)}.ic.no{background:var(--amber)}.ic.na{background:var(--faint)}
   .lbl{font-size:13.5px;font-weight:600}
   .det{font-size:12px;color:var(--muted);margin-top:2px}
@@ -33,11 +33,14 @@
     padding:8px 15px;border-radius:9px;cursor:pointer;font-family:inherit}
   .btn:hover{border-color:var(--green);color:var(--green)}
   .hint{font-size:12px;color:var(--faint)}
-  .err{color:#9a3d30}
+  .err{color:var(--err)}
   .card .row{opacity:0}
   .card.enter .row{animation:rowin .3s cubic-bezier(0.23,1,0.32,1) both}
   @keyframes rowin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){.card .row{opacity:1}.card.enter .row{animation:none!important}}
+
+  :root{--on-accent:#FFFFFF;--red:#A24B3B;--red-soft:#F5E3DE;--err:#9a3d30;--on-moss:#2c4d3c}
+  @media (prefers-color-scheme:dark){:root{--red:#D97757;--red-soft:#3A2C18;--err:#D97757;--on-moss:#ECE7DC}}
 </style>
 </head>
 <body>

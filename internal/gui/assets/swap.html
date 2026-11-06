@@ -51,7 +51,7 @@
   .hint{font-size:12px;color:var(--faint);border-top:1px solid var(--line);padding-top:12px;display:flex;justify-content:space-between;align-items:center}
   .flipbtn{border:1px solid var(--line);background:transparent;color:var(--green);font-size:12px;padding:5px 12px;border-radius:9px;cursor:pointer;font-family:inherit}
   .back h3{font-family:var(--serif);font-size:17px;font-weight:600;margin-bottom:12px}
-  .fid{background:var(--green-soft);color:#2c4d3c;border-radius:10px;padding:10px 12px;font-size:12.5px;margin-bottom:12px}
+  .fid{background:var(--green-soft);color:var(--on-moss);border-radius:10px;padding:10px 12px;font-size:12.5px;margin-bottom:12px}
   @media (prefers-color-scheme:dark){.fid{color:var(--ink)}}
   .step{font-size:12.5px;color:var(--muted);line-height:1.55}.step b{color:var(--ink)}
   .src{font-size:11.5px;color:var(--green);text-decoration:none;margin-top:8px;display:inline-block}
@@ -62,7 +62,7 @@
   @media (hover:hover) and (pointer:fine){.btn:hover{transform:translateY(-1px)}}
   .btn:active{transform:scale(0.97)}
   .btn.keep{color:var(--muted)}
-  .btn.swap{background:var(--green);border-color:var(--green);color:#fff}.btn.ghost{background:transparent}
+  .btn.swap{background:var(--green);border-color:var(--green);color:var(--on-accent)}.btn.ghost{background:transparent}
   .tally{display:flex;justify-content:center;gap:22px;margin-top:16px;font-size:12.5px;color:var(--muted)}
   .tally b{color:var(--ink);font-variant-numeric:tabular-nums}
   .done{text-align:center;padding:40px 20px;display:none}
@@ -72,6 +72,9 @@
   .out.on{display:block}
   .empty{text-align:center;color:var(--muted);padding:80px 20px;font-size:14px}
   @media (prefers-reduced-motion:reduce){.card,.inner,.btn,.flipbtn{transition-property:opacity,background-color,border-color,color!important}.card{box-shadow:none}}
+
+  :root{--on-accent:#FFFFFF;--red:#A24B3B;--red-soft:#F5E3DE;--err:#9a3d30;--on-moss:#2c4d3c}
+  @media (prefers-color-scheme:dark){:root{--red:#D97757;--red-soft:#3A2C18;--err:#D97757;--on-moss:#ECE7DC}}
 </style>
 </head>
 <body>
