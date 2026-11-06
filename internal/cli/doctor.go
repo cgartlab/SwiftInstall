@@ -2,7 +2,9 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
 	"runtime"
 	"time"
 
@@ -28,45 +30,87 @@ func newDoctorCmd() *cobra.Command {
 }
 
 func runDoctor(cmd *cobra.Command, args []string) error {
-	fmt.Printf("\nSwiftInstall 自检（%s/%s）\n\n", runtime.GOOS, runtime.GOARCH)
-
-	// 1) 包管理器
-	be, err := backend.ForCurrentOS()
-	switch {
-	case err != nil:
-		fmt.Printf("  包管理器        ✗ %v\n", err)
-	case be.Detect() != nil:
-		fmt.Printf("  包管理器 %-8s ✗ %v\n", be.Name(), be.Detect())
-	default:
-		fmt.Printf("  包管理器 %-8s ✓\n", be.Name())
+	format, _ := cmd.Flags().GetString("format")
+	if format == "silent" {
+		return nil
 	}
 
-	// 2) 已装扫描
+	pmName := ""
+	var pmErr error
+	if be, err := backend.ForCurrentOS(); err != nil {
+		pmErr = err
+	} else {
+		pmName = be.Name()
+		if derr := be.Detect(); derr != nil {
+			pmErr = derr
+		}
+	}
+
+	instCount := 0
+	var instErr error
 	if names, err := (audit.SystemLister{}).Installed(context.Background()); err != nil {
-		fmt.Printf("  已装扫描        ✗ %v\n", err)
+		instErr = err
 	} else {
-		fmt.Printf("  已装扫描        ✓ 识别到 %d 个应用/包\n", len(names))
+		instCount = len(names)
 	}
 
-	// 3) 软件清单 + 新鲜度
-	if names, err := toollist.EmbeddedNames(); err != nil {
-		fmt.Printf("  软件清单        ✗ %v\n", err)
+	listNames, listErr := toollist.EmbeddedNames()
+	total, fresh, aging, stale := 0, 0, 0, 0
+	if listErr == nil {
+		total, fresh, aging, stale = summarizeFreshness(listNames, time.Now())
+	}
+	cfg, _ := llm.Load()
+
+	if format == "json" {
+		pm := map[string]any{"name": pmName, "ok": pmErr == nil}
+		if pmErr != nil {
+			pm["error"] = pmErr.Error()
+		}
+		inst := map[string]any{"ok": instErr == nil}
+		if instErr != nil {
+			inst["error"] = instErr.Error()
+		} else {
+			inst["count"] = instCount
+		}
+		var tl map[string]any
+		if listErr != nil {
+			tl = map[string]any{"ok": false, "error": listErr.Error()}
+		} else {
+			tl = map[string]any{"ok": true, "lists": len(listNames), "items": total, "fresh": fresh, "aging": aging, "stale": stale}
+		}
+		out := map[string]any{
+			"os": runtime.GOOS, "arch": runtime.GOARCH,
+			"package_manager": pm, "installed": inst, "toollists": tl,
+			"llm": map[string]any{"configured": cfg.Configured(), "model": cfg.Model},
+		}
+		return json.NewEncoder(os.Stdout).Encode(out)
+	}
+
+	fmt.Printf("\nSwiftInstall 自检（%s/%s）\n\n", runtime.GOOS, runtime.GOARCH)
+	if pmErr != nil {
+		fmt.Printf("  包管理器        ✗ %v\n", pmErr)
 	} else {
-		total, fresh, aging, stale := summarizeFreshness(names, time.Now())
-		fmt.Printf("  软件清单        ✓ %d 份，共 %d 项（含平替）\n", len(names), total)
+		fmt.Printf("  包管理器 %-8s ✓\n", pmName)
+	}
+	if instErr != nil {
+		fmt.Printf("  已装扫描        ✗ %v\n", instErr)
+	} else {
+		fmt.Printf("  已装扫描        ✓ 识别到 %d 个应用/包\n", instCount)
+	}
+	if listErr != nil {
+		fmt.Printf("  软件清单        ✗ %v\n", listErr)
+	} else {
+		fmt.Printf("  软件清单        ✓ %d 份，共 %d 项（含平替）\n", len(listNames), total)
 		fmt.Printf("    新鲜 %d · 较久 %d · 需复核 %d\n", fresh, aging, stale)
 		if stale > 0 {
 			fmt.Printf("    提示：有 %d 项资料超过一年未复核，可用 `sis toollist verify` 查看。\n", stale)
 		}
 	}
-
-	// 4) LLM
-	if cfg, _ := llm.Load(); cfg.Configured() {
+	if cfg.Configured() {
 		fmt.Printf("  AI / LLM        ✓ 已配置（%s）\n", cfg.Model)
 	} else {
 		fmt.Printf("  AI / LLM        ○ 未配置（`sis llm set` 可启用 AI 补全）\n")
 	}
-
 	fmt.Println()
 	return nil
 }

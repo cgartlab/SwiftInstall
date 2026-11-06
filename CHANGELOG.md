@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **更多命令尊重 `--format`**：`sis doctor`、`sis guide --list`、`sis llm show`、`sis mirror show` 支持 `json|silent`（之前忽略输出开关）。
+
 - **修复/优化**：`sis toollist list/show/verify` 尊重 `--format`（json/silent，之前恒打印表格）；`sis status` 改用批量 `InstalledSet`（43 包 >20s → ~3s）。
 
 - **UI 成功案例 + ⌘K 模糊排序**：新增 `docs/UI-CASES.md`（Raycast/Linear/Apple Liquid Glass 提炼）；`cmdk.js` 过滤升级为模糊排序（标题子串优先、子序列次之），命令面板加镜面高光边。

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -37,6 +38,13 @@ npm（npmmirror）、pip（清华）镜像，以及 GitHub 下载加速。配置
 			lines, err := mirror.Show()
 			if err != nil {
 				return err
+			}
+			format, _ := cmd.Flags().GetString("format")
+			if format == "silent" {
+				return nil
+			}
+			if format == "json" {
+				return json.NewEncoder(os.Stdout).Encode(map[string]any{"lines": lines})
 			}
 			fmt.Fprintln(os.Stderr)
 			for _, l := range lines {
