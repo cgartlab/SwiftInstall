@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **字号收敛（规则 7，主界面）**：`styles.css` 建立 4 级字号 token（12/13/15/20），全量 font-size 收敛为 4 种，层级更清晰；其余页面后续逐页收敛。
+
 - **配色方案对比 PDF（规则 11）**：`docs/design/palette-options.pdf` + `palette-compare.png`，给出「现状 / A 青瓷绿 / B 黛蓝灰 / C 绛红」4 套（含组件预览），推荐 A；待选定后全站落地。
 
 - **UX/文案/视觉第一批（对照 11 条要求）**：去毛玻璃与顶栏高光（改扁平化）；已安装点/图标 tile 统一为单一强调绿；CLI 英文残留中文化（Checking status/installed/Total/Installing…）；去占位符斜体与 kicker 全大写；列表 kind 显示「命令行/应用/自动」；新增 `docs/UX-AUDIT-v0.5.md`。

@@ -28,8 +28,8 @@
 - 计划（规则 11）：完整色板（含 `--copper` 语义色）重定，产出 **3 套方案 + 前后对比 PDF** 供你挑选；灰阶全部转暖灰。
 
 ## 字号 / 节奏 / 无障碍（规则 7）
-- 现状：单页字号种类偏多（styles 20、audit 15、toollists 12…），超出"≤4 种"。
-- 计划：建立 4 级字号 token（如 12.5 / 14 / 17 / 22），逐页收敛；统一 1.6 行高、段距；保证对比度 ≥ 4.5:1。
+- ✅ 主界面（`styles.css`）已建立 4 级字号 token：`--fs-xs 12 / sm 13 / md 15 / lg 20`，全量 font-size 收敛为这 4 级（KPI 数字=lg，区块标题=md，正文=md/sm，元信息=xs）。前后对比：`gui-main-before-typography.png` ↔ `gui-main.png`。
+- 待办：audit/toollists/swap/share/health 各页仍多字号（12–15 种），后续逐页收敛到 4 级；统一行高/段距，核对对比度 ≥ 4.5:1。
 
 ## 斜体 / 大写 / 等宽 / 中间点 / 动词（规则 8）
 - ✅ 去掉过滤框占位符**斜体**；去掉 kicker/section 标题的**全大写**（`text-transform:uppercase`）。
