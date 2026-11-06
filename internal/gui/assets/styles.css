@@ -135,6 +135,7 @@ html, body {
   display: flex; align-items: center; justify-content: space-between; gap: 14px;
   padding: 14px 28px; background: color-mix(in srgb, var(--paper) 88%, transparent);
   backdrop-filter: blur(12px); border-bottom: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
 }
 .filter {
   display: flex; align-items: center; gap: 8px; color: var(--faint);
@@ -393,3 +394,7 @@ html, body {
 
 :focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; border-radius: 3px; }
 :focus:not(:focus-visible) { outline: none; }
+
+@media (prefers-reduced-transparency: reduce) {
+  .bar { background: var(--paper); backdrop-filter: none; }
+}

@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/cgartlab/SwiftInstall/internal/backend"
@@ -126,5 +127,53 @@ func TestCatalogNotFound_404(t *testing.T) {
 		if resp.StatusCode != http.StatusNotFound {
 			t.Errorf("%s = %d, want 404", u, resp.StatusCode)
 		}
+	}
+}
+
+func TestPresetTraversalRejected(t *testing.T) {
+	ts := newTestServer(t)
+	defer ts.Close()
+	for _, name := range []string{"../../etc/passwd", "../x", "a/../../b"} {
+		resp, err := http.Get(ts.URL + "/api/preset?name=" + name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode == http.StatusOK {
+			t.Errorf("preset name %q should be rejected, got 200", name)
+		}
+	}
+}
+
+func TestImportThenFetch(t *testing.T) {
+	ts := newTestServer(t)
+	defer ts.Close()
+	body := "id: clitest\ntitle: 测试清单\nitems:\n  - name: Foo\n    why: reason\n    license: oss\n    category: 效率\n"
+	resp, err := http.Post(ts.URL+"/api/toollist/import", "application/x-yaml", strings.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("import = %d, want 200", resp.StatusCode)
+	}
+	var imp struct {
+		Imported bool   `json:"imported"`
+		ID       string `json:"id"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&imp); err != nil {
+		t.Fatal(err)
+	}
+	if !imp.Imported || imp.ID != "clitest" {
+		t.Fatalf("import result = %+v", imp)
+	}
+	// Fetch it back by id.
+	resp2, err := http.Get(ts.URL + "/api/toollist?toollist=clitest")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp2.Body.Close()
+	if resp2.StatusCode != 200 {
+		t.Errorf("fetch imported toollist = %d, want 200", resp2.StatusCode)
 	}
 }

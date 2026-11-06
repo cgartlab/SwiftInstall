@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **安全回归测试 + 顶栏现代化**：补 preset 路径穿越拒绝、清单导入→回读 回归测试；顶栏加镜面高光边并补 `prefers-reduced-transparency` 实心兜底。
+
 - **更多命令尊重 `--format`**：`sis doctor`、`sis guide --list`、`sis llm show`、`sis mirror show` 支持 `json|silent`（之前忽略输出开关）。
 
 - **修复/优化**：`sis toollist list/show/verify` 尊重 `--format`（json/silent，之前恒打印表格）；`sis status` 改用批量 `InstalledSet`（43 包 >20s → ~3s）。
