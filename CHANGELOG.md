@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **配色方案 A（青瓷绿）全站落地**：统一强调绿 `#3F6B52`（暗 `#86AE92`），移除全部橙/陶土色（copper/amber→绿或中性暖灰），跨页一致；换 B/C 仅改 token。
+
 - **字号收敛（规则 7，主界面）**：`styles.css` 建立 4 级字号 token（12/13/15/20），全量 font-size 收敛为 4 种，层级更清晰；其余页面后续逐页收敛。
 
 - **配色方案对比 PDF（规则 11）**：`docs/design/palette-options.pdf` + `palette-compare.png`，给出「现状 / A 青瓷绿 / B 黛蓝灰 / C 绛红」4 套（含组件预览），推荐 A；待选定后全站落地。

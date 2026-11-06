@@ -17,7 +17,7 @@
   .cmdk-list{list-style:none;max-height:46vh;overflow-y:auto;padding:6px}
   .cmdk-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;
     border-radius:9px;cursor:pointer;color:var(--ink,#1C1B17)}
-  .cmdk-item.on{background:var(--green-soft,#E7EEE8)}
+  .cmdk-item.on{background:var(--green-soft,#E6EEE7)}
   .cmdk-item .ct{font-size:13.5px;font-weight:600}
   .cmdk-item .cd{font-size:12px;color:var(--muted,#6E6B60);margin-top:1px}
   .cmdk-item .ck{font-size:11px;color:var(--faint,#9A9384)}

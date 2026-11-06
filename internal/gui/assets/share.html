@@ -6,7 +6,7 @@
 <title>SwiftInstall · 分享卡片</title>
 <style>
   :root{--paper:#F4EFE6;--card:#FBF8F1;--ink:#1C1B17;--muted:#6E6B60;--faint:#9A9384;--line:#DDD6C7;
-    --green:#2F5D46;--green-soft:#E7EEE8;--amber:#A9762A;--amber-soft:#F4EAD8;
+    --green:#3F6B52;--green-soft:#E6EEE7;--amber:#7C7568;--amber-soft:#EFE9DC;
     --serif:"Iowan Old Style","Palatino Linotype","Songti SC","Noto Serif SC",Georgia,serif;
     --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",sans-serif}
   *{box-sizing:border-box;margin:0;padding:0}
@@ -38,7 +38,7 @@
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
   :root{--on-accent:#FFFFFF;--red:#A24B3B;--red-soft:#F5E3DE;--err:#9a3d30;--on-moss:#2c4d3c}
-  @media (prefers-color-scheme:dark){:root{--red:#D97757;--red-soft:#3A2C18;--err:#D97757;--on-moss:#ECE7DC}}
+  @media (prefers-color-scheme:dark){:root{--red:#D97757;--red-soft:#2A2620;--err:#D97757;--on-moss:#ECE7DC}}
 
   :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:3px}
   :focus:not(:focus-visible){outline:none}
@@ -90,7 +90,7 @@ $("#dlBtn").onclick=()=>{
   g.fillStyle=cv("--paper","#F4EFE6"); g.fillRect(0,0,W,H);
   g.fillStyle=cv("--card","#FBF8F1"); rr(g,28,28,W-56,H-56,30); g.fill(); g.strokeStyle=cv("--line","#DDD6C7"); g.lineWidth=1; g.stroke();
   const cx=pad+8, cw=W-2*(pad+8);
-  g.fillStyle=cv("--green","#2F5D46"); g.font='600 22px -apple-system,"PingFang SC",sans-serif'; g.fillText("免费 / 开源 · 软件清单", cx, pad+44);
+  g.fillStyle=cv("--green","#3F6B52"); g.font='600 22px -apple-system,"PingFang SC",sans-serif'; g.fillText("免费 / 开源 · 软件清单", cx, pad+44);
   g.fillStyle=cv("--ink","#1C1B17"); g.font='700 46px "Songti SC","Iowan Old Style",serif';
   g.fillText(trim(g,RAW.title||"",W-2*pad-16), cx, pad+104);
   g.fillStyle=cv("--muted","#6E6B60"); g.font='400 22px -apple-system,"PingFang SC",sans-serif';
@@ -104,8 +104,8 @@ $("#dlBtn").onclick=()=>{
     const lic=items[i].license||""; const label=({oss:"开源",free:"免费",freemium:"免费版够用"})[lic]||lic;
     g.font='600 18px -apple-system,"PingFang SC",sans-serif'; const clw=g.measureText(label).width+24;
     const bgx=x+nw+14, bgy=y+2;
-    g.fillStyle=(lic==="freemium")?cv("--amber-soft","#F4EAD8"):cv("--green-soft","#E7EEE8"); rr(g,bgx,bgy,clw,30,15); g.fill();
-    g.fillStyle=(lic==="freemium")?cv("--amber","#A9762A"):cv("--green","#2F5D46"); g.fillText(label, bgx+12, bgy+22);
+    g.fillStyle=(lic==="freemium")?cv("--amber-soft","#EFE9DC"):cv("--green-soft","#E6EEE7"); rr(g,bgx,bgy,clw,30,15); g.fill();
+    g.fillStyle=(lic==="freemium")?cv("--amber","#7C7568"):cv("--green","#3F6B52"); g.fillText(label, bgx+12, bgy+22);
     g.strokeStyle=cv("--line","#E8E2D5"); g.beginPath(); g.moveTo(x,y+30); g.lineTo(x+colW,y+30); g.stroke();
   }
   const fy=H-pad-foot+40;
