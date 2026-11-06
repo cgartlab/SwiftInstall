@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SwiftInstall — 软件清单</title>
+<style>
+  :root{
+    --paper:#F4EFE6; --card:#FBF8F1; --ink:#1C1B17; --muted:#6E6B60;
+    --faint:#9A9384; --line:#DDD6C7; --line2:#E8E2D5;
+    --green:#2F5D46; --green-soft:#E7EEE8; --amber:#A9762A; --amber-soft:#F4EAD8;
+    --serif:"Iowan Old Style","Palatino Linotype","Songti SC","Noto Serif SC",Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--paper:#16140F;--card:#1D1A13;--ink:#ECE7DC;--muted:#A39B89;--faint:#6F6858;
+      --line:#2E2A20;--line2:#252118;--green:#8FB89B;--green-soft:#1E2A22;--amber:#D6A45E;--amber-soft:#3A2C18;}
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;
+    -webkit-font-smoothing:antialiased;line-height:1.6}
+  a{color:inherit}
+  :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:3px}
+
+  .app{display:grid;grid-template-columns:246px 1fr;min-height:100vh}
+  /* rail — the single remembered thing: a ledger index */
+  .rail{border-right:1px solid var(--line);background:var(--card);padding:30px 22px 24px;
+    display:flex;flex-direction:column;gap:26px;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .wordmark{font-family:var(--serif);font-size:23px;font-weight:600;letter-spacing:-.01em}
+  .sub{font-size:12px;color:var(--faint);margin-top:2px}
+  .rail-label{font-size:11.5px;color:var(--faint);letter-spacing:.06em}
+  .rail-list{list-style:none;display:flex;flex-direction:column;gap:2px;margin-top:-14px}
+  .rail-item{padding:10px 12px;border-left:2px solid transparent;cursor:pointer;border-radius:0 8px 8px 0;transition:background .14s,border-color .14s}
+  .rail-item:hover{background:var(--paper)}
+  .rail-item.active{background:var(--green-soft);border-left-color:var(--green)}
+  .rail-item .rt{font-size:14px;font-weight:600}
+  .rail-item.active .rt{color:var(--green)}
+  .rail-item .rm{font-size:11.5px;color:var(--faint);margin-top:1px}
+  .rail-foot{margin-top:auto;display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:16px}
+  .raillink{font-size:12.5px;color:var(--green);text-decoration:none}
+  .raillink:hover{text-decoration:underline;text-underline-offset:3px}
+
+  /* pane */
+  .pane{overflow-y:auto;padding:44px 52px 90px;max-width:920px}
+  .head{padding-bottom:22px;border-bottom:1px solid var(--line)}
+  .head .kicker{font-size:12px;color:var(--green);letter-spacing:.04em;margin-bottom:12px}
+  .head h1{font-family:var(--serif);font-size:38px;line-height:1.14;font-weight:600;letter-spacing:-.5px}
+  .meta{display:flex;gap:44px;margin-top:20px;flex-wrap:wrap}
+  .meta dt{font-size:11px;color:var(--faint)}
+  .meta dd{font-size:13.5px;margin-top:2px}
+  .head-actions{display:flex;gap:10px;margin-top:22px}
+  .ai{display:flex;gap:8px;margin-top:14px;max-width:640px}
+  .ai input{flex:1;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:13px;background:var(--card);color:var(--ink);font-family:inherit;outline:0}
+  .ai input:focus{border-color:var(--green)}
+  .aiout{display:none;margin-top:12px;max-width:70ch;white-space:pre-wrap;font-size:13.5px;color:var(--ink);border-left:3px solid var(--green);padding:10px 14px;background:var(--card);border-radius:0 8px 8px 0;line-height:1.6}
+  .aiout.on{display:block}
+  .aiout .note{color:var(--faint);font-size:12px}
+  .btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);
+    color:var(--ink);font-size:13px;font-weight:550;padding:8px 15px;border-radius:9px;cursor:pointer;
+    text-decoration:none;font-family:inherit;transition:border-color .14s,background .14s}
+  @media (hover:hover) and (pointer:fine){.btn:hover{border-color:var(--green);color:var(--green)}}
+  .btn:active{transform:scale(0.97)}
+  .btn.primary{background:var(--green);border-color:var(--green);color:#fff}
+  .btn.primary:hover{background:var(--green);opacity:.92;color:#fff}
+  .lede{font-size:14px;color:var(--muted);margin-top:14px;max-width:66ch;line-height:1.6}
+
+  .cat{font-family:var(--serif);font-size:19px;font-weight:600;margin:38px 0 4px;display:flex;align-items:baseline;gap:10px}
+  .cat .n{font-size:12px;color:var(--faint);font-family:var(--sans);font-weight:400}
+  .item{display:grid;grid-template-columns:34px 1fr;gap:14px;padding:16px 2px;border-bottom:1px solid var(--line2)}
+  .tile{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px;flex:none}
+  .item-top{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .name{font-size:15px;font-weight:600}
+  .role{font-size:12.5px;color:var(--faint)}
+  .chip{font-size:11px;font-weight:600;padding:1px 8px;border-radius:20px;white-space:nowrap}
+  .chip.oss,.chip.free{background:var(--green-soft);color:var(--green)}
+  .chip.freemium{background:var(--amber-soft);color:var(--amber)}
+  .chip.warn{background:#F5E3DE;color:#A24B3B}
+  .why{font-size:13px;color:var(--muted);margin-top:6px;max-width:70ch;line-height:1.55}
+  .item-links{margin-top:6px;display:flex;gap:14px}
+  .item-links a{font-size:12px;color:var(--green);text-decoration:none}
+  .item-links a:hover{text-decoration:underline;text-underline-offset:3px}
+
+  /* equivalences — handled as an expandable field-guide appendix */
+  .eq{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .eq summary{list-style:none;cursor:pointer;padding:15px 18px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .eq summary::-webkit-details-marker{display:none}
+  .eq summary .from{font-weight:600}
+  .eq summary .arrow{color:var(--green)}
+  .eq summary .to{font-weight:600;color:var(--green)}
+  .eq summary .lead{font-size:12.5px;color:var(--muted);margin-left:auto}
+  .eq[open] summary{border-bottom:1px solid var(--line)}
+  .eq-body{padding:16px 18px}
+  .eq-why{font-size:13px;color:var(--muted);max-width:70ch;margin-bottom:12px}
+  .fid{background:var(--green-soft);color:#2c4d3c;border-radius:10px;padding:11px 13px;font-size:12.5px;margin-bottom:12px}
+  @media (prefers-color-scheme:dark){.fid{color:var(--ink)}}
+  .steps{margin:0 0 10px 20px;font-size:13px}
+  .steps li{margin-bottom:11px}
+  .steps .gt{font-weight:600}
+  .steps .gd{color:var(--muted);margin-top:2px;max-width:70ch}
+  .steps .gsrc{font-size:11.5px;color:var(--green);text-decoration:none;display:inline-block;margin-top:3px}
+  .eq-meta{font-size:11.5px;color:var(--faint)}
+  .no-pb{font-size:12.5px;color:var(--faint)}
+  .loading,.error{color:var(--muted);font-size:14px;padding:40px 0}
+  .error{color:#9a3d30}
+
+  @media (max-width:820px){
+    .app{grid-template-columns:1fr}
+    .rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);flex-direction:row;flex-wrap:wrap;align-items:center;gap:14px;padding:16px 18px}
+    .rail-list{flex-direction:row;margin:0;gap:6px;overflow-x:auto}
+    .rail-item{border-left:0;border-bottom:2px solid transparent;border-radius:8px 8px 0 0}
+    .rail-item.active{border-left:0;border-bottom-color:var(--green)}
+    .rail-foot{margin:0;border:0;padding:0;flex-direction:row}
+    .pane{padding:28px 20px 60px}
+    .head h1{font-size:30px}
+  }
+  @media (prefers-reduced-motion:reduce){.rail-item,.btn,.item,.aiout,.chip{transition-property:opacity,background-color,border-color,color!important}}
+  .banner{margin-top:12px;background:var(--amber-soft);color:var(--amber);border-radius:10px;padding:9px 13px;font-size:12.5px}
+  .filterin{border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:13px;background:var(--card);color:var(--ink);font-family:inherit;outline:0;min-width:180px}
+  .filterin:focus{border-color:var(--green)}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div>
+      <div class="wordmark">SwiftInstall</div>
+      <div class="sub">动态软件清单 · 只收免费 / 开源</div>
+    </div>
+    <div class="rail-label">软件清单</div>
+    <ul id="rail" class="rail-list"></ul>
+    <div class="rail-foot">
+      <label class="raillink" style="cursor:pointer">导入软件清单…<input id="importFile" type="file" accept=".yaml,.yml,text/yaml" hidden></label>
+      <a class="raillink" href="/audit">看我的机器体检</a>
+      <a class="raillink" href="/">返回清单</a>
+    </div>
+  </aside>
+  <main class="pane">
+    <div id="head"></div>
+    <div id="body" aria-live="polite"><div class="loading">正在读取软件清单…</div></div>
+  </main>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const LIC = {oss:"开源", free:"免费", freemium:"免费版够用", paid:"付费"};
+const TILE = ["#7A4E7E","#3B5C8A","#C77D2E","#2F6D73","#6B7B5A","#5A6B7A","#8A5A3B","#4C6B8A"];
+function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function tileColor(name){let h=0;for(const ch of (name||"")){h=(h*31+ch.charCodeAt(0))>>>0;}return TILE[h%TILE.length];}
+function freshState(v){if(!v)return "unknown";const iso=v.length===7?v+"-01":v;const d=new Date(iso+"T00:00:00");if(isNaN(d.getTime()))return "unknown";const days=Math.floor((Date.now()-d.getTime())/86400000);if(days<=180)return "fresh";if(days<=365)return "aging";return "stale";}
+function qparam(k){return new URLSearchParams(location.search).get(k);}
+let currentId = "";
+
+async function init(){
+  try{
+    const r = await fetch("/api/toollists");
+    const j = await r.json();
+    const lists = j.toollists || [];
+    if(!lists.length){ $("#body").innerHTML = '<div class="error">还没有可用软件清单。</div>'; return; }
+    const want = qparam("toollist");
+    currentId = (want && lists.some(b=>b.id===want)) ? want : lists[0].id;
+    renderRail(lists, currentId);
+    loadToollist(currentId);
+  }catch(e){
+    $("#body").innerHTML = '<div class="error">读取软件清单失败，请刷新重试。</div>';
+  }
+}
+function renderRail(lists, active){
+  $("#rail").innerHTML = lists.map(b=>
+    `<li class="rail-item ${b.id===active?'active':''}" data-id="${esc(b.id)}">
+       <div class="rt">${esc(b.title)}</div>
+       <div class="rm">${b.items} 款 · 平替 ${b.equivalences} 组${b.stale? ' · '+b.stale+' 需复核':''}${b.imported?' · 已导入':''}</div>
+     </li>`).join("");
+  document.querySelectorAll(".rail-item").forEach(el=>{
+    el.onclick = ()=>{ currentId = el.dataset.id; location.href = "/toollists?toollist=" + encodeURIComponent(currentId); };
+  });
+}
+async function loadToollist(id){
+  $("#body").innerHTML = '<div class="loading">正在读取软件清单…</div>';
+  try{
+    const r = await fetch("/api/toollist?toollist=" + encodeURIComponent(id));
+    const c = await r.json();
+    if(!r.ok) throw new Error(c.error || "读取失败");
+    render(c);
+  }catch(e){
+    $("#body").innerHTML = '<div class="error">无法读取该软件清单：' + esc(e.message) + "</div>";
+  }
+}
+function render(c){
+  const staleN = [...(c.items||[]), ...(c.equivalences||[])].filter(x=>freshState(x.verified_at)==='stale').length;
+  $("#head").innerHTML = `
+    <div class="head">
+      <div class="kicker">精选软件清单</div>
+      <h1>${esc(c.title)}</h1>
+      <p class="lede">这是一份人工挑选的软件清单：只收免费或开源、而且免费版就足够用的工具。每款都写了它适合谁、为什么值得装。拿不准？点「用这份软件清单体检」，看看你电脑上已经装了什么、哪些可以换。</p>
+      ${staleN ? `<div class="banner">本清单有 ${staleN} 项资料超过一年未复核，仅供参考；可用 <code>sis toollist verify</code> 查看。</div>` : ''}
+      <dl class="meta">
+        <div><dt>面向</dt><dd>${esc(c.audience||"—")}</dd></div>
+        <div><dt>更新</dt><dd>${esc(c.updated||"—")}</dd></div>
+        <div><dt>收录</dt><dd>${(c.items||[]).length} 款 · 平替 ${(c.equivalences||[]).length} 组</dd></div>
+      </dl>
+      <div class="head-actions">
+        <input id="filter" class="filterin" type="text" placeholder="过滤这份清单…" autocomplete="off" spellcheck="false">
+        <a class="btn" href="/api/toollist/export?toollist=${encodeURIComponent(c.id)}" download="${esc(c.id)}.yaml">导出软件清单</a>
+        <a class="btn" href="/share?toollist=${encodeURIComponent(c.id)}">生成分享卡片</a>
+        <a class="btn primary" href="/audit?toollist=${encodeURIComponent(c.id)}">用这份软件清单体检</a>
+        <button id="savePresetBtn" class="btn" type="button">设为安装清单</button>
+        ${(c.equivalences&&c.equivalences.length)?`<a class="btn" href="/swap?toollist=${encodeURIComponent(c.id)}">逐条决策这些平替</a>`:""}
+      </div>
+      <div class="ai"><input id="aiApp" type="text" placeholder="清单里没有的软件？用 AI 查它是什么、有没有免费平替（需先配置 LLM）" autocomplete="off"><button id="aiBtn" class="btn">查询</button></div>
+      <div id="aiOut" class="aiout"></div>
+      <div id="presetOut" class="aiout"></div>
+    </div>`;
+
+  document.getElementById("savePresetBtn").onclick = ()=> saveAsPreset(c);
+  let h = "";
+  // group items by category, preserving first-appearance order
+  const cats = []; const byCat = {};
+  (c.items||[]).forEach(it=>{ const k=it.category||"其他"; if(!byCat[k]){byCat[k]=[]; cats.push(k);} byCat[k].push(it); });
+  cats.forEach(cat=>{
+    h += `<h2 class="cat">${esc(cat)} <span class="n">${byCat[cat].length}</span></h2>`;
+    byCat[cat].forEach(it=>{
+      const src = (it.sources||[])[0];
+      h += `<div class="item">
+        <div class="tile" style="background:${tileColor(it.name)}">${esc(it.name[0])}</div>
+        <div>
+          <div class="item-top"><span class="name">${esc(it.name)}</span>
+            <span class="chip ${esc(it.license)}">${LIC[it.license]||it.license}</span>
+            ${freshState(it.verified_at)==='stale'?'<span class="chip warn">需复核</span>':''}<span class="role">${esc(it.role)}</span></div>
+          <p class="why">${esc(it.why)}</p>
+          ${src?`<div class="item-links"><a href="${esc(src)}" target="_blank" rel="noopener">官方 / 来源</a></div>`:""}
+        </div>
+      </div>`;
+    });
+  });
+
+  const eqs = c.equivalences || [];
+  if(eqs.length){
+    h += `<h2 class="cat">平替与迁移 <span class="n">${eqs.length}</span></h2>`;
+    eqs.forEach(eq=>{
+      const from = (eq.from||[])[0] || "";
+      const pb = eq.playbook;
+      const lead = eq.from_role ? esc(eq.from_role) : "";
+      h += `<details class="eq"><summary>
+          <span class="from">${esc(from)}</span><span class="arrow">→</span>
+          <span class="to">${esc(eq.to.name)}</span>
+          <span class="chip ${esc(eq.to.license)}">${LIC[eq.to.license]||eq.to.license}</span>
+          ${freshState(eq.verified_at)==='stale'?'<span class="chip warn">需复核</span>':''}<span class="lead">${lead}</span>
+        </summary><div class="eq-body">
+          <p class="eq-why">${esc(eq.why)}</p>`;
+      if(pb){
+        h += `<div class="fid"><b>数据保真</b>：${esc(pb.data_fidelity||"")}</div>`;
+        h += `<ol class="steps">`;
+        (pb.steps||[]).forEach(s=>{
+          h += `<li><div class="gt">${esc(s.title)}</div>${s.detail?`<div class="gd">${esc(s.detail)}</div>`:""}${s.source_url?`<a class="gsrc" href="${esc(s.source_url)}" target="_blank" rel="noopener">来源</a>`:""}</li>`;
+        });
+        h += `</ol>`;
+        h += `<div class="eq-meta">核对日期 ${esc(pb.verified_at||"—")}</div>`;
+      }else{
+        h += `<div class="no-pb">这一组暂无迁移指导，可参考官方文档手动切换。</div>`;
+      }
+      h += `</div></details>`;
+    });
+  }
+  $("#body").innerHTML = h;
+  bindAI();
+  const fi=document.getElementById("filter");
+  if(fi){ fi.oninput=()=>{ const q=fi.value.trim().toLowerCase();
+    document.querySelectorAll(".grid").forEach(g=>{ let vis=0;
+      g.querySelectorAll(".item").forEach(it=>{ const m=!q||it.textContent.toLowerCase().includes(q); it.style.display=m?"":"none"; if(m)vis++; });
+      const catH=g.previousElementSibling;
+      if(catH&&catH.classList&&catH.classList.contains("cat")) catH.style.display=vis?"":"none";
+      g.style.display=vis?"":"none";
+    });
+    document.querySelectorAll(".eq").forEach(eq=>{ const m=!q||eq.textContent.toLowerCase().includes(q); eq.style.display=m?"":"none"; });
+  }; }
+}
+$("#importFile").onchange = async (e)=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  try{
+    const text = await f.text();
+    const r = await fetch("/api/toollist/import", {method:"POST", headers:{"Content-Type":"application/x-yaml"}, body:text});
+    const j = await r.json();
+    if(!r.ok) throw new Error(j.error || "导入失败");
+    location.href = "/toollists?toollist=" + encodeURIComponent(j.id);
+  }catch(err){
+    alert("导入失败：" + err.message);
+  }
+};
+async function saveAsPreset(c){
+  const out = document.getElementById("presetOut");
+  const packages = (c.items||[]).filter(it=>it.brew && it.brew!=="homebrew").map(it=>({id:it.brew, category:it.category||""}));
+  out.classList.add("on");
+  if(!packages.length){ out.textContent = "这份清单没有可安装的条目。"; return; }
+  const name = "toollist-" + c.id;
+  try{
+    const r = await fetch("/api/preset?action=save", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({name, packages})});
+    const j = await r.json();
+    if(!r.ok){ out.innerHTML = "<b>保存失败：</b>" + esc(j.error||""); return; }
+    out.innerHTML = "已保存为安装清单 <b>" + esc(name) + "</b>（" + j.total + " 个）。<a href=\"/\" style=\"color:var(--green)\">去主界面安装 →</a>";
+  }catch(e){ out.textContent = "保存失败：" + e.message; }
+}
+function bindAI(){
+  const btn = document.getElementById("aiBtn");
+  if(!btn) return;
+  btn.onclick = async ()=>{
+    const app = (document.getElementById("aiApp").value||"").trim();
+    const out = document.getElementById("aiOut");
+    if(!app){ out.classList.add("on"); out.textContent = "请输入软件名，例如 CleanShot X"; return; }
+    out.classList.add("on"); out.textContent = "正在查询…";
+    try{
+      const r = await fetch("/api/explain?app=" + encodeURIComponent(app));
+      const j = await r.json();
+      if(!r.ok){ out.innerHTML = "<b>" + esc(j.error||"查询失败") + "</b>" + (j.hint ? ("\n" + esc(j.hint)) : ""); return; }
+      out.innerHTML = esc(j.answer) + "\n\n<span class=\"note\">" + esc(j.notice||"AI 生成，仅供参考。") + "</span>";
+    }catch(e){ out.textContent = "查询失败：" + e.message; }
+  };
+}
+init();
+</script>
+  <script src="cmdk.js"></script>
+</body>
+</html>

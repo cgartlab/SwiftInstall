@@ -1,0 +1,157 @@
+id: essentials
+title: Mac 新手上手软件清单
+audience: 刚用 Mac 的新手
+curator: cgartlab
+updated: "2026-11"
+standard:
+  - free-or-oss
+  - free-tier-sufficient
+  - mature
+
+items:
+  # 效率
+  - name: Raycast
+    brew: raycast
+    role: 启动器 / 效率
+    category: 效率
+    license: free
+    free_tier_enough: true
+    why: 按个快捷键就能打开任何软件、算数、找文件；免费版就够用。
+    verified_at: "2026-11-05"
+    sources: [https://www.raycast.com/pricing]
+
+  - name: Rectangle
+    brew: rectangle
+    role: 窗口管理
+    category: 效率
+    license: oss
+    free_tier_enough: true
+    why: 用快捷键把窗口摆到左半屏/右半屏/全屏，不用再拖着窗口费劲对齐。
+    verified_at: "2026-11-05"
+    sources: [https://rectangleapp.com]
+
+  - name: Maccy
+    brew: maccy
+    role: 剪贴板历史
+    category: 效率
+    license: oss
+    free_tier_enough: true
+    why: 帮你记住复制过的内容，粘错了还能找回上一条。
+    verified_at: "2026-11-05"
+    sources: [https://maccy.app]
+
+  - name: Mos
+    brew: mos
+    role: 鼠标增强
+    category: 效率
+    license: oss
+    free_tier_enough: true
+    why: 让鼠标滚动更顺滑，并统一触控板与鼠标的滚动方向。
+    verified_at: "2026-11-05"
+    sources: [https://mos.caldis.me]
+
+  # 系统
+  - name: Stats
+    brew: stats
+    role: 系统监控
+    category: 系统
+    license: oss
+    free_tier_enough: true
+    why: 在菜单栏就能看到电脑的 CPU、内存、电量和网速。
+    verified_at: "2026-11-05"
+    sources: [https://github.com/exelban/stats]
+
+  - name: Ice
+    brew: jordanbaird-ice
+    role: 菜单栏管理
+    category: 系统
+    license: oss
+    free_tier_enough: true
+    why: 菜单栏图标太多时，可以一键收起来，界面更清爽。
+    verified_at: "2026-11-05"
+    sources: [https://github.com/jordanbaird/Ice]
+
+  - name: PearCleaner
+    brew: pearcleaner
+    role: 卸载 / 清理
+    category: 系统
+    license: oss
+    free_tier_enough: true
+    why: 把软件删干净，连残留的小文件一起清理。
+    verified_at: "2026-11-05"
+    sources: [https://github.com/alienator88/Pearcleaner]
+
+  # 文件
+  - name: Keka
+    brew: keka
+    role: 压缩 / 解压
+    category: 文件
+    license: oss
+    free_tier_enough: true
+    why: 双击就能解压 zip、rar 等压缩包，也能自己打包压缩。
+    verified_at: "2026-11-05"
+    sources: [https://www.keka.io]
+
+  - name: LocalSend
+    brew: localsend
+    role: 传文件到手机 / 电脑
+    category: 文件
+    license: oss
+    free_tier_enough: true
+    why: 同一个 WiFi 下，电脑和手机互传照片文件，不用数据线也不用微信压画质。
+    verified_at: "2026-11-05"
+    sources: [https://localsend.org]
+
+  # 媒体
+  - name: IINA
+    brew: iina
+    role: 视频播放
+    category: 媒体
+    license: oss
+    free_tier_enough: true
+    why: 几乎什么格式的视频都能放，还能调字幕，比自带播放器好用。
+    verified_at: "2026-11-05"
+    sources: [https://iina.io]
+
+  # 网络
+  - name: Firefox
+    brew: firefox
+    role: 浏览器
+    category: 网络
+    license: free
+    free_tier_enough: true
+    why: 免费开源的浏览器，隐私保护和插件都很齐全，可作备选浏览器。
+    verified_at: "2026-11-05"
+    sources: [https://www.mozilla.org/firefox/]
+
+  - name: NetNewsWire
+    brew: netnewswire
+    role: RSS 阅读
+    category: 网络
+    license: oss
+    free_tier_enough: true
+    why: 把喜欢的网站/博客订阅到一个地方看，不用一个个打开。
+    verified_at: "2026-11-05"
+    sources: [https://netnewswire.com]
+
+  # 写作
+  - name: Obsidian
+    brew: obsidian
+    role: 笔记
+    category: 写作
+    license: free
+    free_tier_enough: true
+    why: 免费的个人笔记软件，文件存在自己电脑里，换电脑也好迁移。
+    verified_at: "2026-11-05"
+    sources: [https://obsidian.md/pricing]
+
+  # 开发 / 进阶
+  - name: Homebrew
+    brew: homebrew
+    role: 包管理
+    category: 开发
+    license: oss
+    free_tier_enough: true
+    why: Mac 上装软件的“应用商店命令行版”，以后装开发工具基本都靠它。
+    verified_at: "2026-11-05"
+    sources: [https://brew.sh]

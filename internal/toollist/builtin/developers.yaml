@@ -1,0 +1,247 @@
+id: developers
+title: 开发者的 Mac 起步软件清单
+audience: 全栈 / 后端 / 前端开发者
+curator: cgartlab
+updated: "2026-11"
+standard:
+  - free-or-oss
+  - free-tier-sufficient
+  - mature
+
+items:
+  # 开发
+  - name: Visual Studio Code
+    brew: visual-studio-code
+    role: 代码编辑器
+    category: 开发
+    license: free
+    free_tier_enough: true
+    why: 免费、插件生态完备，绝大部分开发场景够用。
+    verified_at: "2026-11-05"
+    sources: [https://code.visualstudio.com]
+
+  - name: Neovim
+    brew: neovim
+    role: 终端编辑器
+    category: 开发
+    license: oss
+    free_tier_enough: true
+    why: 开源、可深度定制，终端里即可完成编辑。
+    verified_at: "2026-11-05"
+    sources: [https://neovim.io]
+
+  - name: iTerm2
+    brew: iterm2
+    role: 终端
+    category: 开发
+    license: free
+    free_tier_enough: true
+    why: 免费、分屏/搜索/触发器齐全，替代系统终端。
+    verified_at: "2026-11-05"
+    sources: [https://iterm2.com]
+
+  - name: Warp
+    brew: warp
+    role: 终端（AI）
+    category: 开发
+    license: freemium
+    free_tier_enough: true
+    why: 基础终端功能免费且够用，AI 功能为付费增值项、可不用。
+    verified_at: "2026-11-05"
+    sources: [https://www.warp.dev/pricing]
+
+  - name: Git
+    brew: git
+    role: 版本控制
+    category: 开发
+    license: oss
+    free_tier_enough: true
+    why: 开源、事实标准的版本控制工具。
+    verified_at: "2026-11-05"
+    sources: [https://git-scm.com]
+
+  - name: GitHub CLI
+    brew: gh
+    role: 版本控制 / 协作
+    category: 开发
+    license: oss
+    free_tier_enough: true
+    why: 开源，在终端里管理 PR / issue / release。
+    verified_at: "2026-11-05"
+    sources: [https://cli.github.com]
+
+  - name: Docker Desktop
+    brew: docker
+    role: 容器
+    category: 开发
+    license: freemium
+    free_tier_enough: true
+    why: 个人 / 小团队免费额度足够日常构建与运行容器。
+    verified_at: "2026-11-05"
+    sources: [https://www.docker.com/pricing]
+
+  - name: Bruno
+    brew: bruno
+    role: API 调试
+    category: 开发
+    license: oss
+    free_tier_enough: true
+    alternative_to: Postman
+    why: 开源、离线优先的 API 客户端，集合以文件形式存于仓库，协作友好。
+    verified_at: "2026-11-05"
+    sources: [https://www.usebruno.com]
+
+  - name: HTTPie
+    brew: httpie
+    role: API 调试（CLI）
+    category: 开发
+    license: oss
+    free_tier_enough: true
+    why: 开源，人类友好的 HTTP 命令行客户端。
+    verified_at: "2026-11-05"
+    sources: [https://httpie.io]
+
+  - name: DBeaver Community
+    brew: dbeaver-community
+    role: 数据库
+    category: 开发
+    license: oss
+    free_tier_enough: true
+    alternative_to: TablePlus
+    why: 开源、跨库的数据库客户端，社区版覆盖日常查询与管理。
+    verified_at: "2026-11-05"
+    sources: [https://dbeaver.io]
+
+  # 系统
+  - name: Homebrew
+    brew: homebrew
+    role: 包管理
+    category: 系统
+    license: oss
+    free_tier_enough: true
+    why: macOS 上事实标准的包管理器。
+    verified_at: "2026-11-05"
+    sources: [https://brew.sh]
+
+  - name: Stats
+    brew: stats
+    role: 系统监控
+    category: 系统
+    license: oss
+    free_tier_enough: true
+    why: 开源，菜单栏显示 CPU / 内存 / 网络 / 电池。
+    verified_at: "2026-11-05"
+    sources: [https://github.com/exelban/stats]
+
+  # 效率
+  - name: Mos
+    brew: mos
+    role: 鼠标增强
+    category: 效率
+    license: oss
+    free_tier_enough: true
+    why: 开源，平滑鼠标滚动。
+    verified_at: "2026-11-05"
+    sources: [https://mos.caldis.me]
+
+  - name: Rectangle
+    brew: rectangle
+    role: 窗口管理
+    category: 效率
+    license: oss
+    free_tier_enough: true
+    why: 开源免费的窗口管理。
+    verified_at: "2026-11-05"
+    sources: [https://rectangleapp.com]
+
+  - name: Raycast
+    brew: raycast
+    role: 启动器 / 效率
+    category: 效率
+    license: free
+    free_tier_enough: true
+    why: 免费版覆盖启动器、剪贴板、窗口管理与脚本命令。
+    verified_at: "2026-11-05"
+    sources: [https://www.raycast.com/pricing]
+
+  - name: Maccy
+    brew: maccy
+    role: 剪贴板管理
+    category: 效率
+    license: oss
+    free_tier_enough: true
+    why: 轻量开源剪贴板历史。
+    verified_at: "2026-11-05"
+    sources: [https://maccy.app]
+
+  # 网络
+  - name: mkcert
+    brew: mkcert
+    role: 本地 HTTPS 证书
+    category: 网络
+    license: oss
+    free_tier_enough: true
+    why: 开源，一条命令生成本地受信任的 TLS 证书。
+    verified_at: "2026-11-05"
+    sources: [https://github.com/FiloSottile/mkcert]
+
+  - name: RustDesk
+    brew: rustdesk
+    role: 远程桌面
+    category: 网络
+    license: oss
+    free_tier_enough: true
+    why: 开源、可自托管的远程桌面。
+    verified_at: "2026-11-05"
+    sources: [https://rustdesk.com]
+
+equivalences:
+  - from: ["Postman", "postman"]
+    from_role: API 调试
+    to:
+      name: Bruno
+      brew: bruno
+      license: oss
+    free_tier_enough: true
+    why: "Bruno 开源、离线优先，集合以文件保存在仓库里；Postman 的云端与协作限制在免费版上可被绕过。"
+    verified_at: "2026-11-05"
+    sources: [https://www.usebruno.com]
+    playbook:
+      summary: "从 Postman 迁移到 Bruno（开源 API 客户端）"
+      data_fidelity: "可导入 Postman Collection v2.1 与 Environment；测试脚本与部分变量需手动调整。"
+      verified_at: "2026-11-05"
+      steps:
+        - title: "在 Postman 导出"
+          detail: "导出 Collection 为 v2.1 JSON，并单独导出 Environment。"
+          source_url: https://learning.postman.com/docs/getting-started/importing-and-exporting/exporting-data/
+        - title: "在 Bruno 导入"
+          detail: "Collection → Import，选择 Postman Collection / Environment 文件。"
+          source_url: https://docs.usebruno.com
+        - title: "核对请求与变量"
+          detail: "确认鉴权、环境变量与前置脚本可用。"
+          source_url: https://docs.usebruno.com
+
+  - from: ["TablePlus", "tableplus"]
+    from_role: 数据库
+    to:
+      name: DBeaver Community
+      brew: dbeaver-community
+      license: oss
+    free_tier_enough: true
+    why: "DBeaver 社区版开源、跨库，覆盖日常查询与管理，免费即可用。"
+    verified_at: "2026-11-05"
+    sources: [https://dbeaver.io]
+    playbook:
+      summary: "从 TablePlus 迁移到 DBeaver Community（开源数据库工具）"
+      data_fidelity: "数据库连接与数据在服务器端，不受影响；本地连接配置与常用查询需重建。"
+      verified_at: "2026-11-05"
+      steps:
+        - title: "记录连接信息"
+          detail: "记下主机、端口、库名与账号（TablePlus 连接设置里可见）。"
+          source_url: https://tableplus.com/blog/
+        - title: "在 DBeaver 新建连接"
+          detail: "Database → New Connection，按数据库类型填入同样参数。"
+          source_url: https://dbeaver.com/docs/
+        - title: "迁移常用 SQL"
+          detail: "把常用查询存为 DBeaver 的 SQL 脚本。"
+          source_url: https://dbeaver.com/docs/

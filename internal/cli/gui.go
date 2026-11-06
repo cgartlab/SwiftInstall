@@ -38,16 +38,27 @@ func newGUICmd() *cobra.Command {
 
 func runGUI(cmd *cobra.Command, args []string) error {
 	manifestPath, err := manifestPathFrom(cmd)
+	firstRun := false
+	var m *manifest.Manifest
 	if err != nil {
-		return err
-	}
-
-	m, err := manifest.ParseManifest(manifestPath)
-	if err != nil {
-		return fmt.Errorf("解析清单文件失败: %w", err)
-	}
-	if err := manifest.Validate(m); err != nil {
-		return fmt.Errorf("清单文件校验失败: %w", err)
+		// No manifest is fine: fall back to a first-run, audit-only session.
+		presetName, _ := cmd.Flags().GetString("preset")
+		fileFlag, _ := cmd.Flags().GetString("file")
+		if presetName == "" && fileFlag == "" && resolveManifest() == "" {
+			m = &manifest.Manifest{}
+			manifestPath = ""
+			firstRun = true
+		} else {
+			return err
+		}
+	} else {
+		m, err = manifest.ParseManifest(manifestPath)
+		if err != nil {
+			return fmt.Errorf("解析清单文件失败: %w", err)
+		}
+		if err := manifest.Validate(m); err != nil {
+			return fmt.Errorf("清单文件校验失败: %w", err)
+		}
 	}
 
 	be, err := backend.ForCurrentOS()
@@ -85,9 +96,15 @@ func runGUI(cmd *cobra.Command, args []string) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	source := manifestPath
+	openPath := ""
+	if firstRun {
+		source = "首次启动 · 环境体检"
+		openPath = "/audit"
+	}
 	return gui.Run(ctx, gui.Options{
 		Manifest:     m,
-		Source:       manifestPath,
+		Source:       source,
 		Backend:      be,
 		Proxy:        proxy,
 		RetryCount:   retryCount,
@@ -95,5 +112,6 @@ func runGUI(cmd *cobra.Command, args []string) error {
 		SkipExisting: true,
 		Addr:         addr,
 		Open:         !open,
+		OpenPath:     openPath,
 	})
 }

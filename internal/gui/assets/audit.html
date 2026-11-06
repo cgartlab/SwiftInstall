@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SwiftInstall — 环境体检</title>
+<style>
+  :root{
+    --paper:#F4EFE6; --card:#FBF8F1; --ink:#1C1B17; --muted:#6E6B60;
+    --line:#DDD6C7; --green:#2F5D46; --green-soft:#E7EEE8;
+    --amber:#A9762A; --amber-soft:#F4EAD8;
+    --serif:"Iowan Old Style","Palatino Linotype","Songti SC","Noto Serif SC",Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.6; padding:0 0 80px;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:0 32px}
+  header{display:flex;align-items:center;justify-content:space-between;
+    padding:22px 0 16px;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:600;letter-spacing:.2px}
+  .brand .mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--green),#4b7d60);
+    display:grid;place-items:center;color:#fff;font-size:13px;font-weight:700}
+  .nav{display:flex;align-items:center;gap:18px;font-size:13.5px}
+  .nav a{color:var(--muted);text-decoration:none}
+  .nav a:hover{color:var(--ink)}
+  .nav .here{color:var(--green);font-weight:600}
+  .lock{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:12.5px}
+  .lock i{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block}
+
+  .kicker{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--green);
+    font-weight:600;margin:54px 0 14px}
+  h1{font-family:var(--serif);font-size:44px;line-height:1.12;font-weight:600;letter-spacing:-.5px}
+  .lede{font-size:15.5px;color:var(--muted);max-width:560px;margin-top:16px}
+  .btn{display:inline-flex;align-items:center;gap:9px;border:none;cursor:pointer;
+    background:var(--green);color:#fff;font-size:14.5px;font-weight:600;padding:12px 22px;
+    border-radius:10px;transition:.2s;font-family:inherit;box-shadow:0 6px 16px rgba(47,93,70,.2)}
+  @media (hover:hover) and (pointer:fine){.btn:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(47,93,70,.28)}}
+  .btn:active{transform:scale(0.97)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+  .btn.ghost:hover{border-color:var(--ink);transform:none}
+  .start-row{margin-top:30px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+
+  #scan{padding:90px 0;text-align:center;display:none}
+  .ring{width:96px;height:96px;border-radius:50%;border:2px solid var(--green-soft);margin:0 auto 24px;
+    display:grid;place-items:center;position:relative}
+  .ring::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid transparent;
+    border-top-color:var(--green);animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .ring .n{font-size:23px;font-weight:600;font-variant-numeric:tabular-nums}
+  .scan-l{font-size:16px;font-weight:600}
+  .scan-s{font-size:13px;color:var(--muted);margin-top:6px;height:18px}
+  .track{width:320px;height:4px;background:var(--line);border-radius:3px;margin:24px auto 0;overflow:hidden}
+  .track i{display:block;height:100%;width:100%;transform:scaleX(0);transform-origin:left;background:var(--green);transition:transform .35s cubic-bezier(0.23,1,0.32,1);will-change:transform}
+
+  #result{display:none}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:34px 0 8px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .stat .v{font-size:29px;font-weight:600;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+  .stat .l{font-size:12.5px;color:var(--muted);margin-top:4px}
+  .stat.hl .v{color:var(--green)}
+  .stat.am .v{color:var(--amber)}
+
+  .sect-t{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);
+    font-weight:600;margin:34px 0 12px;padding-top:18px;border-top:1px solid var(--line)}
+  .sect-t .c{color:var(--green)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:10px}
+  .rep{display:flex;align-items:flex-start;gap:14px}
+  .rep .flow{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14.5px;flex-shrink:0;min-width:270px}
+  .rep .flow .a{color:var(--ink)}
+  .rep .flow .arw{color:var(--green)}
+  .rep .flow .b{color:var(--green)}
+  .chip{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap}
+  .chip.oss{background:var(--green-soft);color:var(--green)}
+  .chip.free{background:var(--green-soft);color:var(--green)}
+  .chip.freemium{background:var(--amber-soft);color:var(--amber)}
+  .chip.warn{background:#F5E3DE;color:#A24B3B}
+  .why{font-size:13px;color:var(--muted);flex:1}
+  .src{font-size:11.5px}
+  .src a{color:var(--green);text-decoration:none}
+  .copy{border:1px solid var(--line);background:transparent;color:var(--muted);font-size:11.5px;
+    padding:4px 10px;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap}
+  .copy:hover{border-color:var(--green);color:var(--green)}
+
+  .cat-h{font-size:12.5px;font-weight:600;color:var(--green);letter-spacing:1px;margin:20px 0 8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .item .top{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+  .item .nm{font-weight:600;font-size:14px}
+  .item .role{font-size:12px;color:var(--muted)}
+  .item .wy{font-size:12.5px;color:var(--muted);margin-top:6px}
+  .item .foot{display:flex;justify-content:flex-end;margin-top:8px}
+  .keeps{display:flex;flex-wrap:wrap;gap:8px}
+  .keep{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:5px 13px;font-size:13px}
+  .empty{color:var(--muted);font-size:13.5px;padding:6px 2px}
+  .legend{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+  .err{color:#9a3d30;font-size:14px;padding:20px 0}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:var(--ink);color:#fff;
+    font-size:13px;padding:9px 17px;border-radius:9px;opacity:0;transition:.3s;pointer-events:none}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  @media(max-width:720px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}
+    .rep{flex-direction:column;gap:6px}.rep .flow{min-width:0}}
+  /* migration guide drawer */
+  .scrim{position:fixed;inset:0;background:rgba(28,27,23,.30);opacity:0;pointer-events:none;transition:.3s;z-index:40;backdrop-filter:blur(1px)}
+  .scrim.on{opacity:1;pointer-events:auto}
+  .gdrawer{position:fixed;top:0;right:0;bottom:0;width:min(450px,94%);background:var(--paper);
+    border-left:1px solid var(--line);box-shadow:-20px 0 50px rgba(28,27,23,.16);
+    transform:translateX(104%);transition:transform .4s cubic-bezier(.22,.61,.36,1);z-index:41;
+    overflow-y:auto;padding:26px 28px}
+  .gdrawer.on{transform:none}
+  .gclose{position:absolute;top:16px;right:18px;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);
+    background:var(--card);color:var(--muted);cursor:pointer;font-size:15px}
+  .gdrawer h3{font-family:var(--serif);font-size:23px;margin:6px 0 12px;padding-right:34px}
+  .gsum{font-size:14px;color:var(--ink);margin-bottom:12px}
+  .gfid{background:var(--green-soft);color:#2c4d3c;border-radius:10px;padding:11px 13px;font-size:12.5px;margin-bottom:10px}
+  .gmeta{font-size:12px;color:var(--muted);margin-bottom:14px}
+  .gsteps{margin:0 0 14px 18px;font-size:13px}
+  .gsteps li{margin-bottom:12px}
+  .gsteps .gt{font-weight:600;font-size:13.5px}
+  .gsteps .gd{color:var(--muted);margin-top:2px}
+  .gsteps .gsrc{font-size:11.5px;color:var(--green);text-decoration:none;display:inline-block;margin-top:3px}
+  .gnote{font-size:11.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+  .guidebtn{border:1px solid var(--green);background:transparent;color:var(--green);font-size:11.5px;
+    padding:4px 10px;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap}
+  .guidebtn:hover{background:var(--green-soft)}
+  .rep .repbtns{display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0}
+  .blsel{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--ink);
+    font:inherit;font-size:12.5px;padding:4px 10px;border-radius:8px;cursor:pointer}
+  .blsel:hover{border-color:var(--ink)}
+  /* scan → report morph */
+  #result .stat{opacity:0;transform:translateY(8px)}
+  #result.enter .stat{animation:pop .42s cubic-bezier(.22,.61,.36,1) both}
+  #result.enter .stat:nth-child(1){animation-delay:.02s}
+  #result.enter .stat:nth-child(2){animation-delay:.06s}
+  #result.enter .stat:nth-child(3){animation-delay:.10s}
+  #result.enter .stat:nth-child(4){animation-delay:.14s}
+  @keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+  .rep-actions{margin:18px 0 2px}
+  .rep-actions a{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);
+    color:var(--green);font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:10px;text-decoration:none}
+  .rep-actions a:hover{border-color:var(--green)}
+  @media (prefers-reduced-motion:reduce){#result .stat{opacity:1;transform:none;animation:none!important}}
+  #sections.enter > *{animation:rowin .32s cubic-bezier(0.23,1,0.32,1) both}
+  @keyframes rowin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){#sections.enter > *{animation:none!important;opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="mark">S</span> SwiftInstall</div>
+    <div class="nav">
+      <span class="here">环境体检</span>
+      <a href="/toollists">软件清单</a>
+      <a href="/">← 返回清单</a>
+      <select id="toollistSel" class="blsel" title="选择软件清单"></select>
+      <a href="/api/toollist/export" id="exportLink" download>导出软件清单</a>
+      <span class="lock"><i></i> 本地扫描 · 数据不外传</span>
+    </div>
+  </header>
+
+  <!-- hero -->
+  <section id="hero">
+    <div class="kicker">首次启动 · 环境体检</div>
+    <h1>先看看你的 Mac<br>装了什么。</h1>
+    <p class="lede">这一步只是「看一眼」你的电脑：<b>不会改动、也不会卸载任何东西</b>。我们扫描你已安装的软件，按可核验的维度给出客观评价，并找出其中更适合你的<b>免费 / 开源平替</b>。全程本地完成，你决定要不要换。</p>
+    <div class="start-row">
+      <button class="btn" id="startBtn">开始体检 &nbsp;→</button>
+      <span class="lock"><i></i> 安装清单不会离开这台 Mac</span>
+    </div>
+  </section>
+
+  <!-- scanning -->
+  <section id="scan">
+    <div class="ring"><div class="n" id="scanN">0</div></div>
+    <div class="scan-l">正在扫描已安装的应用</div>
+    <div class="scan-s" id="scanS">读取 /Applications 与 Homebrew 清单…</div>
+    <div class="track"><i id="scanBar"></i></div>
+  </section>
+
+  <!-- result -->
+  <section id="result">
+    <div class="kicker">体检完成</div>
+    <h1 style="font-size:32px" id="resTitle">你的 Mac，看清楚了。</h1>
+    <div class="stats">
+      <div class="stat"><div class="v" id="sInst">—</div><div class="l">已安装应用</div></div>
+      <div class="stat hl"><div class="v" id="sRep">—</div><div class="l">可替换（有更优平替）</div></div>
+      <div class="stat am"><div class="v" id="sAdd">—</div><div class="l">建议补充</div></div>
+      <div class="stat"><div class="v" id="sKeep">—</div><div class="l">已装且够用</div></div>
+    </div>
+    <div id="sections" aria-live="polite"></div>
+    <div class="legend">判断基于可核验维度（授权、免费版范围、维护活跃度、隐私、可导出性），非主观好坏。软件清单：<span id="catName"></span> · 更新 <span id="catUpd"></span></div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+<div class="scrim" id="gscrim" onclick="closeGuide()"></div>
+<aside class="gdrawer" id="gdrawer" aria-hidden="true">
+  <button class="gclose" onclick="closeGuide()" aria-label="关闭">✕</button>
+  <div id="gbody"></div>
+</aside>
+
+<script>
+const LIC = {oss:"开源", free:"免费", freemium:"免费版够用", paid:"付费"};
+const $ = s => document.querySelector(s);
+let raw = null;
+
+$("#startBtn").onclick = startAudit;
+
+function show(id){ ["hero","scan","result"].forEach(x=> $("#"+x).style.display = x===id?"block":"none"); }
+
+function startAudit(){
+  const sc=$("#scan"); sc.style.opacity=""; sc.style.transform=""; $("#result").classList.remove("enter");
+  show("scan");
+  const dur = 1700, t0 = performance.now(), n=$("#scanN"), bar=$("#scanBar"), s=$("#scanS");
+  const subs=["读取 /Applications 与 Homebrew 清单…","识别已安装应用…","比对免费 / 开源平替目录…","生成可核验评价…"];
+  function tick(now){
+    const p = Math.min(1,(now-t0)/dur), e = 1-Math.pow(1-p,3);
+    n.textContent = Math.round(e*99);
+    bar.style.transform = "scaleX("+e+")";
+    s.textContent = subs[Math.min(subs.length-1, Math.floor(e*subs.length))];
+    if(p<1) requestAnimationFrame(tick); else fetchAudit();
+  }
+  requestAnimationFrame(tick);
+}
+
+async function fetchAudit(){
+  try{
+    const bid = new URLSearchParams(location.search).get("toollist") || "";
+    const r = await fetch("/api/audit" + (bid ? "?toollist=" + encodeURIComponent(bid) : ""));
+    const j = await r.json();
+    if(!r.ok) throw new Error(j.error || "体检失败");
+    raw = j;
+    render(j);
+    morphToResult();
+  }catch(e){
+    show("hero");
+    alert("体检失败：" + e.message);
+  }
+}
+
+function morphToResult(){
+  const sc=$("#scan");
+  sc.style.transition="opacity .38s cubic-bezier(.22,.61,.36,1), transform .38s cubic-bezier(.22,.61,.36,1)";
+  sc.style.opacity="0"; sc.style.transform="scale(1.04)";
+  setTimeout(()=>{ sc.style.opacity=""; sc.style.transform=""; sc.style.transition="";
+    show("result"); const res=$("#result"); res.classList.remove("enter"); void res.offsetWidth; res.classList.add("enter"); },300);
+}
+
+function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+function render(j){
+  $("#sInst").textContent = j.installed_count ?? "—";
+  $("#sRep").textContent = (j.replaces||[]).length;
+  $("#sAdd").textContent = (j.adds||[]).length;
+  $("#sKeep").textContent = (j.keeps||[]).length;
+  $("#catName").textContent = j.catalog_title || "";
+  $("#catUpd").textContent = "";
+  let h = "";
+  if(j.catalog_id){ h += `<div class="rep-actions"><a href="/swap?toollist=${encodeURIComponent(j.catalog_id)}">逐条决策这些平替 →</a></div>`; }
+
+  // replaces
+  const reps = j.replaces || [];
+  h += `<div class="sect-t"><span class="c">可替换 · ${reps.length}</span>　（已装的付费软件存在更好的免费/开源平替）</div>`;
+  if(!reps.length){ h += `<div class="empty">未发现可替换项。</div>`; }
+  else{
+    h += reps.map((r,i)=>{
+      const src = (r.sources||[]).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">来源</a>`).join(" ");
+      return `<div class="card rep">
+        <div class="flow"><span class="a">${esc(r.from)}</span><span class="arw">→</span>
+          <span class="b">${esc(r.name)}</span> <span class="chip ${esc(r.license)}">${LIC[r.license]||r.license}</span>${r.stale==='stale'?'<span class="chip warn">需复核</span>':''}</div>
+        <div class="why">${esc(r.why)} <span class="src">${src}</span></div>
+        <div class="repbtns">${r.playbook?`<button class="guidebtn" data-gi="${i}">查看迁移指导</button>`:""}${r.brew?`<button class="copy" data-cmd="brew install --cask ${esc(r.brew)}">复制安装命令</button>`:""}</div>
+      </div>`;
+    }).join("");
+  }
+
+  // adds grouped by category
+  const adds = j.adds || [];
+  h += `<div class="sect-t"><span class="c">建议补充 · ${adds.length}</span>　（软件清单推荐，尚未安装）</div>`;
+  if(!adds.length){ h += `<div class="empty">软件清单已全部就绪。</div>`; }
+  else{
+    const groups = {};
+    adds.forEach(a=>{ const k=a.category||"其他"; (groups[k]=groups[k]||[]).push(a); });
+    Object.keys(groups).forEach(cat=>{
+      h += `<div class="cat-h">${esc(cat)}</div><div class="grid">`;
+      h += groups[cat].map(a=>{
+        const src = (a.sources||[]).slice(0,1).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">来源</a>`).join(" ");
+        return `<div class="item">
+          <div class="top"><span class="nm">${esc(a.name)}</span>
+            <span class="chip ${esc(a.license)}">${LIC[a.license]||a.license}</span>
+            <span class="role">${esc(a.role)}</span></div>
+          <div class="wy">${esc(a.why)} ${src}</div>
+          <div class="foot">${a.brew?`<button class="copy" data-cmd="brew install --cask ${esc(a.brew)}">复制安装命令</button>`:""}</div>
+        </div>`;
+      }).join("");
+      h += `</div>`;
+    });
+  }
+
+  // keeps
+  const keeps = j.keeps || [];
+  h += `<div class="sect-t"><span class="c">已装且够用 · ${keeps.length}</span></div>`;
+  h += keeps.length ? `<div class="keeps">${keeps.map(k=>`<span class="keep">${esc(k)}</span>`).join("")}</div>`
+                    : `<div class="empty">无。</div>`;
+  if(j.unmatched_count){ h += `<div class="sect-t">未收录 · ${j.unmatched_count}</div><div class="why">另有 ${j.unmatched_count} 个已安装应用不在本清单中；可到「软件清单」页用 AI 查它们是什么、有没有免费平替。</div>`; }
+
+  $("#sections").innerHTML = h;
+  { const sec=$("#sections"); sec.classList.remove("enter"); void sec.offsetWidth;
+    Array.prototype.forEach.call(sec.children,(el,i)=>{ el.style.animationDelay=(Math.min(i,8)*40)+"ms"; });
+    sec.classList.add("enter"); }
+  document.querySelectorAll(".copy").forEach(b=>{
+    b.onclick = ()=>{ navigator.clipboard.writeText(b.dataset.cmd).then(()=>toast("已复制：" + b.dataset.cmd)); };
+  });
+  document.querySelectorAll(".guidebtn").forEach(b=>{
+    b.onclick = ()=> openGuide(reps[+b.dataset.gi]);
+  });
+}
+
+function openGuide(r){
+  if(!r || !r.playbook) return;
+  const pb = r.playbook;
+  let h = `<div class="kicker">迁移指导</div><h3 class="serif">${esc(r.from)} → ${esc(r.name)}</h3>`;
+  if(pb.summary) h += `<p class="gsum">${esc(pb.summary)}</p>`;
+  if(pb.data_fidelity) h += `<div class="gfid"><b>数据保真</b>：${esc(pb.data_fidelity)}</div>`;
+  if(pb.verified_at) h += `<div class="gmeta">核对日期：${esc(pb.verified_at)}</div>`;
+  h += `<ol class="gsteps">`;
+  (pb.steps||[]).forEach(s=>{
+    h += `<li><div class="gt">${esc(s.title)}</div>${s.detail?`<div class="gd">${esc(s.detail)}</div>`:""}${s.source_url?`<a class="gsrc" href="${esc(s.source_url)}" target="_blank" rel="noopener">来源 ↗</a>`:""}</li>`;
+  });
+  h += `</ol>`;
+  h += `<div class="gnote">只提供指导，不会自动安装 / 卸载，也不会搬动你的数据。</div>`;
+  $("#gbody").innerHTML = h;
+  $("#gdrawer").classList.add("on"); $("#gscrim").classList.add("on");
+}
+function closeGuide(){ $("#gdrawer").classList.remove("on"); $("#gscrim").classList.remove("on"); }
+
+let tt;
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("on");
+  clearTimeout(tt); tt=setTimeout(()=>t.classList.remove("on"),2000); }
+async function initToollists(){
+  try{
+    const r = await fetch("/api/toollists");
+    const j = await r.json();
+    const sel = $("#toollistSel");
+    const cur = new URLSearchParams(location.search).get("toollist") || "";
+    (j.toollists||[]).forEach(b=>{
+      const o = document.createElement("option");
+      o.value = b.id;
+      o.textContent = b.title + (b.playbooks ? " · " + b.playbooks + " 个迁移指导" : "");
+      sel.appendChild(o);
+    });
+    if(cur) sel.value = cur;
+    sel.onchange = ()=>{ location.href = "/audit?toollist=" + encodeURIComponent(sel.value); };
+    updateExport(cur);
+  }catch(e){ /* keep defaults */ }
+}
+function updateExport(bid){
+  const a = $("#exportLink"); if(!a) return;
+  a.href = "/api/toollist/export" + (bid ? "?toollist=" + encodeURIComponent(bid) : "");
+  a.setAttribute("download", (bid || "mac-designers") + ".yaml");
+}
+initToollists();
+</script>
+  <script src="cmdk.js"></script>
+</body>
+</html>

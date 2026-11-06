@@ -1,0 +1,472 @@
+id: mac-designers
+title: 设计师的 Mac 起步软件清单
+audience: 平面 / UI 设计师
+curator: cgartlab
+updated: "2026-11"
+standard:
+  - free-or-oss
+  - free-tier-sufficient
+  - mature
+
+items:
+  # 效率
+  - name: Raycast
+    brew: raycast
+    role: 启动器 / 效率
+    category: 效率
+    license: free
+    free_tier_enough: true
+    alternative_to: Alfred
+    why: 免费版已覆盖启动器、剪贴板历史、窗口管理、脚本命令，多数 Alfred 付费功能在免费版即可满足。
+    version_note: 适用 2026.11，免费功能未缩水
+    verified_at: "2026-11-05"
+    sources: [https://www.raycast.com/pricing]
+
+  - name: Maccy
+    brew: maccy
+    role: 剪贴板管理
+    category: 效率
+    license: oss
+    free_tier_enough: true
+    why: 轻量开源的剪贴板历史，无保存条数与时间限制。
+    verified_at: "2026-11-05"
+    sources: [https://maccy.app]
+
+  - name: Rectangle
+    brew: rectangle
+    role: 窗口管理
+    category: 效率
+    license: oss
+    free_tier_enough: true
+    why: 开源免费的窗口管理，快捷键拖拽即可，无需订阅类工具。
+    verified_at: "2026-11-05"
+    sources: [https://rectangleapp.com]
+
+  - name: Mos
+    brew: mos
+    role: 鼠标增强
+    category: 效率
+    license: oss
+    free_tier_enough: true
+    why: 开源，平滑鼠标滚动并统一触控板与鼠标的滚动方向。
+    verified_at: "2026-11-05"
+    sources: [https://mos.caldis.me]
+
+  # 系统
+  - name: Ice
+    brew: jordanbaird-ice
+    role: 菜单栏管理
+    category: 系统
+    license: oss
+    free_tier_enough: true
+    why: 开源，隐藏 / 整理菜单栏项目，适合小屏与刘海屏。
+    verified_at: "2026-11-05"
+    sources: [https://github.com/jordanbaird/Ice]
+
+  - name: Stats
+    brew: stats
+    role: 系统监控
+    category: 系统
+    license: oss
+    free_tier_enough: true
+    why: 开源，菜单栏内显示 CPU / 内存 / 网络 / 电池等信息。
+    verified_at: "2026-11-05"
+    sources: [https://github.com/exelban/stats]
+
+  - name: PearCleaner
+    brew: pearcleaner
+    role: 卸载 / 清理
+    category: 系统
+    license: oss
+    free_tier_enough: true
+    why: 开源的应用卸载与残留清理，替代付费清理工具的基础功能。
+    verified_at: "2026-11-05"
+    sources: [https://github.com/alienator88/Pearcleaner]
+
+  # 文件
+  - name: Keka
+    brew: keka
+    role: 压缩 / 解压
+    category: 文件
+    license: oss
+    free_tier_enough: true
+    why: 开源、支持常见压缩格式，够用。
+    verified_at: "2026-11-05"
+    sources: [https://www.keka.io]
+
+  - name: LocalSend
+    brew: localsend
+    role: 局域网文件传输
+    category: 文件
+    license: oss
+    free_tier_enough: true
+    why: 开源、去中心化、端到端加密的跨平台文件传输。
+    verified_at: "2026-11-05"
+    sources: [https://localsend.org]
+
+  # 设计
+  - name: ImageOptim
+    brew: imageoptim
+    role: 图片压缩
+    category: 设计
+    license: oss
+    free_tier_enough: true
+    why: 开源无损压缩，可清除 EXIF 元数据。
+    verified_at: "2026-11-05"
+    sources: [https://imageoptim.com]
+
+  - name: GIMP
+    brew: gimp
+    role: 位图编辑
+    category: 设计
+    license: oss
+    free_tier_enough: true
+    alternative_to: Photoshop
+    why: 开源位图编辑，覆盖修图、合成等大部分日常需求，无需订阅。
+    verified_at: "2026-11-05"
+    sources: [https://www.gimp.org]
+
+  - name: Inkscape
+    brew: inkscape
+    role: 矢量编辑
+    category: 设计
+    license: oss
+    free_tier_enough: true
+    alternative_to: Illustrator
+    why: 开源矢量编辑，适合图标、插画与 SVG 工作流。
+    verified_at: "2026-11-05"
+    sources: [https://inkscape.org]
+
+  - name: Figma
+    brew: figma
+    role: 界面设计
+    category: 设计
+    license: freemium
+    free_tier_enough: true
+    alternative_to: Sketch
+    why: 免费版即可完成个人与小型协作设计；重度依赖插件生态时再评估。
+    verified_at: "2026-11-05"
+    sources: [https://www.figma.com/pricing/]
+
+  # 开发
+  - name: Homebrew
+    brew: homebrew
+    role: 包管理
+    category: 开发
+    license: oss
+    free_tier_enough: true
+    why: macOS 上事实标准的包管理器，几乎所有开源工具的地基。
+    verified_at: "2026-11-05"
+    sources: [https://brew.sh]
+
+  - name: Visual Studio Code
+    brew: visual-studio-code
+    role: 代码编辑器
+    category: 开发
+    license: free
+    free_tier_enough: true
+    why: 免费、插件生态完备，绝大部分开发场景够用。
+    verified_at: "2026-11-05"
+    sources: [https://code.visualstudio.com]
+
+  - name: iTerm2
+    brew: iterm2
+    role: 终端
+    category: 开发
+    license: free
+    free_tier_enough: true
+    why: 免费、功能强大的终端，分屏、搜索、触发器齐全。
+    verified_at: "2026-11-05"
+    sources: [https://iterm2.com]
+
+  # 写作
+  - name: CotEditor
+    brew: coteditor
+    role: 纯文本编辑
+    category: 写作
+    license: oss
+    free_tier_enough: true
+    why: 开源的原生纯文本编辑器，语法高亮与正则查找齐全。
+    verified_at: "2026-11-05"
+    sources: [https://coteditor.com]
+
+  - name: Obsidian
+    brew: obsidian
+    role: 笔记 / 知识管理
+    category: 写作
+    license: free
+    free_tier_enough: true
+    alternative_to: Notion
+    why: 本地优先、免费个人使用；数据在自己手里，可按需选云端同步。
+    verified_at: "2026-11-05"
+    sources: [https://obsidian.md/pricing]
+
+  - name: Zotero
+    brew: zotero
+    role: 文献管理
+    category: 写作
+    license: oss
+    free_tier_enough: true
+    why: 开源文献管理，配合插件可做引用与笔记，个人使用免费够用。
+    verified_at: "2026-11-05"
+    sources: [https://www.zotero.org]
+
+  # 媒体
+  - name: IINA
+    brew: iina
+    role: 视频播放
+    category: 媒体
+    license: oss
+    free_tier_enough: true
+    why: 开源、基于 mpv，几乎支持所有音视频格式。
+    verified_at: "2026-11-05"
+    sources: [https://iina.io]
+
+  - name: OBS Studio
+    brew: obs-studio
+    role: 录屏 / 直播
+    category: 媒体
+    license: oss
+    free_tier_enough: true
+    why: 开源的专业录屏与直播工具，免费且功能完整。
+    verified_at: "2026-11-05"
+    sources: [https://obsproject.com]
+
+  - name: HandBrake
+    brew: handbrake
+    role: 视频转码
+    category: 媒体
+    license: oss
+    free_tier_enough: true
+    why: 开源视频转码，支持批量与常见格式压缩。
+    verified_at: "2026-11-05"
+    sources: [https://handbrake.fr]
+
+  # 网络
+  - name: NetNewsWire
+    brew: netnewswire
+    role: RSS 阅读
+    category: 网络
+    license: oss
+    free_tier_enough: true
+    why: 开源、简洁、无遥测的 RSS 阅读器。
+    verified_at: "2026-11-05"
+    sources: [https://netnewswire.com]
+
+  - name: Firefox
+    brew: firefox
+    role: 浏览器
+    category: 网络
+    license: free
+    free_tier_enough: true
+    why: 免费开源内核浏览器，隐私控制与扩展生态完善。
+    verified_at: "2026-11-05"
+    sources: [https://www.mozilla.org/firefox/]
+
+  - name: KeePassXC
+    brew: keepassxc
+    role: 密码管理
+    category: 网络
+    license: oss
+    free_tier_enough: true
+    alternative_to: 1Password
+    why: 开源、离线、跨平台，本地加密数据库；个人使用免费且数据完全自持。
+    verified_at: "2026-11-05"
+    sources: [https://keepassxc.org]
+
+equivalences:
+  - from: ["CleanShot X", "cleanshot"]
+    from_role: 截图 / 录屏
+    to:
+      name: Capso
+      brew: lzhgus/tap/capso
+      license: oss
+    free_tier_enough: true
+    why: "CleanShot X 的开源平替，滚动截图、4K 录屏、GIF 均覆盖，日常使用免费版已足够。"
+    verified_at: "2026-11-05"
+    sources: [https://github.com/lzhgus/Capso]
+    playbook:
+      summary: "从 CleanShot X 迁移到 Capso（开源）"
+      data_fidelity: "截图/录屏产物是普通文件，不受影响；应用内的历史与偏好设置需手动处理。"
+      verified_at: "2026-11-05"
+      steps:
+        - title: "备份旧历史（可选）"
+          detail: "如需保留 CleanShot X 内的历史，先在应用内导出为文件。"
+          source_url: https://cleanshot.com/support
+        - title: "安装 Capso"
+          detail: "brew install --cask lzhgus/tap/capso"
+          source_url: https://github.com/lzhgus/Capso
+        - title: "重设快捷键"
+          detail: "在 Capso 偏好设置中按原习惯配置截图 / 录屏快捷键。"
+          source_url: https://github.com/lzhgus/Capso
+        - title: "核对日常流程"
+          detail: "确认滚动截图、4K 录屏、GIF 是否覆盖你的用例。"
+          source_url: https://github.com/lzhgus/Capso
+
+  - from: ["Alfred", "alfred"]
+    from_role: 启动器 / 效率
+    to:
+      name: Raycast
+      brew: raycast
+      license: free
+    free_tier_enough: true
+    why: "Raycast 免费版已覆盖启动器、剪贴板、窗口管理与脚本命令，可替代 Alfred 多数付费功能。"
+    verified_at: "2026-11-05"
+    sources: [https://www.raycast.com/pricing, https://www.alfredapp.com/powerpack/]
+    playbook:
+      summary: "从 Alfred 迁移到 Raycast（免费版）"
+      data_fidelity: "Alfred 的 Workflow 与主题无法直接导入；需在 Raycast 用扩展/脚本重建，快捷键需重设。"
+      verified_at: "2026-11-05"
+      steps:
+        - title: "记录常用 Workflow 与快捷键"
+          detail: "把 Alfred 里常用的 Workflow、关键字与快捷键列出来。"
+          source_url: https://www.alfredapp.com/help/
+        - title: "安装 Raycast 并装扩展"
+          detail: "brew install --cask raycast；在 Store 里安装剪贴板 / 窗口 / 脚本等扩展。"
+          source_url: https://www.raycast.com/store
+        - title: "重设快捷键"
+          detail: "在 Raycast 设置里按原习惯绑定热键。"
+          source_url: https://manual.raycast.com
+        - title: "核对核心流程"
+          detail: "确认启动器、剪贴板、窗口管理是否覆盖日常。"
+          source_url: https://manual.raycast.com
+
+  - from: ["1Password", "1password"]
+    from_role: 密码管理
+    to:
+      name: KeePassXC
+      brew: keepassxc
+      license: oss
+    free_tier_enough: true
+    why: "开源、离线、跨平台，本地加密数据库；个人使用免费且数据完全自持。"
+    verified_at: "2026-11-05"
+    sources: [https://keepassxc.org]
+    playbook:
+      summary: "从 1Password 迁移到 KeePassXC（开源）"
+      data_fidelity: "可导出 1PUX/CSV；登录项与 TOTP 可迁移，附件与通行密钥可能需手工处理。"
+      verified_at: "2026-11-05"
+      steps:
+        - title: "在 1Password 导出"
+          detail: "使用 File → Export，选择 1PUX 或 CSV 格式。"
+          source_url: https://support.1password.com/export/
+        - title: "在 KeePassXC 导入"
+          detail: "Database → Import，选择刚导出的 CSV。"
+          source_url: https://keepassxc.org/docs/
+        - title: "核对 TOTP 与附件"
+          detail: "确认一次性密码与附件是否完整迁移。"
+          source_url: https://keepassxc.org/docs/
+        - title: "安全删除导出文件"
+          detail: "迁移完成后删除明文 CSV，避免泄露。"
+          source_url: https://support.1password.com/export/
+
+  - from: ["Sketch", "sketch"]
+    from_role: 界面设计
+    to:
+      name: Figma
+      brew: figma
+      license: freemium
+    free_tier_enough: true
+    why: "免费版即可完成个人与小型协作设计；重度依赖插件生态时再评估。"
+    verified_at: "2026-11-05"
+    sources: [https://www.figma.com/pricing/]
+    playbook:
+      summary: "把设计工作流从 Sketch 迁到 Figma 免费版"
+      data_fidelity: "Sketch 文件可直接导入 Figma；插件脚本与部分交互原型可能不完整。"
+      verified_at: "2026-11-05"
+      steps:
+        - title: "备份 Sketch 源文件"
+          detail: "将文件另存 / 导出为 .sketch、PDF 或 SVG 作为备份。"
+          source_url: https://www.figma.com/help
+        - title: "在 Figma 导入"
+          detail: "Figma 支持直接导入 .sketch，检查图层与组件是否正确。"
+          source_url: https://help.figma.com
+        - title: "重建 Symbol / 样式"
+          detail: "把 Sketch 的 Symbol 对应为 Figma Components 与样式。"
+          source_url: https://help.figma.com
+        - title: "核对原型交互"
+          detail: "重新连接原型连线，确认动效与跳转一致。"
+          source_url: https://help.figma.com
+
+  - from: ["Typora", "typora"]
+    from_role: Markdown 写作
+    to:
+      name: Obsidian
+      brew: obsidian
+      license: free
+    free_tier_enough: true
+    why: "免费个人使用，本地 Markdown；若只求简洁写作，Obsidian 免费版足够。"
+    verified_at: "2026-11-05"
+    sources: [https://obsidian.md/pricing, https://typora.io]
+    playbook:
+      summary: "把 Markdown 写作从 Typora 迁到 Obsidian（免费个人版）"
+      data_fidelity: "Markdown 文件可直接打开；主题与自定义 CSS 需重新配置。"
+      verified_at: "2026-11-05"
+      steps:
+        - title: "定位 .md 文件"
+          detail: "Typora 直接编辑磁盘上的 .md 文件，找到所在文件夹。"
+          source_url: https://obsidian.md
+        - title: "作为库打开"
+          detail: "在 Obsidian 选择「打开文件夹作为库」，指向同一文件夹。"
+          source_url: https://help.obsidian.md
+        - title: "纳入图片附件"
+          detail: "把图床 / 本地图片目录一并纳入库，避免链接失效。"
+          source_url: https://help.obsidian.md
+        - title: "按需配置同步"
+          detail: "个人免费版无云同步，可自选 iCloud / WebDAV 等。"
+          source_url: https://obsidian.md/pricing
+
+  - from: ["Sublime Text", "sublime-text"]
+    from_role: 代码编辑
+    to:
+      name: Visual Studio Code
+      brew: visual-studio-code
+      license: free
+    free_tier_enough: true
+    why: "免费、插件生态更丰富，可替代 Sublime Text 的多数日常用途。"
+    verified_at: "2026-11-05"
+    sources: [https://code.visualstudio.com, https://www.sublimetext.com]
+    playbook:
+      summary: "用 VS Code（免费）替代 Sublime Text"
+      data_fidelity: "项目文件为普通文本；快捷键与主题需重设，插件需找对应扩展。"
+      verified_at: "2026-11-05"
+      steps:
+        - title: "安装 VS Code"
+          detail: "brew install --cask visual-studio-code"
+          source_url: https://code.visualstudio.com
+        - title: "安装常用扩展"
+          detail: "按语言安装扩展（Go / Python / Prettier 等）。"
+          source_url: https://marketplace.visualstudio.com
+        - title: "迁移快捷键（可选）"
+          detail: "安装 Sublime 键位映射扩展，接近原来的手感。"
+          source_url: https://marketplace.visualstudio.com/items?itemName=ms-vscode.sublime-keybindings
+        - title: "打开旧项目核对"
+          detail: "逐个项目确认构建与调试配置。"
+          source_url: https://code.visualstudio.com/docs
+
+  - from: ["Notion", "notion"]
+    from_role: 笔记
+    to:
+      name: Obsidian
+      brew: obsidian
+      license: free
+    free_tier_enough: true
+    why: "Obsidian 本地优先、免费个人使用，数据在自己手上；若不需要云端协作，可换到本地 Markdown。"
+    verified_at: "2026-11-05"
+    sources: [https://obsidian.md/pricing]
+    playbook:
+      summary: "把笔记从 Notion 迁到 Obsidian（免费个人版）"
+      data_fidelity: "可把 Notion 页面导出为 Markdown/HTML；数据库(relation/rollup)与部分嵌入需手工重建。"
+      verified_at: "2026-11-05"
+      steps:
+        - title: "在 Notion 导出"
+          detail: "Settings → Export all workspace content，选择 Markdown & CSV。"
+          source_url: https://www.notion.com/help/export-your-content
+        - title: "在 Obsidian 作为库打开"
+          detail: "把导出文件夹放进 Obsidian 库，或用「打开文件夹作为库」指向它。"
+          source_url: https://help.obsidian.md
+        - title: "核对数据库与附件"
+          detail: "数据库视图与图片附件需检查，必要时重建。"
+          source_url: https://help.obsidian.md
+        - title: "按需同步"
+          detail: "个人免费版无云同步，可选 iCloud / WebDAV 等。"
+          source_url: https://obsidian.md/pricing

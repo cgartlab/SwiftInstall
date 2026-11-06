@@ -149,7 +149,7 @@
   .why b{color:var(--green)}
   .dw-foot{padding:16px 26px 22px;border-top:1px solid var(--line);display:flex;gap:10px}
 
-  /* booklist */
+  /* toollist */
   .bl-head h2{font-size:23px;font-weight:600}
   .bl-head .sub{font-size:13px;color:var(--muted);margin-top:4px;margin-bottom:20px}
   .bl-list{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--card)}
@@ -209,7 +209,7 @@
       </div>
       <div class="actions">
         <button class="btn" onclick="showScreen('s-report'); renderReport()">查看体检报告 &nbsp;→</button>
-        <button class="btn ghost" onclick="showScreen('s-booklist'); renderBooklist()">直接看我的书单</button>
+        <button class="btn ghost" onclick="showScreen('s-toollist'); renderToollist()">直接看我的软件清单</button>
       </div>
     </section>
 
@@ -228,14 +228,14 @@
       <div id="reportBody"></div>
     </section>
 
-    <!-- 4 booklist -->
-    <section id="s-booklist" class="screen">
+    <!-- 4 toollist -->
+    <section id="s-toollist" class="screen">
       <div class="bl-head">
-        <h2 class="serif">我的 Mac 书单</h2>
-        <div class="sub">你选中的免费/开源工具，一键装齐。可像书单一样保存、分享——别人加载后也会按他的机器状态呈现。</div>
+        <h2 class="serif">我的 Mac 软件清单</h2>
+        <div class="sub">你选中的免费/开源工具，一键装齐。可像软件清单一样保存、分享——别人加载后也会按他的机器状态呈现。</div>
       </div>
       <div class="bl-list" id="blList"></div>
-      <div class="empty" id="blEmpty">还没有加入任何工具。回到体检报告，点「加入书单」。</div>
+      <div class="empty" id="blEmpty">还没有加入任何工具。回到体检报告，点「加入软件清单」。</div>
       <div class="installbar">
         <div class="saved" id="savedInfo"></div>
         <button class="btn" id="installBtn" onclick="doInstall()">一键装齐</button>
@@ -252,7 +252,7 @@
     </div>
     <div class="dw-body" id="dwBody"></div>
     <div class="dw-foot">
-      <button class="btn" id="dwAdd" style="flex:1">加入我的书单</button>
+      <button class="btn" id="dwAdd" style="flex:1">加入我的软件清单</button>
       <button class="btn ghost" onclick="closeDrawer()">稍后</button>
     </div>
   </aside>
@@ -295,10 +295,10 @@ const DATA = [
 const ALTS = DATA.filter(d=>d.ver==="alt");
 const KEEPS = DATA.filter(d=>d.ver==="keep");
 const SAVE = 69+59*7+99*7+36*7; // 示意
-let booklist = [];
+let toollist = [];
 let lastSave = SAVE;
 
-const STEPS = ["welcome","scan","summary","report","booklist"];
+const STEPS = ["welcome","scan","summary","report","toollist"];
 function setSteps(idx){document.getElementById('steps').innerHTML=STEPS.map((_,i)=>`<i class="dot ${i<=idx?'on':''}"></i>`).join('')}
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -377,15 +377,15 @@ function openDrawer(idx){
     body += d.cmp.map(c=>`<div class="line"><div>${c[0]}</div><div class="c">${c[1]}</div><div class="c ${c[2]==='免费'||c[2].includes('是')||c[2].includes('够用')?'good':''}">${c[2]}</div></div>`).join("");
     body += `</div>`;
     body += `<div class="why"><b>为什么推荐：</b>${d.why}</div>`;
-    document.getElementById('dwAdd').textContent = booklist.includes(d) ? "已加入书单 ✓" : "加入我的书单";
-    document.getElementById('dwAdd').disabled = booklist.includes(d);
+    document.getElementById('dwAdd').textContent = toollist.includes(d) ? "已加入软件清单 ✓" : "加入我的软件清单";
+    document.getElementById('dwAdd').disabled = toollist.includes(d);
   } else {
     body += `<div class="pair">${nodeA}</div>`;
     body += `<div class="cmp"><div class="line head"><div>维度</div><div>状态</div><div></div></div>`;
     body += d.cmp.filter(c=>c[1]!=="—").map(c=>`<div class="line"><div>${c[0]}</div><div class="c good">${c[1]}</div><div class="c"></div></div>`).join("");
     body += `</div>`;
     body += `<div class="why">${d.why}</div>`;
-    document.getElementById('dwAdd').textContent="已在你的书单（保留）";
+    document.getElementById('dwAdd').textContent="已在你的软件清单（保留）";
     document.getElementById('dwAdd').disabled=true;
   }
   document.getElementById('dwBody').innerHTML=body;
@@ -393,8 +393,8 @@ function openDrawer(idx){
   document.getElementById('drawer').classList.add('on');
 }
 document.getElementById('dwAdd').addEventListener('click',()=>{
-  if(currentItem && !booklist.includes(currentItem)){ booklist.push(currentItem); toast(`已加入书单：${currentItem.alt}`); }
-  document.getElementById('dwAdd').textContent="已加入书单 ✓";
+  if(currentItem && !toollist.includes(currentItem)){ toollist.push(currentItem); toast(`已加入软件清单：${currentItem.alt}`); }
+  document.getElementById('dwAdd').textContent="已加入软件清单 ✓";
   document.getElementById('dwAdd').disabled=true;
 });
 function closeDrawer(){
@@ -402,10 +402,10 @@ function closeDrawer(){
   document.getElementById('drawer').classList.remove('on');
 }
 
-/* booklist */
-function renderBooklist(){
+/* toollist */
+function renderToollist(){
   const list=document.getElementById('blList'), empty=document.getElementById('blEmpty');
-  const items=[...KEEPS, ...booklist];
+  const items=[...KEEPS, ...toollist];
   if(items.length===0){ list.innerHTML=""; list.style.display="none"; empty.style.display="block"; }
   else{
     list.style.display="block"; empty.style.display="none";
@@ -420,9 +420,9 @@ function renderBooklist(){
     }).join("");
   }
   let saveAmt=0;
-  booklist.forEach(d=>{ if(d.name==="CleanShot X")saveAmt+=69; else if(d.name==="Alfred")saveAmt+=59*7; else if(d.name==="Sketch")saveAmt+=99*7; else if(d.name==="1Password")saveAmt+=252;});
-  document.getElementById('savedInfo').innerHTML = booklist.length
-    ? `已选 <b>${booklist.length}</b> 个平替 · 预计每年省 <b>${fmt(saveAmt)}</b>`
+  toollist.forEach(d=>{ if(d.name==="CleanShot X")saveAmt+=69; else if(d.name==="Alfred")saveAmt+=59*7; else if(d.name==="Sketch")saveAmt+=99*7; else if(d.name==="1Password")saveAmt+=252;});
+  document.getElementById('savedInfo').innerHTML = toollist.length
+    ? `已选 <b>${toollist.length}</b> 个平替 · 预计每年省 <b>${fmt(saveAmt)}</b>`
     : `尚未选择平替，保留现有免费工具`;
   const btn=document.getElementById('installBtn');
   btn.disabled = items.length===0;
@@ -431,7 +431,7 @@ function renderBooklist(){
 function doInstall(){
   const btn=document.getElementById('installBtn');
   btn.textContent="正在安装…"; btn.disabled=true; btn.style.opacity=.7;
-  setTimeout(()=>{ btn.textContent="全部装好 ✓"; toast("安装完成：书单已就绪"); },1600);
+  setTimeout(()=>{ btn.textContent="全部装好 ✓"; toast("安装完成：软件清单已就绪"); },1600);
 }
 
 let toastTimer;

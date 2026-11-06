@@ -43,9 +43,16 @@
 
 **SwiftInstall** 是一个开源的批量软件安装工具。核心是一个现代化的 Go CLI —— `sis`，按清单文件把新系统所需的软件一次装好。
 
+> **第一次用？** 把它想成一份「软件清单」：我们只收免费或开源、免费版就够用的工具，并告诉你每款适不适合你——帮你把新电脑一次配好，不装用不上的收费软件。
+
 - **macOS** 是一等公民：基于 [Homebrew](https://brew.sh/)，同时支持 **formula** 与 **cask**（GUI 应用）。
 - **Windows** 继续支持：基于原生 `winget`。
 - 后端按操作系统**自动选择**，同一份清单在两端都能用（包 ID 各自适配）。
+- 竞争定位与差异化（我们赢在哪、还差在哪）：[docs/POSITIONING.md](docs/POSITIONING.md)
+- 交互体验与样式设计方案（含平替滑卡原型）：[docs/INTERACTION-DESIGN.md](docs/INTERACTION-DESIGN.md)
+- 设计系统（token + 组件规范 + 无障碍门槛）：[docs/DESIGN-SYSTEM.md](docs/DESIGN-SYSTEM.md)
+- 发布就绪清单（版本/回归/发布步骤）：[docs/RELEASE-CHECKLIST.md](docs/RELEASE-CHECKLIST.md)
+- 增长与获客（GTM：渠道矩阵/发布清单/漏斗）：[docs/GTM.md](docs/GTM.md)
 
 设计上追求**简单、克制、可预期**：一个二进制、一份清单、几条命令，没有配置文件，没有隐藏状态。
 
@@ -60,6 +67,11 @@
 | **后端自动选择** | 按操作系统自动选用 Homebrew 或 winget，无需手动切换 |
 | **图形界面 (GUI)** | `sis gui` 在浏览器窗口内可视化浏览、勾选并一键安装/卸载，实时状态与进度 |
 | **交互式 TUI** | `sis tui` 在终端内提供可视化的清单浏览与安装界面 |
+| **环境体检 (`sis audit`)** | 扫描已装软件，按可核验维度给出评价，并指出可替换为免费/开源平替的项（只给建议，不自动安装/卸载） |
+| **软件清单 (`sis toollist`)** | 新手/设计/开发/创作者/隐私 5 份精选清单，只收免费或开源、免费版够用；可导出分享、导入加载 |
+| **迁移指导 (`sis guide`)** | 从付费软件换到免费/开源平替的分步手册，带版本日期与来源（只读不代办） |
+| **AI 补全 (`sis explain` / GUI)** | 对清单外的软件用 LLM 给出简介与免费平替建议（可选，需配置 LLM） |
+| **自检 (`sis doctor`)** | 一键检查包管理器、已装扫描、清单新鲜度、LLM 配置 |
 | **批量安装 / 卸载** | 遍历清单逐条执行，单个失败不中断整批 |
 | **多格式输出** | `table` / `json` / `silent`，适配脚本与人读 |
 | **去重与跳过** | 自动去重重复包，可跳过已安装软件 |
@@ -165,6 +177,11 @@ sis gui        图形界面（浏览器窗口内浏览、勾选、一键安装/�
 sis tui        交互式终端界面（浏览清单、选择并安装）
 sis preset     保存 / 列出 / 切换 / 删除软件清单预设
 sis search     在 Homebrew 仓库中搜索软件包
+sis audit      体检已装软件：可核验评价 + 免费/开源平替建议（--toollist 选内置软件清单）
+sis guide      查看迁移指导（从软件换到免费/开源平替的步骤，只读）
+sis toollist    查看 / 导出软件清单（导出 YAML 分享，别人可 sis audit --catalog 加载）
+sis explain    用 AI 简介某软件并找免费/开源平替（需 sis llm set 配置）
+sis doctor     自检：包管理器 / 已装扫描 / 软件清单新鲜度 / LLM 配置
 sis install    按清单批量安装软件
 sis uninstall  按清单批量卸载软件
 sis list       查看清单中的软件
@@ -455,25 +472,25 @@ SwiftInstall/
 ├── internal/
 │   ├── cli/                        # Cobra 命令
 │   │   ├── root.go                 # 根命令与全局标志
-│   │   ├── install.go              # install
-│   │   ├── uninstall.go            # uninstall
-│   │   ├── list.go                 # list
-│   │   ├── status.go               # status
-│   │   ├── gui.go                  # gui 图形界面（启动本地 Web 服务）
-│   │   ├── tui.go                  # tui 交互式终端界面
-│   │   ├── helpers.go              # 清单自动查找 + Renderer 选择
-│   │   └── version.go              # version
+│   │   ├── install.go / uninstall.go / list.go / status.go
+│   │   ├── gui.go / tui.go         # 图形 / 终端界面
+│   │   ├── audit.go                # 环境体检（sis audit）
+│   │   ├── guide.go                # 迁移指导（sis guide）
+│   │   ├── toollist.go             # 软件清单 list/show/export/verify
+│   │   ├── explain.go              # AI 补全（sis explain）
+│   │   ├── doctor.go               # 自检（sis doctor）
+│   │   ├── preset.go / mirror.go / llm.go / search.go
+│   │   └── helpers.go / version.go
+│   ├── audit/                      # 已装扫描 + 名称归一 + 报告
+│   ├── toollist/                   # 软件清单/平替/迁移指导 + builtin/*.yaml
+│   ├── advice/                     # AI 补全 Explain（可注入 Chatter）
+│   ├── llm/                        # OpenAI 兼容客户端 + 配置
 │   ├── engine/                     # 批量安装/卸载编排（跳过、干跑、重试）
 │   ├── manifest/                   # YAML/TXT 解析、去重、校验
-│   ├── backend/                    # 后端接口 + 平台注册 + 实现
-│   │   ├── backend.go              # Backend 接口、InstallOptions、Output
-│   │   ├── registry.go             # ForCurrentOS：按 OS 自动选择后端
-│   │   ├── homebrew.go             # Homebrew 后端（formula + cask）
-│   │   └── winget.go               # winget 后端
-│   ├── gui/                        # 本地 Web GUI：HTTP + SSE API + 内嵌前端
-│   │   ├── gui.go                  # 服务、/api/state|status|run
-│   │   └── assets/                 # index.html · styles.css · app.js（go:embed）
+│   ├── backend/                    # 后端接口 + 平台注册 + 实现（homebrew/winget/npm/github）
+│   ├── gui/                        # 本地 Web GUI：HTTP + SSE API + 内嵌前端（index/audit/toollists）
 │   ├── tui/                        # 终端界面（bubbletea/lipgloss）
+│   ├── preset/ / mirror/           # 预设 / 国内镜像配置
 │   └── ui/                         # terminal / json / silent 渲染器
 ├── Windows/                        # 遗留 .bat 安装器 + 清单示例
 ├── macOS/                          # 遗留 .sh 安装器 + 清单示例

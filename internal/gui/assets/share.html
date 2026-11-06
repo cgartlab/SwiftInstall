@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SwiftInstall · 分享卡片</title>
+<style>
+  :root{--paper:#F4EFE6;--card:#FBF8F1;--ink:#1C1B17;--muted:#6E6B60;--faint:#9A9384;--line:#DDD6C7;
+    --green:#2F5D46;--green-soft:#E7EEE8;--amber:#A9762A;--amber-soft:#F4EAD8;
+    --serif:"Iowan Old Style","Palatino Linotype","Songti SC","Noto Serif SC",Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;padding:26px;gap:16px}
+  .poster{width:min(680px,100%);background:var(--card);border:1px solid var(--line);border-radius:20px;
+    padding:40px 44px 30px;box-shadow:0 1px 2px rgba(30,26,18,.05),0 20px 50px rgba(30,26,18,.12)}
+  .kicker{font-size:12px;letter-spacing:.12em;color:var(--green);margin-bottom:14px}
+  h1{font-family:var(--serif);font-size:34px;line-height:1.2;font-weight:600;letter-spacing:-.5px}
+  .sub{font-size:13.5px;color:var(--muted);margin-top:10px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 22px;margin-top:24px}
+  .it{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);min-width:0}
+  .it .nm{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chip{font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:20px;flex:none}
+  .chip.oss,.chip.free{background:var(--green-soft);color:var(--green)}
+  .chip.freemium{background:var(--amber-soft);color:var(--amber)}
+  .more{font-size:12px;color:var(--faint);margin-top:12px}
+  .foot{margin-top:26px;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-end}
+  .brand{font-family:var(--serif);font-size:19px;font-weight:600}
+  .tag{font-size:11.5px;color:var(--muted);margin-top:4px}
+  .controls{display:flex;gap:10px}
+  .btn{border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:13px;font-weight:600;
+    padding:9px 16px;border-radius:9px;cursor:pointer;font-family:inherit}
+  .btn:hover{border-color:var(--green);color:var(--green)}
+  .btn.primary{background:var(--green);border-color:var(--green);color:#fff}
+  .out{max-width:680px;width:100%;white-space:pre-wrap;font-size:12.5px;color:var(--muted);
+    background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:none}
+  .out.on{display:block}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+  <div class="poster" id="poster">
+    <div class="kicker">免费 / 开源 · 软件清单</div>
+    <h1 id="title">正在生成…</h1>
+    <p class="sub" id="sub"></p>
+    <div class="grid" id="grid"></div>
+    <div class="more" id="more"></div>
+    <div class="foot">
+      <div><div class="brand">SwiftInstall</div><div class="tag">只收免费/开源 · 免费版就够用</div></div>
+      <div class="controls">
+        <button class="btn" id="copyBtn">复制文案</button>
+        <button class="btn primary" id="dlBtn">下载图片</button>
+      </div>
+    </div>
+  </div>
+  <div class="out" id="out"></div>
+  <script>
+  const $=s=>document.querySelector(s);
+  const LIC={oss:"开源",free:"免费",freemium:"免费版够用"};
+  const id=new URLSearchParams(location.search).get("toollist")||"mac-designers";
+  let RAW=null;
+  function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+  async function load(){
+    try{
+      const r=await fetch("/api/toollist?toollist="+encodeURIComponent(id)); const c=await r.json();
+      if(!r.ok) throw new Error(c.error||"读取失败"); RAW=c;
+      $("#title").textContent=c.title;
+      $("#sub").textContent=(c.audience?c.audience+" · ":"")+(c.items||[]).length+" 款精选工具";
+      const items=(c.items||[]).slice(0,14);
+      $("#grid").innerHTML=items.map(it=>`<div class="it"><span class="nm">${esc(it.name)}</span> <span class="chip ${esc(it.license)}">${LIC[it.license]||esc(it.license)}</span></div>`).join("");
+      const rest=(c.items||[]).length-items.length;
+      $("#more").textContent = rest>0 ? ("还有 " + rest + " 款…") : "";
+    }catch(e){ $("#title").textContent="读取失败："+e.message; }
+  }
+  function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+function trim(g,text,maxW){if(g.measureText(text).width<=maxW)return text;let t=text;while(t.length>1&&g.measureText(t+"\u2026").width>maxW)t=t.slice(0,-1);return t+"\u2026";}
+$("#dlBtn").onclick=()=>{
+  if(!RAW) return;
+  const items=(RAW.items||[]).slice(0,14), rows=Math.ceil(items.length/2);
+  const W=1080, pad=72, head=170, rowH=52, foot=140, H=pad+head+rows*rowH+30+foot+pad, S=2;
+  const cv=document.createElement("canvas"); cv.width=W*S; cv.height=H*S;
+  const g=cv.getContext("2d"); g.scale(S,S);
+  g.fillStyle="#F4EFE6"; g.fillRect(0,0,W,H);
+  g.fillStyle="#FBF8F1"; rr(g,28,28,W-56,H-56,30); g.fill(); g.strokeStyle="#DDD6C7"; g.lineWidth=1; g.stroke();
+  const cx=pad+8, cw=W-2*(pad+8);
+  g.fillStyle="#2F5D46"; g.font='600 22px -apple-system,"PingFang SC",sans-serif'; g.fillText("免费 / 开源 · 软件清单", cx, pad+44);
+  g.fillStyle="#1C1B17"; g.font='700 46px "Songti SC","Iowan Old Style",serif';
+  g.fillText(trim(g,RAW.title||"",W-2*pad-16), cx, pad+104);
+  g.fillStyle="#6E6B60"; g.font='400 22px -apple-system,"PingFang SC",sans-serif';
+  g.fillText((RAW.audience?RAW.audience+" · ":"")+((RAW.items||[]).length)+" 款精选工具", cx, pad+140);
+  const gap=46, colW=(cw-gap)/2;
+  for(let i=0;i<items.length;i++){ const col=i%2, row=Math.floor(i/2);
+    const x=cx+col*(colW+gap), y=pad+head+row*rowH;
+    g.fillStyle="#1C1B17"; g.font='600 26px -apple-system,"PingFang SC",sans-serif';
+    const name=trim(g,items[i].name||"", colW-96); g.fillText(name, x, y+24);
+    const nw=g.measureText(name).width;
+    const lic=items[i].license||""; const label=({oss:"开源",free:"免费",freemium:"免费版够用"})[lic]||lic;
+    g.font='600 18px -apple-system,"PingFang SC",sans-serif'; const clw=g.measureText(label).width+24;
+    const bgx=x+nw+14, bgy=y+2;
+    g.fillStyle=(lic==="freemium")?"#F4EAD8":"#E7EEE8"; rr(g,bgx,bgy,clw,30,15); g.fill();
+    g.fillStyle=(lic==="freemium")?"#A9762A":"#2F5D46"; g.fillText(label, bgx+12, bgy+22);
+    g.strokeStyle="#E8E2D5"; g.beginPath(); g.moveTo(x,y+30); g.lineTo(x+colW,y+30); g.stroke();
+  }
+  const fy=H-pad-foot+40;
+  g.strokeStyle="#DDD6C7"; g.beginPath(); g.moveTo(cx,fy-30); g.lineTo(cx+cw,fy-30); g.stroke();
+  g.fillStyle="#1C1B17"; g.font='700 30px "Songti SC",serif'; g.fillText("SwiftInstall", cx, fy+10);
+  g.fillStyle="#6E6B60"; g.font='400 20px -apple-system,"PingFang SC",sans-serif'; g.fillText("只收免费/开源 · 免费版就够用", cx, fy+42);
+  cv.toBlob(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="toollist-"+id+".png";a.click();URL.revokeObjectURL(a.href);},"image/png");
+};
+$("#copyBtn").onclick=()=>{
+    if(!RAW) return;
+    const names=(RAW.items||[]).slice(0,10).map(i=>i.name).join("、");
+    const txt=`【${RAW.title}】${(RAW.items||[]).length} 款只收免费/开源、免费版就够用的 Mac 工具，比如：${names} 等。完整清单与一键安装见 SwiftInstall。`;
+    navigator.clipboard.writeText(txt).then(()=>{ const o=$("#out"); o.classList.add("on"); o.textContent="已复制文案（可直接粘贴到小红书/公众号）：\n\n"+txt; });
+  };
+  load();
+  </script>
+  <script src="cmdk.js"></script>
+</body>
+</html>

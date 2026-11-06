@@ -1,0 +1,255 @@
+id: creators
+title: 内容创作者的 Mac 起步软件清单
+audience: 视频 / 摄影 / 自媒体创作者
+curator: cgartlab
+updated: "2026-11"
+standard:
+  - free-or-oss
+  - free-tier-sufficient
+  - mature
+
+items:
+  # 媒体
+  - name: DaVinci Resolve
+    brew: davinci-resolve
+    role: 视频剪辑 / 调色
+    category: 媒体
+    license: freemium
+    free_tier_enough: true
+    alternative_to: Adobe Premiere Pro
+    why: 免费版已覆盖剪辑、调色、特效与导出，个人与中小项目足够用。
+    verified_at: "2026-11-05"
+    sources: [https://www.blackmagicdesign.com/products/davinciresolve]
+
+  - name: OBS Studio
+    brew: obs-studio
+    role: 录制 / 直播
+    category: 媒体
+    license: oss
+    free_tier_enough: true
+    why: 开源的专业录屏与直播工具，免费且功能完整。
+    verified_at: "2026-11-05"
+    sources: [https://obsproject.com]
+
+  - name: HandBrake
+    brew: handbrake
+    role: 视频转码
+    category: 媒体
+    license: oss
+    free_tier_enough: true
+    why: 开源视频转码，支持批量与常见格式压缩。
+    verified_at: "2026-11-05"
+    sources: [https://handbrake.fr]
+
+  - name: Shotcut
+    brew: shotcut
+    role: 视频剪辑（轻量）
+    category: 媒体
+    license: oss
+    free_tier_enough: true
+    why: 开源跨平台剪辑器，适合快速剪辑与素材整理。
+    verified_at: "2026-11-05"
+    sources: [https://shotcut.org]
+
+  - name: Audacity
+    brew: audacity
+    role: 音频录制 / 编辑
+    category: 媒体
+    license: oss
+    free_tier_enough: true
+    why: 开源音频工具，播客与配音剪辑够用。
+    verified_at: "2026-11-05"
+    sources: [https://www.audacityteam.org]
+
+  - name: IINA
+    brew: iina
+    role: 视频播放
+    category: 媒体
+    license: oss
+    free_tier_enough: true
+    why: 开源、基于 mpv，几乎支持所有音视频格式。
+    verified_at: "2026-11-05"
+    sources: [https://iina.io]
+
+  # 设计
+  - name: Blender
+    brew: blender
+    role: 3D 创作
+    category: 设计
+    license: oss
+    free_tier_enough: true
+    why: 开源 3D 套件，建模/渲染/动画/合成一体，完全免费。
+    verified_at: "2026-11-05"
+    sources: [https://www.blender.org]
+
+  - name: GIMP
+    brew: gimp
+    role: 位图编辑
+    category: 设计
+    license: oss
+    free_tier_enough: true
+    alternative_to: Adobe Photoshop
+    why: 开源位图编辑，覆盖修图与合成的大部分日常需求。
+    verified_at: "2026-11-05"
+    sources: [https://www.gimp.org]
+
+  - name: Inkscape
+    brew: inkscape
+    role: 矢量编辑
+    category: 设计
+    license: oss
+    free_tier_enough: true
+    alternative_to: Adobe Illustrator
+    why: 开源矢量编辑，适合图标、插画与 SVG 工作流。
+    verified_at: "2026-11-05"
+    sources: [https://inkscape.org]
+
+  - name: Krita
+    brew: krita
+    role: 数字绘画
+    category: 设计
+    license: oss
+    free_tier_enough: true
+    why: 开源数字绘画，笔刷与图层完善，免费。
+    verified_at: "2026-11-05"
+    sources: [https://krita.org]
+
+  - name: darktable
+    brew: darktable
+    role: RAW 处理 / 摄影
+    category: 设计
+    license: oss
+    free_tier_enough: true
+    alternative_to: Adobe Lightroom
+    why: 开源的 RAW 工作流与照片管理，替代 Lightroom 的常用能力。
+    verified_at: "2026-11-05"
+    sources: [https://www.darktable.org]
+
+  - name: Figma
+    brew: figma
+    role: 界面 / 协作
+    category: 设计
+    license: freemium
+    free_tier_enough: true
+    why: 免费版即可完成个人与小型协作设计。
+    verified_at: "2026-11-05"
+    sources: [https://www.figma.com/pricing/]
+
+  # 写作
+  - name: Obsidian
+    brew: obsidian
+    role: 脚本 / 笔记
+    category: 写作
+    license: free
+    free_tier_enough: true
+    why: 本地优先、免费个人使用，适合写脚本与选题笔记。
+    verified_at: "2026-11-05"
+    sources: [https://obsidian.md/pricing]
+
+  # 文件
+  - name: LocalSend
+    brew: localsend
+    role: 素材传输
+    category: 文件
+    license: oss
+    free_tier_enough: true
+    why: 开源、端到端加密的跨平台局域网传输，传素材很方便。
+    verified_at: "2026-11-05"
+    sources: [https://localsend.org]
+
+  - name: Keka
+    brew: keka
+    role: 压缩 / 解压
+    category: 文件
+    license: oss
+    free_tier_enough: true
+    why: 开源、支持常见压缩格式，够用。
+    verified_at: "2026-11-05"
+    sources: [https://www.keka.io]
+
+  # 效率
+  - name: Raycast
+    brew: raycast
+    role: 启动器 / 效率
+    category: 效率
+    license: free
+    free_tier_enough: true
+    why: 免费版覆盖启动器、剪贴板、窗口管理与脚本命令。
+    verified_at: "2026-11-05"
+    sources: [https://www.raycast.com/pricing]
+
+equivalences:
+  - from: ["Adobe Premiere Pro", "Premiere Pro", "premiere"]
+    from_role: 视频剪辑
+    to:
+      name: DaVinci Resolve
+      brew: davinci-resolve
+      license: freemium
+    free_tier_enough: true
+    why: "DaVinci Resolve 免费版覆盖剪辑/调色/导出，对多数创作者已足够，无需订阅。"
+    verified_at: "2026-11-05"
+    sources: [https://www.blackmagicdesign.com/products/davinciresolve]
+    playbook:
+      summary: "从 Premiere Pro 迁移到 DaVinci Resolve（免费版）"
+      data_fidelity: "可在 Premiere 导出 XML/FCPXML 交由 DaVinci 导入；部分特效、插件与字幕需重建。"
+      verified_at: "2026-11-05"
+      steps:
+        - title: "在 Premiere 导出时间线"
+          detail: "File → Export → Final Cut Pro XML，导出序列。"
+          source_url: https://helpx.adobe.com/premiere-pro/using/exporting-xml.html
+        - title: "在 DaVinci 导入"
+          detail: "File → Import → Timeline，选择 XML；核对素材离线情况。"
+          source_url: https://www.blackmagicdesign.com/products/davinciresolve
+        - title: "重建特效与字幕"
+          detail: "把插件特效、动态字幕在 DaVinci 内重做，核对颜色。"
+          source_url: https://www.blackmagicdesign.com/products/davinciresolve
+
+  - from: ["Adobe Photoshop", "Photoshop", "photoshop"]
+    from_role: 位图编辑
+    to:
+      name: GIMP
+      brew: gimp
+      license: oss
+    free_tier_enough: true
+    why: "GIMP 开源免费，覆盖修图、合成、批处理的大部分日常需求。"
+    verified_at: "2026-11-05"
+    sources: [https://www.gimp.org]
+    playbook:
+      summary: "从 Photoshop 迁移到 GIMP（开源）"
+      data_fidelity: "GIMP 可打开 PSD，但智能对象、部分图层样式与滤镜可能不完全兼容，需核对。"
+      verified_at: "2026-11-05"
+      steps:
+        - title: "整理并备份 PSD"
+          detail: "把要迁移的文件另存一份，保留原始 PSD。"
+          source_url: https://www.gimp.org
+        - title: "在 GIMP 打开"
+          detail: "File → Open 选择 PSD，检查图层与文字是否完整。"
+          source_url: https://www.gimp.org/docs/
+        - title: "重建不兼容的效果"
+          detail: "对丢失的图层样式/滤镜，用 GIMP 等价操作重做。"
+          source_url: https://www.gimp.org/docs/
+
+  - from: ["Adobe Illustrator", "Illustrator", "illustrator"]
+    from_role: 矢量编辑
+    to:
+      name: Inkscape
+      brew: inkscape
+      license: oss
+    free_tier_enough: true
+    why: "Inkscape 开源免费，SVG 工作流成熟，适合图标与插画。"
+    verified_at: "2026-11-05"
+    sources: [https://inkscape.org]
+    playbook:
+      summary: "从 Illustrator 迁移到 Inkscape（开源）"
+      data_fidelity: "建议导出 SVG 再在 Inkscape 打开；部分效果与字体需重新处理。"
+      verified_at: "2026-11-05"
+      steps:
+        - title: "在 Illustrator 导出 SVG"
+          detail: "File → Save As / Export → SVG，注意保留路径与文字。"
+          source_url: https://helpx.adobe.com/illustrator/using/svg.html
+        - title: "在 Inkscape 打开"
+          detail: "File → Open 选择 SVG，检查路径与描边。"
+          source_url: https://inkscape.org/doc/
+        - title: "处理文字与效果"
+          detail: "必要时把文字转为路径、重设滤镜效果。"
+          source_url: https://inkscape.org/doc/

@@ -11,6 +11,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"net"
 	"net/http"
@@ -22,11 +23,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cgartlab/SwiftInstall/internal/advice"
+	"github.com/cgartlab/SwiftInstall/internal/audit"
 	"github.com/cgartlab/SwiftInstall/internal/backend"
 	"github.com/cgartlab/SwiftInstall/internal/engine"
 	"github.com/cgartlab/SwiftInstall/internal/llm"
 	"github.com/cgartlab/SwiftInstall/internal/manifest"
 	"github.com/cgartlab/SwiftInstall/internal/preset"
+	"github.com/cgartlab/SwiftInstall/internal/toollist"
 )
 
 //go:embed assets
@@ -46,6 +50,8 @@ type Options struct {
 	Addr string
 	// Open asks the server to open the default browser once it is listening.
 	Open bool
+	// OpenPath is the path opened in the browser (e.g. "/audit"). Default "/".
+	OpenPath string
 }
 
 type server struct {
@@ -58,6 +64,10 @@ type server struct {
 
 	// extra backends (npm, github) detected at startup, for cross-source search.
 	extra map[string]backend.Backend
+
+	// catMu guards imported, the toollists the user imported this session.
+	catMu    sync.RWMutex
+	imported map[string]*toollist.Catalog
 }
 
 // currentManifest returns the manifest currently loaded in the session.
@@ -88,6 +98,46 @@ func (s *server) loadPreset(name string) (*manifest.Manifest, error) {
 	return m, nil
 }
 
+// routes builds the GUI HTTP mux. Extracted from Run so tests can exercise the
+// real route wiring without binding a network port.
+func (s *server) routes(sub fs.FS) *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.Handle("/", http.FileServer(http.FS(sub)))
+	mux.HandleFunc("/api/state", s.handleState)
+	mux.HandleFunc("/api/status", s.handleStatus)
+	mux.HandleFunc("/api/search", s.handleSearch)
+	mux.HandleFunc("/api/info", s.handleInfo)
+	mux.HandleFunc("/api/outdated", s.handleOutdated)
+	mux.HandleFunc("/api/audit", s.handleAudit)
+	mux.HandleFunc("/api/health", s.handleHealth)
+	mux.HandleFunc("/api/explain", s.handleExplain)
+	mux.HandleFunc("/api/toollists", s.handleToollists)
+	mux.HandleFunc("/api/toollist", s.handleToollist)
+	mux.HandleFunc("/api/toollist/import", s.handleToollistImport)
+	mux.HandleFunc("/api/toollist/export", s.handleToollistExport)
+	mux.HandleFunc("/api/llm", s.handleLLM)
+	mux.HandleFunc("/api/presets", s.handlePresets)
+	mux.HandleFunc("/api/preset", s.handlePreset)
+	mux.HandleFunc("/api/run", s.handleRun)
+	serve := func(name string) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			b, err := fs.ReadFile(sub, name)
+			if err != nil {
+				http.NotFound(w, r)
+				return
+			}
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			_, _ = w.Write(b)
+		}
+	}
+	mux.HandleFunc("/audit", serve("audit.html"))
+	mux.HandleFunc("/toollists", serve("toollists.html"))
+	mux.HandleFunc("/swap", serve("swap.html"))
+	mux.HandleFunc("/health", serve("health.html"))
+	mux.HandleFunc("/share", serve("share.html"))
+	return mux
+}
+
 // Run starts the GUI server on the configured address (loopback by default),
 // optionally opens the browser, and blocks until ctx is cancelled.
 func Run(ctx context.Context, opts Options) error {
@@ -98,17 +148,7 @@ func Run(ctx context.Context, opts Options) error {
 		return err
 	}
 
-	mux := http.NewServeMux()
-	mux.Handle("/", http.FileServer(http.FS(sub)))
-	mux.HandleFunc("/api/state", srv.handleState)
-	mux.HandleFunc("/api/status", srv.handleStatus)
-	mux.HandleFunc("/api/search", srv.handleSearch)
-	mux.HandleFunc("/api/info", srv.handleInfo)
-	mux.HandleFunc("/api/outdated", srv.handleOutdated)
-	mux.HandleFunc("/api/llm", srv.handleLLM)
-	mux.HandleFunc("/api/presets", srv.handlePresets)
-	mux.HandleFunc("/api/preset", srv.handlePreset)
-	mux.HandleFunc("/api/run", srv.handleRun)
+	mux := srv.routes(sub)
 
 	addr := opts.Addr
 	if addr == "" {
@@ -142,7 +182,7 @@ func Run(ctx context.Context, opts Options) error {
 	}
 	fmt.Fprintf(os.Stderr, "\n  按 Ctrl+C 停止。\n\n")
 	if opts.Open {
-		openBrowser(localURL)
+		openBrowser(localURL + strings.TrimPrefix(opts.OpenPath, "/"))
 	}
 
 	<-ctx.Done()
@@ -258,6 +298,206 @@ func (s *server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{"installed": installed})
+}
+
+// handleAudit runs the first-run environment check: scan installed apps against
+// the built-in toollist and return replace / add / keep recommendations. Advisory
+// only — it never installs or uninstalls anything.
+func (s *server) handleAudit(w http.ResponseWriter, r *http.Request) {
+	cat, err := s.catalogByName(r.URL.Query().Get("toollist"))
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		return
+	}
+	rep, err := audit.Run(r.Context(), audit.SystemLister{}, cat)
+	if err != nil {
+		writeJSON(w, http.StatusBadGateway, map[string]any{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, rep)
+}
+
+// handleExplain is the AI long-tail helper: describe an arbitrary app and
+// suggest free/open alternatives via the configured LLM.
+func (s *server) handleExplain(w http.ResponseWriter, r *http.Request) {
+	app := strings.TrimSpace(r.URL.Query().Get("app"))
+	if app == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "缺少 app 参数"})
+		return
+	}
+	cfg, err := llm.Load()
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		return
+	}
+	if !cfg.Configured() {
+		writeJSON(w, http.StatusBadRequest, map[string]any{
+			"error": "LLM 未配置",
+			"hint":  "先运行 sis llm set --base-url ... --api-key ... --model ...（或在主界面左下『AI / LLM 设置』里填写）。",
+		})
+		return
+	}
+	out, err := advice.Explain(r.Context(), llm.NewClient(cfg), app)
+	if err != nil {
+		writeJSON(w, http.StatusBadGateway, map[string]any{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"app": app, "answer": out, "notice": "AI 生成，仅供参考，请以官方信息为准。",
+	})
+}
+
+// handleHealth is the GUI view of the CLI's `doctor`: platform, package
+// manager, installed-app scan, toollist freshness and LLM status as JSON.
+func (s *server) handleHealth(w http.ResponseWriter, r *http.Request) {
+	out := map[string]any{"goos": runtime.GOOS, "goarch": runtime.GOARCH}
+
+	if be, err := backend.ForCurrentOS(); err != nil {
+		out["package_manager"] = map[string]any{"ok": false, "error": err.Error()}
+	} else if derr := be.Detect(); derr != nil {
+		out["package_manager"] = map[string]any{"name": be.Name(), "ok": false, "error": derr.Error()}
+	} else {
+		out["package_manager"] = map[string]any{"name": be.Name(), "ok": true}
+	}
+
+	if names, err := (audit.SystemLister{}).Installed(r.Context()); err != nil {
+		out["installed"] = map[string]any{"ok": false, "error": err.Error()}
+	} else {
+		out["installed"] = map[string]any{"ok": true, "count": len(names)}
+	}
+
+	names, _ := toollist.EmbeddedNames()
+	lists := make([]map[string]any, 0, len(names))
+	totalItems, totalFresh, totalStale := 0, 0, 0
+	for _, n := range names {
+		c, err := toollist.LoadBuiltinNamed(n)
+		if err != nil {
+			continue
+		}
+		total, fresh, aging, stale := toollist.FreshnessCounts(c, time.Now())
+		totalItems += total
+		totalFresh += fresh
+		totalStale += stale
+		lists = append(lists, map[string]any{"id": c.ID, "title": c.Title, "total": total, "fresh": fresh, "aging": aging, "stale": stale})
+	}
+	out["toollists"] = lists
+	out["toollists_total"] = map[string]any{"lists": len(lists), "items": totalItems, "fresh": totalFresh, "stale": totalStale}
+
+	cfg, _ := llm.Load()
+	out["llm"] = map[string]any{"configured": cfg.Configured(), "model": cfg.Model}
+
+	writeJSON(w, http.StatusOK, out)
+}
+
+// catalogByName resolves a toollist id: imported (this session) first, then
+// built-in; empty id means the shipped default.
+func (s *server) catalogByName(id string) (*toollist.Catalog, error) {
+	if id == "" {
+		return toollist.LoadBuiltin()
+	}
+	s.catMu.RLock()
+	c := s.imported[id]
+	s.catMu.RUnlock()
+	if c != nil {
+		return c, nil
+	}
+	return toollist.LoadBuiltinNamed(id)
+}
+
+func (s *server) addImported(c *toollist.Catalog) {
+	s.catMu.Lock()
+	if s.imported == nil {
+		s.imported = map[string]*toollist.Catalog{}
+	}
+	s.imported[c.ID] = c
+	s.catMu.Unlock()
+}
+
+func catalogSummary(c *toollist.Catalog, imported bool) map[string]any {
+	pb := 0
+	for _, e := range c.Equivalences {
+		if e.Playbook != nil {
+			pb++
+		}
+	}
+	total, fresh, aging, stale := toollist.FreshnessCounts(c, time.Now())
+	m := map[string]any{
+		"id": c.ID, "title": c.Title, "items": len(c.Items),
+		"equivalences": len(c.Equivalences), "playbooks": pb,
+		"updated": c.Updated, "total": total, "fresh": fresh, "aging": aging, "stale": stale,
+	}
+	if imported {
+		m["imported"] = true
+	}
+	return m
+}
+
+// handleToollists lists built-in toollists plus any imported this session.
+func (s *server) handleToollists(w http.ResponseWriter, r *http.Request) {
+	names, err := toollist.EmbeddedNames()
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		return
+	}
+	out := make([]map[string]any, 0, len(names)+2)
+	for _, n := range names {
+		if c, err := toollist.LoadBuiltinNamed(n); err == nil {
+			out = append(out, catalogSummary(c, false))
+		}
+	}
+	s.catMu.RLock()
+	for _, c := range s.imported {
+		out = append(out, catalogSummary(c, true))
+	}
+	s.catMu.RUnlock()
+	writeJSON(w, http.StatusOK, map[string]any{"toollists": out})
+}
+
+// handleToollistImport parses an uploaded toollist YAML and keeps it for this session.
+func (s *server) handleToollistImport(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"error": "POST required"})
+		return
+	}
+	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
+		return
+	}
+	cat, err := toollist.Parse(body)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
+		return
+	}
+	s.addImported(cat)
+	writeJSON(w, http.StatusOK, catalogSummary(cat, true))
+}
+
+// handleToollist returns the full catalog (items + equivalences) for one toollist.
+func (s *server) handleToollist(w http.ResponseWriter, r *http.Request) {
+	cat, err := s.catalogByName(r.URL.Query().Get("toollist"))
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, cat)
+}
+
+// handleToollistExport streams a toollist as a shareable YAML file.
+func (s *server) handleToollistExport(w http.ResponseWriter, r *http.Request) {
+	cat, err := s.catalogByName(r.URL.Query().Get("toollist"))
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		return
+	}
+	b, err := toollist.Marshal(cat)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		return
+	}
+	w.Header().Set("Content-Type", "application/x-yaml; charset=utf-8")
+	w.Header().Set("Content-Disposition", `attachment; filename="`+cat.ID+`.yaml"`)
+	_, _ = w.Write(b)
 }
 
 // aiDescription returns a cached or freshly-generated description for a

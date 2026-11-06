@@ -28,6 +28,13 @@ go install github.com/cgartlab/SwiftInstall/cmd/sis@latest
 | `sis gui` | Local graphical UI in a browser window: browse, select, install/uninstall |
 | `sis tui` | Interactive terminal UI for browsing the manifest and installing |
 | `sis search <q>` | Search the full Homebrew repository (formulae + casks) |
+| `sis audit` | First-run environment check: scan installed apps, evaluate on verifiable dimensions, and suggest free/open alternatives. `--catalog <file>` uses a custom toollist YAML |
+| `sis guide [app]` | Read-only migration playbook from an app to its free/open alternative (`--list` to list all; `--catalog` for a custom toollist) |
+| `sis toollist` | `list` / `show [id]` / `export [id] [-o file]` — inspect and export a shareable toollist YAML (others load it with `sis audit --catalog`) |
+| `sis explain <app>` | AI (LLM) first-pass: what the app is + free/open alternatives + migration notes. Requires `sis llm set`; output marked AI-generated |
+| `sis doctor` | One-shot environment self-check: package manager, installed-app scan, toollist freshness, LLM config |
+
+Built-in toollists: `mac-designers`, `developers`, `creators`, `essentials`, `privacy`. `sis audit` and `sis guide` accept `--toollist <id>` to choose one (default `mac-designers`).
 | `sis preset` | Save / list / show / delete named manifest presets |
 | `sis install --preset <name>` | Install using a saved preset (also `-p` on list/status/gui/tui) |
 | `sis install` | Install software from a manifest file |

@@ -30,6 +30,14 @@
         <div class="stat"><span class="stat-n" id="statSelected">0</span><span class="stat-l">已选</span></div>
       </section>
 
+      <section class="block">
+        <h2 class="block-h">入门</h2>
+        <a href="/toollists" class="linkbtn" style="display:inline-flex;align-items:center;gap:6px">◍ 软件清单 · 精选免费/开源</a>
+        <a href="/audit" class="linkbtn" style="display:inline-flex;align-items:center;gap:6px">◎ 环境体检 · 看看该装什么</a>
+        <a href="/health" class="linkbtn" style="display:inline-flex;align-items:center;gap:6px">✚ 系统自检 · 环境是否健康</a>
+        <p style="font-size:11.5px;color:var(--faint);line-height:1.5;margin-top:2px">第一次用？从「软件清单」挑工具，或先做「环境体检」看看该装什么。</p>
+      </section>
+
       <div class="side-actions">
         <button id="openLLM" class="sidebtn">AI / LLM 设置</button>
         <button id="refresh" class="sidebtn iconbtn" title="重新检测安装状态" aria-label="重新检测状态">
@@ -45,7 +53,8 @@
           <input id="search" type="text" placeholder="过滤当前清单…" autocomplete="off" spellcheck="false">
         </div>
         <div class="bar-right">
-          <button id="checkUpdates" class="btn ghost" title="检查已安装软件的更新">
+          <button class="btn ghost" onclick="window.__cmdkOpen&&window.__cmdkOpen()" title="命令面板（⌘K）" aria-label="打开命令面板">⌘K</button>
+          <button id="checkUpdates" class="btn ghost" title="检查已安装软件的更新" aria-label="检查已安装软件的更新">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>
             检查更新
           </button>
@@ -125,6 +134,50 @@
     </div>
   </div>
 
+  <div id="cmdk" class="cmdk" hidden>
+    <div class="cmdk-box" role="dialog" aria-modal="true" aria-label="命令面板">
+      <input id="cmdkInput" class="cmdk-input" type="text" placeholder="搜索命令…（体检 / 软件清单 / 逐条决策）" autocomplete="off" spellcheck="false">
+      <ul id="cmdkList" class="cmdk-list"></ul>
+      <div class="cmdk-foot">↑↓ 选择 · ↵ 执行 · Esc 关闭</div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
+
+  <script>
+  (function(){
+    const $=s=>document.querySelector(s);
+    const CMDS=[
+      {t:"环境体检", d:"扫描已装软件，看该装 / 该换什么", run:()=>location.href="/audit"},
+      {t:"软件清单", d:"浏览精选免费 / 开源清单", run:()=>location.href="/toollists"},
+      {t:"逐条决策 · 设计师清单", d:"用平替滑卡逐条决定", run:()=>location.href="/swap?toollist=mac-designers"},
+      {t:"逐条决策 · 开发者清单", d:"用平替滑卡逐条决定", run:()=>location.href="/swap?toollist=developers"},
+      {t:"过滤当前清单", d:"聚焦顶部搜索框", run:()=>{ close(); const el=$("#search"); if(el) el.focus(); }},
+      {t:"检查已安装更新", d:"Homebrew outdated", run:()=>{ close(); const b=$("#checkUpdates"); if(b) b.click(); }},
+      {t:"刷新状态", d:"重新加载页面", run:()=>location.reload()},
+    ];
+    let shown=[...CMDS], sel=0;
+    const ov=$("#cmdk"), inp=$("#cmdkInput"), list=$("#cmdkList");
+    function open(){ ov.hidden=false; inp.value=""; filter(""); inp.focus(); }
+    function close(){ ov.hidden=true; }
+    function filter(q){ q=(q||"").trim().toLowerCase(); shown=CMDS.filter(c=>!q||(c.t+" "+c.d).toLowerCase().includes(q)); sel=0; paint(); }
+    function paint(){ list.innerHTML=shown.length?shown.map((c,i)=>`<li class="cmdk-item ${i===sel?'on':''}" data-i="${i}"><div><div class="ct">${c.t}</div><div class="cd">${c.d}</div></div><span class="ck">↵</span></li>`).join(""):'<li class="cmdk-empty">没有匹配的命令</li>';
+      list.querySelectorAll(".cmdk-item").forEach(li=>li.onclick=()=>{sel=+li.dataset.i; exec();}); }
+    function exec(){ const c=shown[sel]; if(c){ close(); c.run(); } }
+    inp.addEventListener("input",e=>filter(e.target.value));
+    inp.addEventListener("keydown",e=>{
+      if(e.key==="ArrowDown"){e.preventDefault();sel=Math.min(shown.length-1,sel+1);paint();}
+      else if(e.key==="ArrowUp"){e.preventDefault();sel=Math.max(0,sel-1);paint();}
+      else if(e.key==="Enter"){e.preventDefault();exec();}
+      else if(e.key==="Escape"){e.preventDefault();close();}
+    });
+    ov.addEventListener("click",e=>{ if(e.target===ov) close(); });
+    document.addEventListener("keydown",e=>{
+      if((e.metaKey||e.ctrlKey)&&(e.key==="k"||e.key==="K")){e.preventDefault(); ov.hidden?open():close();}
+      else if(e.key==="Escape" && !ov.hidden){close();}
+    });
+    window.__cmdkOpen=open;
+  })();
+  </script>
 </body>
 </html>
