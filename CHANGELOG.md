@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **修正 + 交互**：修正上一轮误给 `/api/preset` 加 GET 守卫（POST 保存预设恢复可用，补全量测试通过）；`/swap` 松手未达阈值时回弹带轻微弹簧（cubic-bezier 过冲，reduced-motion 下不位移）。
+
 - **只读 API 方法校验**：state/status/audit/explain/health/toollists/toollist/export/info/search/presets/preset/outdated 仅接受 GET，其它方法返回 405；导入等 POST 接口不受影响。补测试。
 
 - **修帮助浮层穿透 + gg/G**：帮助/命令浮层打开时不再响应 `j/k/空格/Enter`（修复上轮引入的穿透）；新增 `gg` 回顶、`G` 到底，并写入快捷键卡片。

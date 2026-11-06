@@ -838,9 +838,6 @@ func (s *server) handlePresets(w http.ResponseWriter, r *http.Request) {
 //	POST /api/preset/save             body {"name","packages":[{id,category,kind,optional}]}
 //	POST /api/preset/delete           body {"name"}
 func (s *server) handlePreset(w http.ResponseWriter, r *http.Request) {
-	if !requireGET(w, r) {
-		return
-	}
 	switch r.Method {
 	case http.MethodGet:
 		name := strings.TrimSpace(r.URL.Query().Get("name"))
