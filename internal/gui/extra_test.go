@@ -196,3 +196,32 @@ func TestHandleRunValidation(t *testing.T) {
 		}
 	}
 }
+
+func TestSafeFilename(t *testing.T) {
+	for _, in := range []string{`evil"x`, "../../etc/passwd", "<script>", "", "正常-id_1"} {
+		out := safeFilename(in)
+		if out == "" {
+			t.Errorf("safeFilename(%q) empty", in)
+		}
+		if strings.ContainsAny(out, "\"\\/\r\n<>") {
+			t.Errorf("safeFilename(%q) = %q contains unsafe char", in, out)
+		}
+		if len(out) > 64 {
+			t.Errorf("safeFilename(%q) too long: %d", in, len(out))
+		}
+	}
+}
+
+func TestImportRejectsUnsafeID(t *testing.T) {
+	ts := newTestServer(t)
+	defer ts.Close()
+	body := "id: <script>x</script>\nitems:\n  - name: a\n    why: b\n    license: oss\n    category: 效率\n"
+	resp, err := http.Post(ts.URL+"/api/toollist/import", "application/x-yaml", strings.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("unsafe id import = %d, want 400", resp.StatusCode)
+	}
+}

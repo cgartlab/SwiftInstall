@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -454,6 +455,29 @@ func (s *server) handleToollists(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"toollists": out})
 }
 
+var toollistIDRe = regexp.MustCompile(`^[\p{L}\p{N}][\p{L}\p{N}._-]{0,63}$`)
+
+// safeFilename reduces an id to a conservative filename stem (no quotes,
+// slashes or control chars) so it is safe inside Content-Disposition.
+func safeFilename(id string) string {
+	var b strings.Builder
+	for _, r := range id {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '.' || r == '_' || r == '-' {
+			b.WriteRune(r)
+		} else {
+			b.WriteByte('-')
+		}
+	}
+	out := strings.Trim(b.String(), "-.")
+	if out == "" {
+		out = "toollist"
+	}
+	if len(out) > 64 {
+		out = out[:64]
+	}
+	return out
+}
+
 // handleToollistImport parses an uploaded toollist YAML and keeps it for this session.
 func (s *server) handleToollistImport(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -468,6 +492,10 @@ func (s *server) handleToollistImport(w http.ResponseWriter, r *http.Request) {
 	cat, err := toollist.Parse(body)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
+		return
+	}
+	if !toollistIDRe.MatchString(cat.ID) {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "清单 id 非法：仅允许字母/数字/点/下划线/连字符，且不以符号开头（≤64）"})
 		return
 	}
 	s.addImported(cat)
@@ -506,7 +534,7 @@ func (s *server) handleToollistExport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/x-yaml; charset=utf-8")
-	w.Header().Set("Content-Disposition", `attachment; filename="`+cat.ID+`.yaml"`)
+	w.Header().Set("Content-Disposition", `attachment; filename="`+safeFilename(cat.ID)+`.yaml"`)
 	_, _ = w.Write(b)
 }
 

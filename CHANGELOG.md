@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **导入/导出安全加固**：`/api/toollist/import` 校验清单 id 字符集（防注入/异常 key）；`/export` 文件名净化（`safeFilename`，防 Content-Disposition 头注入）。补测试。
+
 - **`install`/`uninstall` 参数校验**：加 `cobra.NoArgs`，多余位置参数报错（之前被静默忽略，`sis install foo` 会误装整份清单）；补测试。
 
 - **`--format` 校验**：非法值（如 `--format xml`）现在明确报错（exit 1），不再静默回退表格；补 CLI 测试。
