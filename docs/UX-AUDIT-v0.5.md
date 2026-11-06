@@ -12,7 +12,7 @@
 ## 文案本地化与措辞（规则 2 / 3）
 - ✅ CLI 英文残留中文化：`Checking status of N packages…` → 「正在检查 N 个软件的安装状态（清单：…）」；`installed/missing` → 「已安装/未安装」；`Total: … / succeeded / skipped / failed / packages / Installing / Uninstalling` → 中文；`list` 的 `Total: N packages` → 「共 N 个软件」。
 - ✅ 第一批精简：首页新手提示、体检引导长段（保留"不改动/不卸载"关键信息）、体检 legend、滑卡操作说明、清单页长介绍、去面向新手的 CLI 命令提示、自检副标题（改为顿号）。
-- 待办：继续逐屏删"重复 UI 的说明"。
+- ✅ 第二批：LLM 配置说明、保存预设说明再压缩；其余长文案均属"确有需要"（配置/安全），保留。规则 3 收尾。
 
 ## 数字表达（规则 4）
 - ✅ 计数均带单位（份/项/个/款），所有统计标题补「项」等量词；状态点旁有"已安装/未安装"文字（不只靠颜色）；数字用 `tabular-nums` 对齐。

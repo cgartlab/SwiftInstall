@@ -103,7 +103,7 @@
   <div id="llmOverlay" class="overlay" hidden>
     <div class="panel save-panel" role="dialog" aria-modal="true">
       <div class="panel-title">AI / LLM 设置</div>
-      <div class="search-hint" style="margin:6px 0 12px">配置一个 OpenAI 兼容端点，用于为信息不全的软件/字体生成简介。兼容 OpenAI、DeepSeek、GLM、magpie 网关等。</div>
+      <div class="search-hint" style="margin:6px 0 12px">用于为缺简介的软件/字体生成说明。支持 OpenAI、DeepSeek、GLM、magpie 网关等。</div>
       <label class="llm-l">Base URL</label>
       <input id="llmBase" type="text" placeholder="https://api.deepseek.com/v1" autocomplete="off" spellcheck="false">
       <label class="llm-l">Model</label>
@@ -123,7 +123,7 @@
   <div id="saveOverlay" class="overlay" hidden>
     <div class="panel save-panel" role="dialog" aria-modal="true">
       <div class="panel-title">保存为预设</div>
-      <div class="search-hint" style="margin:6px 0 12px">把当前清单（含搜索添加的软件）保存为预设，随时切换加载。</div>
+      <div class="search-hint" style="margin:6px 0 12px">把当前清单保存为预设，随时切换。</div>
       <input id="saveName" type="text" placeholder="预设名称，如 work / design" autocomplete="off" spellcheck="false">
       <div class="panel-foot">
         <span id="saveError" class="summary" style="color:var(--red)"></span>
