@@ -402,3 +402,11 @@ html, body {
 /* vim-style keyboard focus row */
 .row.kb { background: var(--moss-soft); box-shadow: inset 2px 0 0 var(--moss); }
 .row:active { background: var(--panel-2); }
+.kbd-panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 22px 26px; min-width: 320px; box-shadow: var(--shadow); }
+.kbd-title { font-family: var(--serif); font-size: 18px; margin-bottom: 14px; }
+.kbd-list { list-style: none; display: grid; gap: 9px; }
+.kbd-list li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.kbd-list kbd { font-family: var(--mono); font-size: 11.5px; color: var(--ink);
+  border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 2px 7px; background: var(--panel-2); }
+.kbd-list span { margin-left: 4px; }

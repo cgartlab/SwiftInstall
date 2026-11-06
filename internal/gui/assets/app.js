@@ -491,6 +491,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     if (!$("overlay").hidden && !state.running) $("overlay").hidden = true;
     else if (!$("saveOverlay").hidden) $("saveOverlay").hidden = true;
+    else if ($("kbdHelp") && !$("kbdHelp").hidden) $("kbdHelp").hidden = true;
   }
   // vim-style list navigation: j/k move, Space toggles, Enter opens detail.
   const tag = (e.target && e.target.tagName || "").toLowerCase();
@@ -500,6 +501,7 @@ document.addEventListener("keydown", (e) => {
   const active = document.activeElement;
   const onControl = active && active !== document.body && !(active.classList && active.classList.contains("row"));
   if (typing || cmOpen) return;
+  if (e.key === "?") { e.preventDefault(); if ($("kbdHelp")) $("kbdHelp").hidden = false; return; }
   if (kbIndex < 0 && onControl) return; // let buttons/links keep their native keys
   if (e.key === "j") { e.preventDefault(); setKb(kbIndex < 0 ? 0 : kbIndex + 1); }
   else if (e.key === "k") { e.preventDefault(); setKb(kbIndex < 0 ? 0 : kbIndex - 1); }
@@ -530,6 +532,8 @@ function toast(msg) {
 
 /* ---------------- LLM settings ---------------- */
 
+if ($("kbdBtn")) $("kbdBtn").addEventListener("click", () => { $("kbdHelp").hidden = false; });
+if ($("kbdHelp")) $("kbdHelp").addEventListener("click", (e) => { if (e.target === $("kbdHelp")) $("kbdHelp").hidden = true; });
 $("openLLM").addEventListener("click", openLLM);
 $("llmCancel").addEventListener("click", () => ($("llmOverlay").hidden = true));
 $("llmSave").addEventListener("click", saveLLM);
