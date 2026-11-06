@@ -84,7 +84,7 @@
    - `AGENTS.md` / `CHANGELOG.md` 同步；新增 `docs/WINDOWS-PARITY.md` 记录「看齐 vs 超越」对照。
    - Windows 验证：`gofmt` 干净、workflow YAML 解析通过、`go build ./...` / `go vet ./...` / `go test -count=1 ./...` 全 rc=0、`git diff --check` rc=0。
    - **Round 3 补充**：`internal/backend/winget.go` 增加可注入的 `lookPath` / `run`（生产行为不变），新增 `internal/backend/winget_test.go`（10 个测试，覆盖 Detect / IsInstalled / Install / Uninstall 参数与命令输出捕获）；Windows 线获得 macOS 线没有的 winget 后端单测覆盖。验证 `go test -count=1 ./...` 全 rc=0。
-   - ⚠️ **仅本地**：分支未推送、未开 PR（会话审批关闭），`origin/main` 仍是旧状态。
+   - ✅ **已交付（Round 4）**：`baseline/shared` 与 `feat/windows-parity` 已推送到 origin；**PR #35** 已创建（base=`main`，160 文件 / +16521 −369）。`origin/main` 仍为 `49e9cbf`，合并需人工确认——本 PR 含大量 GUI / HTML / CSS / 图片，属强 UI 改动，按规矩不得自动合并。
 3. （后续）macOS 线同步基线，保留 Homebrew 深度能力。
 4. （后续）winget 深度增强：源镜像 / USTC、导出导入清单、升级、管理员权限检测。
 
@@ -97,7 +97,7 @@
 - ✅ **已修（Round 4）**：`git push --dry-run` 暴露仓库级 pre-push hook `check-branch-name.ps1` 的命名规范（只允许 `main/master`、`baseline/<desc>`、`fix/…`、`feat/…`、`docs/<desc>`、`chore/…`、`release/v…`）。原分支名 `core/shared` 与 `windows/parity-v0.3` 都不合规，已分别重命名为 **`baseline/shared`** 与 **`feat/windows-parity`**，并同步全部文档引用；复验 dry-run 不再报命名错误。
 - **网络通道（Round 4）**：代理 `127.0.0.1:7897` 有监听但 TLS 握手失败（`unexpected eof while reading`）；直连 `github.com:443` 300 秒超时（rc=128）。git 推送通道当前不可用，gh API 通道正常。需先修通道才能推送。
 
-前置条件：先修好 git 网络通道（代理 TLS 失败 / 直连超时）；推送 / 开 PR / 合并等远程写入还需恢复会话审批并获执行点确认；PR #34 的 `review` fail check 需在合并前处理（重跑或判定非阻塞）。
+前置条件（Round 4 已解除网络与命名门槛）：git 通道已恢复（`git ls-remote origin` rc=0）；分支名已符合 pre-push hook 规范；两条分支已推送、PR #35 已开。剩余：PR #35 的 CI 全绿后由人工确认合并（强 UI 改动不自动合并）；PR #32 的 `CHANGELOG.md` 冲突需显式处理；PR #34 建议关闭（内容 100% 重叠且违反分支模型）。
 
 ## 6. 环境备注
 
