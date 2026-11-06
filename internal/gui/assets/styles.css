@@ -167,7 +167,7 @@ html, body {
   padding: 9px 4px; border-bottom: 1px solid var(--line-2);
   cursor: pointer;
 }
-.row:hover { background: var(--panel); }
+@media (hover: hover) and (pointer: fine) { .row:hover { background: var(--panel); } }
 .row input[type="checkbox"] { accent-color: var(--moss); width: 15px; height: 15px; cursor: pointer; }
 
 .chev { margin-left: auto; color: var(--faint); font-size: 14px; transition: transform .15s; }

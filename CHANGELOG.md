@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **列表行 hover 打磨**：hover 底色过渡 120ms；用 `@media (hover:hover)` 门控，触屏不出现粘滞 hover（保留 `:active` 按压反馈）。
+
 - **⌘K 分组标题**：命令面板按「导航 / 动作」分组显示（最近使用仍置顶），信息层级更清晰。
 
 - **端到端回归脚本**：新增 `scripts/regression.sh`（CLI 退出码矩阵 + GUI 路由/E2E，23 项，exit 0=全过）；本轮全线回归 `go test -race ./...` 全绿、脚本 23/23。
