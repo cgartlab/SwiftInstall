@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **端到端回归脚本**：新增 `scripts/regression.sh`（CLI 退出码矩阵 + GUI 路由/E2E，23 项，exit 0=全过）；本轮全线回归 `go test -race ./...` 全绿、脚本 23/23。
+
 - **修正 + 交互**：修正上一轮误给 `/api/preset` 加 GET 守卫（POST 保存预设恢复可用，补全量测试通过）；`/swap` 松手未达阈值时回弹带轻微弹簧（cubic-bezier 过冲，reduced-motion 下不位移）。
 
 - **只读 API 方法校验**：state/status/audit/explain/health/toollists/toollist/export/info/search/presets/preset/outdated 仅接受 GET，其它方法返回 405；导入等 POST 接口不受影响。补测试。

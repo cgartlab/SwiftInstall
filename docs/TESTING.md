@@ -187,3 +187,7 @@ CI（`.github/workflows/ci.yml`）在上面的 `build + vet + test` 基础上运
 
 - `/share?toollist=` 渲染清单海报（标题/受众/两列工具+授权标签/品牌页脚）+「复制文案」；清单页加入口。
 - 覆盖：`TestShareRoute`（`/share` 200）；`share.html` 通过 `node --check`；含 Canvas「下载图片」导出（1080pt PNG）。
+
+## 端到端回归脚本（Round 16）
+
+- `bash scripts/regression.sh`：构建二进制 → 跑 CLI 退出码矩阵（version/doctor/audit/toollist/guide/status/mirror/llm/format 校验/参数校验）+ 起 GUI 跑路由/E2E（页面 200、未知清单 404、只读 POST 405、`/cmdk.js` 200）。全部通过返回 0。
