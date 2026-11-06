@@ -14,6 +14,12 @@ func withTempHome(t *testing.T) {
 	t.Helper()
 	dir := t.TempDir()
 	t.Setenv("HOME", dir)
+	// Unix: os.UserConfigDir() prefers XDG_CONFIG_HOME over HOME/.config.
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(dir, ".config"))
+	// Windows: os.UserConfigDir() reads %APPDATA% and ignores HOME /
+	// XDG_CONFIG_HOME. Without this, tests write into the developer's real
+	// roaming profile and pick up presets left behind by earlier runs.
+	t.Setenv("APPDATA", filepath.Join(dir, "AppData", "Roaming"))
 	// macOS UserConfigDir uses ~/Library/Application Support via HOME.
 }
 
