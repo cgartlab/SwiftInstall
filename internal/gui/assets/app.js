@@ -119,6 +119,7 @@ function statusOf(id) {
 /* ---------------- rendering ---------------- */
 
 var kbIndex = -1;
+var lastG = 0;
 function visibleRows() { return Array.prototype.slice.call(document.querySelectorAll("#list .row")); }
 function setKb(i) {
   var rows = visibleRows();
@@ -500,9 +501,12 @@ document.addEventListener("keydown", (e) => {
   const cmOpen = cm && !cm.hidden;
   const active = document.activeElement;
   const onControl = active && active !== document.body && !(active.classList && active.classList.contains("row"));
-  if (typing || cmOpen) return;
-  if (e.key === "?") { e.preventDefault(); if ($("kbdHelp")) $("kbdHelp").hidden = false; return; }
+  const helpOpen = $("kbdHelp") && !$("kbdHelp").hidden;
+  if (e.key === "?" && !typing && !cmOpen) { e.preventDefault(); if ($("kbdHelp")) $("kbdHelp").hidden = helpOpen; return; }
+  if (typing || cmOpen || helpOpen) return; // never act behind an open help/palette
   if (kbIndex < 0 && onControl) return; // let buttons/links keep their native keys
+  if (e.key === "g") { const now = Date.now(); if (now - lastG < 600) { e.preventDefault(); setKb(0); lastG = 0; return; } lastG = now; return; }
+  if (e.key === "G") { e.preventDefault(); const rows = visibleRows(); if (rows.length) setKb(rows.length - 1); return; }
   if (e.key === "j") { e.preventDefault(); setKb(kbIndex < 0 ? 0 : kbIndex + 1); }
   else if (e.key === "k") { e.preventDefault(); setKb(kbIndex < 0 ? 0 : kbIndex - 1); }
   else if (e.key === " " || e.key === "Spacebar") {

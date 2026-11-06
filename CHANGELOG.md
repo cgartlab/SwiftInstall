@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **修帮助浮层穿透 + gg/G**：帮助/命令浮层打开时不再响应 `j/k/空格/Enter`（修复上轮引入的穿透）；新增 `gg` 回顶、`G` 到底，并写入快捷键卡片。
+
 - **键盘快捷键帮助浮层**：主界面顶栏加 `?` 按钮，按 `?` 弹出快捷键卡片（j/k、空格、Enter、⌘K、Esc），`Esc`/点遮罩关闭。
 
 - **导入/导出安全加固**：`/api/toollist/import` 校验清单 id 字符集（防注入/异常 key）；`/export` 文件名净化（`safeFilename`，防 Content-Disposition 头注入）。补测试。
