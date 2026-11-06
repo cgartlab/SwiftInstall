@@ -269,7 +269,7 @@ function render(j){
 
   // replaces
   const reps = j.replaces || [];
-  h += `<div class="sect-t"><span class="c">可替换，${reps.length}</span>　（已装的付费软件存在更好的免费/开源平替）</div>`;
+  h += `<div class="sect-t"><span class="c">可替换 ${reps.length} 项</span>　（已装的付费软件存在更好的免费/开源平替）</div>`;
   if(!reps.length){ h += `<div class="empty">未发现可替换项。</div>`; }
   else{
     h += reps.map((r,i)=>{
@@ -285,7 +285,7 @@ function render(j){
 
   // adds grouped by category
   const adds = j.adds || [];
-  h += `<div class="sect-t"><span class="c">建议补充，${adds.length}</span>　（软件清单推荐，尚未安装）</div>`;
+  h += `<div class="sect-t"><span class="c">建议补充 ${adds.length} 项</span>　（软件清单推荐，尚未安装）</div>`;
   if(!adds.length){ h += `<div class="empty">软件清单已全部就绪。</div>`; }
   else{
     const groups = {};
@@ -308,10 +308,10 @@ function render(j){
 
   // keeps
   const keeps = j.keeps || [];
-  h += `<div class="sect-t"><span class="c">已装且够用，${keeps.length}</span></div>`;
+  h += `<div class="sect-t"><span class="c">已装且够用 ${keeps.length} 项</span></div>`;
   h += keeps.length ? `<div class="keeps">${keeps.map(k=>`<span class="keep">${esc(k)}</span>`).join("")}</div>`
                     : `<div class="empty">无。</div>`;
-  if(j.unmatched_count){ h += `<div class="sect-t">未收录，${j.unmatched_count}</div><div class="why">另有 ${j.unmatched_count} 个已安装应用不在本清单中；可到「软件清单」页用 AI 查它们是什么、有没有免费平替。</div>`; }
+  if(j.unmatched_count){ h += `<div class="sect-t">未收录 ${j.unmatched_count} 项</div><div class="why">另有 ${j.unmatched_count} 个已安装应用不在本清单中；可到「软件清单」页用 AI 查它们是什么、有没有免费平替。</div>`; }
 
   $("#sections").innerHTML = h;
   { const sec=$("#sections"); sec.classList.remove("enter"); void sec.offsetWidth;
