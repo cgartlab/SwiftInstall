@@ -10,25 +10,33 @@ import (
 )
 
 // WingetBackend implements Backend using Windows Package Manager (winget).
+//
+// lookPath and run are injectable so the Windows line can unit-test the winget
+// backend on any host (including Linux CI runners) without winget installed.
+// Production behaviour is unchanged: NewWingetBackend wires the real
+// implementations.
 type WingetBackend struct {
 	execPath string
 	ready    bool
+	lookPath func(file string) (string, error)
+	run      func(ctx context.Context, args ...string) (*Output, error)
 }
 
 // NewWingetBackend creates a new winget backend instance.
 // Call Detect() before using any other methods.
 func NewWingetBackend() *WingetBackend {
-	return &WingetBackend{}
+	w := &WingetBackend{lookPath: exec.LookPath}
+	w.run = w.execCommand
+	return w
 }
 
 func (w *WingetBackend) Name() string { return "winget" }
 
 // Detect locates the winget executable and verifies it's usable.
 func (w *WingetBackend) Detect() error {
-	path, err := exec.LookPath("winget.exe")
+	path, err := w.lookPath("winget.exe")
 	if err != nil {
-		// Try common locations as fallback
-		path, err = exec.LookPath("winget")
+		path, err = w.lookPath("winget")
 		if err != nil {
 			return fmt.Errorf("winget is not installed or not in PATH.\n" +
 				"Please install it from: https://aka.ms/getwinget")
@@ -39,31 +47,33 @@ func (w *WingetBackend) Detect() error {
 	return nil
 }
 
+func (w *WingetBackend) notReady() error {
+	return fmt.Errorf("winget backend not initialized: call Detect() first")
+}
+
 // IsInstalled checks if a package is installed using `winget list --id <id> --exact`.
 func (w *WingetBackend) IsInstalled(ctx context.Context, id string) (bool, error) {
 	if !w.ready {
-		return false, fmt.Errorf("winget backend not initialized: call Detect() first")
+		return false, w.notReady()
 	}
 
-	cmd := exec.CommandContext(ctx, w.execPath,
-		"list", "--id", id, "--exact", "--accept-source-agreements")
-	out, err := cmd.Output()
+	out, err := w.run(ctx, "list", "--id", id, "--exact", "--accept-source-agreements")
 	if err != nil {
-		// winget returns non-zero exit code when package is not found
-		if _, ok := err.(*exec.ExitError); ok {
+		// winget exits non-zero when the package is not found; that is a
+		// negative answer, not a failure.
+		if out != nil && out.ExitCode != 0 {
 			return false, nil
 		}
 		return false, fmt.Errorf("check installed status: %w", err)
 	}
 
-	// If output contains the package ID, it's installed
-	return strings.Contains(string(out), id), nil
+	return strings.Contains(out.Stdout, id), nil
 }
 
 // Install installs a package using `winget install --id <id> --exact --silent`.
 func (w *WingetBackend) Install(ctx context.Context, id string, opts InstallOptions) (*Output, error) {
 	if !w.ready {
-		return nil, fmt.Errorf("winget backend not initialized: call Detect() first")
+		return nil, w.notReady()
 	}
 
 	args := []string{
@@ -80,7 +90,7 @@ func (w *WingetBackend) Install(ctx context.Context, id string, opts InstallOpti
 // Uninstall removes a package using `winget uninstall --id <id> --exact --silent`.
 func (w *WingetBackend) Uninstall(ctx context.Context, id string) (*Output, error) {
 	if !w.ready {
-		return nil, fmt.Errorf("winget backend not initialized: call Detect() first")
+		return nil, w.notReady()
 	}
 
 	args := []string{
@@ -90,8 +100,8 @@ func (w *WingetBackend) Uninstall(ctx context.Context, id string) (*Output, erro
 	return w.run(ctx, args...)
 }
 
-// run executes a winget command and captures output.
-func (w *WingetBackend) run(ctx context.Context, args ...string) (*Output, error) {
+// execCommand is the production implementation of run.
+func (w *WingetBackend) execCommand(ctx context.Context, args ...string) (*Output, error) {
 	start := time.Now()
 	cmd := exec.CommandContext(ctx, w.execPath, args...)
 
@@ -100,12 +110,10 @@ func (w *WingetBackend) run(ctx context.Context, args ...string) (*Output, error
 	cmd.Stderr = &stderr
 
 	err := cmd.Run()
-	dur := time.Since(start).Milliseconds()
-
 	out := &Output{
 		Stdout:     stdout.String(),
 		Stderr:     stderr.String(),
-		DurationMs: dur,
+		DurationMs: time.Since(start).Milliseconds(),
 	}
 
 	if err == nil {

@@ -21,12 +21,14 @@ Windows 线已包含原 macOS 进度线（`feat/product-v0.3`）的全部跨平�
 | 发布完整性 | 无校验和 | **`SHA256SUMS`** 随 Release 发布 |
 | 发布矩阵 | 4 个目标 | **5 个目标** |
 | Windows 测试隔离 | 只设 `HOME` / `XDG_CONFIG_HOME`，测试写真实 `%APPDATA%` | 4 个包补 `APPDATA` 隔离，测试不再污染用户目录 |
+| winget 后端测试 | 无 `winget_test.go`，后端不可注入 | 可注入 `lookPath` / `run` + 10 个单测，任意 CI runner 可跑 |
 
 ## 3. 为什么这些算「更好」
 
 - 原 macOS 线的 Windows job 只保证「winget 路径仍可编译」，测试只在 Linux 跑。Windows 线让全量测试（含 Homebrew 后端测试）在 Windows 上也通过，覆盖翻倍。所有后端是纯 Go + `exec.Command`，不加 build tags 即可跨平台编译与测试。
 - `workflow_dispatch` + `SHA256SUMS` + Windows arm64 直接回应 issue #29 的三项缺口。
 - 测试隔离修复了真实缺陷：`os.UserConfigDir()` 在 Windows 读 `%APPDATA%`，此前测试把 `dev` / `work` / `toollist-x` 等预设写进用户真实漫游目录，既污染数据又导致 `go test ./...` 红灯。
+- winget 是 Windows 线的平台实现，但它此前**完全没有测试注入点**（Homebrew 后端却有 `run` / `lookPath` 可注入），所以 macOS 线从未给 winget 写过单测。Windows 线补上可注入层与 10 个单测，让 winget 路径在 Linux / Windows CI 上都能被验证——这是 macOS 线不具备的覆盖，也符合「平台线各自增强」的分工。
 
 ## 4. 验证（Windows，2026-11-07）
 
