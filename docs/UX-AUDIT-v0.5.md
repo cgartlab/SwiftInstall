@@ -44,3 +44,9 @@
 
 ## 本轮改动文件
 `internal/gui/assets/styles.css`、`app.js`、`audit.html`、`cmdk.js`、`internal/ui/terminal.go`、`internal/cli/status.go`、`install.go`、`uninstall.go`、`list.go`；截图 `docs/screenshots/gui-main.png`（扁平化 + 单一强调色）。
+
+## 配色方案（规则 11，待你选）
+- 对比 PDF：`docs/design/palette-options.pdf`（含"现状 / A 青瓷绿 / B 黛蓝灰 / C 绛红"四页，每页有 swatch + 组件预览）。
+- 快速看：`docs/design/palette-compare.png`。
+- **推荐 A 青瓷绿**：单一强调色（绿=免费/收益），暖灰不偏蓝，付费/代价改中性暖灰、不再用橙/陶土。
+- 选定后我按该色板替换 `--copper` 等语义色并全站落地（含暗色）。
