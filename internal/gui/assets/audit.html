@@ -149,6 +149,9 @@
 
   :root{--on-accent:#FFFFFF;--red:#A24B3B;--red-soft:#F5E3DE;--err:#9a3d30;--on-moss:#2c4d3c;--green-hi:#4b7d60}
   @media (prefers-color-scheme:dark){:root{--red:#D97757;--red-soft:#3A2C18;--err:#D97757;--on-moss:#ECE7DC}}
+
+  :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:3px}
+  :focus:not(:focus-visible){outline:none}
 </style>
 </head>
 <body>
