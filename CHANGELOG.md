@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **UI 成功案例 + ⌘K 模糊排序**：新增 `docs/UI-CASES.md`（Raycast/Linear/Apple Liquid Glass 提炼）；`cmdk.js` 过滤升级为模糊排序（标题子串优先、子序列次之），命令面板加镜面高光边。
+
 - **前端评审报告 + 二轮色值收敛**：新增 `docs/REVIEW-2026-11.md`（人工按 Argus 口径补做）；第二遍把 styles.css/audit 的 `#fff`、npm 品牌红、遮罩黑、品牌渐变绿收敛为 token；设计系统补充「暗色用 prefers-color-scheme」说明。
 
 暂无。

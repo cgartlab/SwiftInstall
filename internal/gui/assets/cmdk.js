@@ -10,7 +10,7 @@
     background:color-mix(in srgb,#0b0b0a 42%,transparent);backdrop-filter:blur(6px)}
   .cmdk[hidden]{display:none}
   .cmdk-box{width:min(560px,92vw);background:var(--card,var(--panel,#FBF8F1));
-    border:1px solid var(--line,#DDD6C7);border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.35);overflow:hidden}
+    border:1px solid var(--line,#DDD6C7);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 24px 70px rgba(0,0,0,.35);overflow:hidden}
   .cmdk-input{width:100%;border:0;border-bottom:1px solid var(--line,#DDD6C7);background:transparent;
     color:var(--ink,#1C1B17);font-size:15px;padding:15px 18px;outline:0;
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}
@@ -59,9 +59,30 @@
 
   function open() { ov.hidden = false; inp.value = ""; filter(""); inp.focus(); }
   function close() { ov.hidden = true; }
+  function fscore(hay, q) {
+    var h = (hay || "").toLowerCase();
+    var i = h.indexOf(q);
+    if (i >= 0) return 1000 - i; // substring: strongest, earlier is better
+    var hi = 0, s = 0;
+    for (var k = 0; k < q.length; k++) {
+      var p = h.indexOf(q[k], hi);
+      if (p < 0) return -1; // not a subsequence
+      s += (p === hi ? 2 : 1); // reward contiguity
+      hi = p + 1;
+    }
+    return s; // weaker but valid
+  }
   function filter(q) {
     q = (q || "").trim().toLowerCase();
-    shown = CMDS.filter(function (c) { return !q || (c.t + " " + c.d).toLowerCase().indexOf(q) >= 0; });
+    if (!q) { shown = CMDS.slice(); sel = 0; paint(); return; }
+    var scored = [];
+    for (var i = 0; i < CMDS.length; i++) {
+      var c = CMDS[i], st = fscore(c.t, q), sd = fscore(c.d, q);
+      var sc = st >= 0 ? st : (sd >= 0 ? sd - 300 : -1);
+      if (sc >= 0) scored.push({ c: c, s: sc });
+    }
+    scored.sort(function (a, b) { return b.s - a.s; });
+    shown = scored.map(function (x) { return x.c; });
     sel = 0; paint();
   }
   function paint() {
