@@ -54,9 +54,16 @@
 
   var inp = ov.querySelector("#cmdkInput");
   var list = ov.querySelector("#cmdkList");
+  var recent = []; // in-memory only (no persistence), most-recently-run first
   var shown = CMDS.slice();
   var sel = 0;
 
+  function ordered() {
+    var r = [];
+    recent.forEach(function (c) { if (CMDS.indexOf(c) >= 0 && r.indexOf(c) < 0) r.push(c); });
+    CMDS.forEach(function (c) { if (r.indexOf(c) < 0) r.push(c); });
+    return r;
+  }
   function open() { ov.hidden = false; inp.value = ""; filter(""); inp.focus(); }
   function close() { ov.hidden = true; }
   function fscore(hay, q) {
@@ -74,7 +81,7 @@
   }
   function filter(q) {
     q = (q || "").trim().toLowerCase();
-    if (!q) { shown = CMDS.slice(); sel = 0; paint(); return; }
+    if (!q) { shown = ordered(); sel = 0; paint(); return; }
     var scored = [];
     for (var i = 0; i < CMDS.length; i++) {
       var c = CMDS[i], st = fscore(c.t, q), sd = fscore(c.d, q);
@@ -96,7 +103,7 @@
       li.onclick = function () { sel = +li.dataset.i; exec(); };
     });
   }
-  function exec() { var c = shown[sel]; if (c) { close(); c.run(); } }
+  function exec() { var c = shown[sel]; if (c) { recent = [c].concat(recent.filter(function (x) { return x !== c; })).slice(0, 4); close(); c.run(); } }
 
   inp.addEventListener("input", function (e) { filter(e.target.value); });
   inp.addEventListener("keydown", function (e) {
