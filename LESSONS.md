@@ -42,3 +42,8 @@
 - 失误：macOS 清单用显示名/大写 token（如 `Visual-Studio-Code`）导致 `brew` 找不到包 → 规则：`macOS/packages.txt` 必须用真实小写 Homebrew token（`git`、`python@3.12`、`font-hack-nerd-font`）
 - 失误：GUI 应用按 formula 安装失败 → 规则：GUI 应用在清单标 `kind: cask`；`kind` 留空时后端按 formula 优先、再 cask 自动探测
 - 失误：发布只产出 Windows amd64 → 规则：release 矩阵覆盖 darwin/arm64、darwin/amd64、windows/amd64、linux/amd64，产物命名 `sis-<os>-<arch>[.exe]`，并校验 `sis version` 含 tag
+
+## GUI / 测试
+
+- 失误：给只读 handler 批量加 GET 守卫时误伤了 `/api/preset`（它支持 POST 保存预设），且只跑了单测没跑全量，导致回归入库 → 规则：改 HTTP 方法校验前先确认该 handler 是否 GET+POST；提交前必须跑 `go test ./...`（不仅目标用例）。
+- 失误：`/api/toollist/export` 用清单 id 直接拼 `Content-Disposition` 文件名 → 规则：输出文件名统一走 `safeFilename()` 净化（防头注入/路径字符）。
