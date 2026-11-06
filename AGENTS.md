@@ -83,9 +83,9 @@ persistence without a concrete need.
 
 ### Platform branch model
 
-- `core/shared` is the **shared baseline**: platform-agnostic code (Backend interface + pluggable platform registry, CLI, engine, manifest, ui, gui, tui, audit, toollist, advice, llm, mirror, preset and their tests). Public updates flow one-way from the baseline into the two platform lines.
-- `main` is the **Windows** line: it syncs from `core/shared` and adds Windows-specific enhancements (winget capabilities, Windows CI running `go test ./...`, multi-arch release). Do not put macOS work here.
-- macOS support (Homebrew backend, Wave 6 / issue #23) lives on its **own long-lived branch** (`feat/product-v0.3`): it syncs from `core/shared` and keeps macOS-specific capabilities. macOS PRs target that branch, not `main`; the two platform lines run in parallel and are not merged into each other.
+- `baseline/shared` is the **shared baseline**: platform-agnostic code (Backend interface + pluggable platform registry, CLI, engine, manifest, ui, gui, tui, audit, toollist, advice, llm, mirror, preset and their tests). Public updates flow one-way from the baseline into the two platform lines.
+- `main` is the **Windows** line: it syncs from `baseline/shared` and adds Windows-specific enhancements (winget capabilities, Windows CI running `go test ./...`, multi-arch release). Do not put macOS work here.
+- macOS support (Homebrew backend, Wave 6 / issue #23) lives on its **own long-lived branch** (`feat/product-v0.3`): it syncs from `baseline/shared` and keeps macOS-specific capabilities. macOS PRs target that branch, not `main`; the two platform lines run in parallel and are not merged into each other.
 - Platform backends are installed via `backend.RegisterPlatform(goos, factory)` (defaults in `internal/backend/platform_defaults.go`). A platform line overrides its entry from `init()` without editing shared code; `ForGOOS(goos)` resolves any registered platform on any host, so the Windows line can test both mappings.
 - See `docs/SHARED-BASELINE.md` for the layering and sync rules.
 
