@@ -195,8 +195,8 @@ function render(c){
     <div class="head">
       <div class="kicker">精选软件清单</div>
       <h1>${esc(c.title)}</h1>
-      <p class="lede">这是一份人工挑选的软件清单：只收免费或开源、而且免费版就足够用的工具。每款都写了它适合谁、为什么值得装。拿不准？点「用这份软件清单体检」，看看你电脑上已经装了什么、哪些可以换。</p>
-      ${staleN ? `<div class="banner">本清单有 ${staleN} 项资料超过一年未复核，仅供参考；可用 <code>sis toollist verify</code> 查看。</div>` : ''}
+      <p class="lede">人工挑选：只收免费或开源、且免费版够用的工具，每款都写了适合谁、为何值得装。拿不准？点「用这份软件清单体检」，看你已装了什么、哪些可换。</p>
+      ${staleN ? `<div class="banner">本清单有 ${staleN} 项资料超过一年未复核，仅供参考。</div>` : ''}
       <dl class="meta">
         <div><dt>面向</dt><dd>${esc(c.audience||"—")}</dd></div>
         <div><dt>更新</dt><dd>${esc(c.updated||"—")}</dd></div>
