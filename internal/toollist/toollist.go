@@ -121,10 +121,17 @@ func AvailableFor(c *Catalog, goos string) bool {
 	if c == nil {
 		return false
 	}
+	p := NormalizePlatform(goos)
+	// Only the two supported desktop platforms are isolated. On any other GOOS
+	// (e.g. linux CI runners / release builds) every built-in catalog stays
+	// visible, so the CLI, health endpoint and tests keep working there.
+	if p != PlatformWindows && p != PlatformMacOS {
+		return true
+	}
 	if c.Platform == "" || c.Platform == PlatformAny {
 		return true
 	}
-	return c.Platform == NormalizePlatform(goos)
+	return c.Platform == p
 }
 
 // BuiltinName is the id/file name of the default shipped catalog on macOS.

@@ -51,8 +51,12 @@ func TestHandleToollists_PlatformFiltered(t *testing.T) {
 }
 
 func TestHandleToollist_RejectsOtherPlatform(t *testing.T) {
+	cp := toollist.CurrentPlatform()
+	if cp != toollist.PlatformWindows && cp != toollist.PlatformMacOS {
+		t.Skipf("platform isolation applies only to windows/darwin, got %s", cp)
+	}
 	other := "mac-designers"
-	if toollist.CurrentPlatform() == toollist.PlatformMacOS {
+	if cp == toollist.PlatformMacOS {
 		other = "windows-essentials"
 	}
 	rec := httptest.NewRecorder()
