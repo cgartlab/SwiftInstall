@@ -293,7 +293,7 @@ $("#importFile").onchange = async (e)=>{
 };
 async function saveAsPreset(c){
   const out = document.getElementById("presetOut");
-  const packages = (c.items||[]).filter(it=>it.brew && it.brew!=="homebrew").map(it=>({id:it.brew, category:it.category||""}));
+  const packages = (c.items||[]).map(it=>({id:(it.brew&&it.brew!=="homebrew")?it.brew:it.winget, category:it.category||""})).filter(p=>p.id);
   out.classList.add("on");
   if(!packages.length){ out.textContent = "这份清单没有可安装的条目。"; return; }
   const name = "toollist-" + c.id;

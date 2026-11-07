@@ -183,7 +183,7 @@
   <section id="scan">
     <div class="ring"><div class="n" id="scanN">0</div></div>
     <div class="scan-l">正在扫描已安装的应用</div>
-    <div class="scan-s" id="scanS">读取 /Applications 与 Homebrew 清单…</div>
+    <div class="scan-s" id="scanS">读取本机已安装软件…</div>
     <div class="track"><i id="scanBar"></i></div>
   </section>
 
@@ -221,7 +221,7 @@ function startAudit(){
   const sc=$("#scan"); sc.style.opacity=""; sc.style.transform=""; $("#result").classList.remove("enter");
   show("scan");
   const dur = 1700, t0 = performance.now(), n=$("#scanN"), bar=$("#scanBar"), s=$("#scanS");
-  const subs=["读取 /Applications 与 Homebrew 清单…","识别已安装应用…","比对免费 / 开源平替目录…","生成可核验评价…"];
+  const subs=["读取本机已安装软件…","识别已安装应用…","比对免费 / 开源平替目录…","生成可核验评价…"];
   function tick(now){
     const p = Math.min(1,(now-t0)/dur), e = 1-Math.pow(1-p,3);
     n.textContent = Math.round(e*99);
@@ -366,7 +366,7 @@ async function initToollists(){
 function updateExport(bid){
   const a = $("#exportLink"); if(!a) return;
   a.href = "/api/toollist/export" + (bid ? "?toollist=" + encodeURIComponent(bid) : "");
-  a.setAttribute("download", (bid || "mac-designers") + ".yaml");
+  a.setAttribute("download", (bid || "toollist") + ".yaml");
 }
 initToollists();
 </script>

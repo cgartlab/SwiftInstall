@@ -162,15 +162,21 @@
   <script>
   (function(){
     const $=s=>document.querySelector(s);
-    const CMDS=[
+    let CMDS=[
       {t:"环境体检", d:"扫描已装软件，看该装 / 该换什么", run:()=>location.href="/audit"},
       {t:"软件清单", d:"浏览精选免费 / 开源清单", run:()=>location.href="/toollists"},
-      {t:"逐条决策 · 设计师清单", d:"用平替滑卡逐条决定", run:()=>location.href="/swap?toollist=mac-designers"},
-      {t:"逐条决策 · 开发者清单", d:"用平替滑卡逐条决定", run:()=>location.href="/swap?toollist=developers"},
+      {t:"逐条决策这些平替", d:"用平替滑卡逐条决定（当前平台默认清单）", run:()=>location.href="/swap"},
       {t:"过滤当前清单", d:"聚焦顶部搜索框", run:()=>{ close(); const el=$("#search"); if(el) el.focus(); }},
-      {t:"检查已安装更新", d:"Homebrew outdated", run:()=>{ close(); const b=$("#checkUpdates"); if(b) b.click(); }},
+      {t:"检查已安装更新", d:"检查已安装软件的更新", run:()=>{ close(); const b=$("#checkUpdates"); if(b) b.click(); }},
       {t:"刷新状态", d:"重新加载页面", run:()=>location.reload()},
     ];
+    // 平台感知：命令面板只列出服务端返回的「当前平台可用」清单。
+    fetch("/api/toollists").then(r=>r.json()).then(d=>{
+      (d.toollists||[]).forEach(b=>{
+        if(b.equivalences>0) CMDS.push({t:"逐条决策 · "+b.title, d:"用平替滑卡逐条决定", run:()=>location.href="/swap?toollist="+encodeURIComponent(b.id)});
+      });
+      filter("");
+    }).catch(()=>{});
     let shown=[...CMDS], sel=0;
     const ov=$("#cmdk"), inp=$("#cmdkInput"), list=$("#cmdkList");
     function open(){ ov.hidden=false; inp.value=""; filter(""); inp.focus(); }

@@ -63,7 +63,7 @@
   <script>
   const $=s=>document.querySelector(s);
   const LIC={oss:"开源",free:"免费",freemium:"免费版够用"};
-  const id=new URLSearchParams(location.search).get("toollist")||"mac-designers";
+  const id=new URLSearchParams(location.search).get("toollist")||"";
   let RAW=null;
   function cv(name,fb){try{const v=getComputedStyle(document.documentElement).getPropertyValue(name).trim();return v||fb;}catch(e){return fb;}}
   function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}

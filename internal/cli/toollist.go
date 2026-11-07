@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"runtime"
 	"text/tabwriter"
 	"time"
 
@@ -33,7 +34,7 @@ func newToollistListCmd() *cobra.Command {
 		Use:   "list",
 		Short: "列出内置软件清单",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			names, err := toollist.EmbeddedNames()
+			names, err := toollist.AvailableNames()
 			if err != nil {
 				return err
 			}
@@ -79,13 +80,13 @@ func newToollistListCmd() *cobra.Command {
 func newToollistShowCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "show [id]",
-		Short: "查看某个内置软件清单的内容（默认 mac-designers）",
+		Short: "查看某个内置软件清单的内容（默认当前平台清单）",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id := "mac-designers"
+			id := toollist.DefaultNameFor(runtime.GOOS)
 			if len(args) > 0 {
 				id = args[0]
 			}
-			c, err := toollist.LoadBuiltinNamed(id)
+			c, err := toollist.LoadBuiltinNamedFor(id, runtime.GOOS)
 			if err != nil {
 				return err
 			}
@@ -147,11 +148,11 @@ func newToollistExportCmd() *cobra.Command {
 		Use:   "export [id]",
 		Short: "把软件清单导出为 YAML（可分享）",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id := "mac-designers"
+			id := toollist.DefaultNameFor(runtime.GOOS)
 			if len(args) > 0 {
 				id = args[0]
 			}
-			c, err := toollist.LoadBuiltinNamed(id)
+			c, err := toollist.LoadBuiltinNamedFor(id, runtime.GOOS)
 			if err != nil {
 				return err
 			}
@@ -178,11 +179,11 @@ func newToollistVerifyCmd() *cobra.Command {
 		Long: `逐项显示距今多久、是否需要复核。超过 1 年未复核会标为「需复核」，
 用于维护「免费版够用」这类会随时间变化的判断。`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id := "mac-designers"
+			id := toollist.DefaultNameFor(runtime.GOOS)
 			if len(args) > 0 {
 				id = args[0]
 			}
-			c, err := toollist.LoadBuiltinNamed(id)
+			c, err := toollist.LoadBuiltinNamedFor(id, runtime.GOOS)
 			if err != nil {
 				return err
 			}

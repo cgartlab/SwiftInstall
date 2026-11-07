@@ -1,0 +1,284 @@
+id: windows-essentials
+platform: windows
+title: Windows 新手上手软件清单
+audience: 刚用 Windows 的新手
+curator: cgartlab
+updated: "2026-11"
+standard:
+  - free-or-oss
+  - free-tier-sufficient
+  - mature
+
+items:
+  # 效率 / 文件
+  - name: Microsoft PowerToys
+    winget: Microsoft.PowerToys
+    role: 窗口 / 快捷键 / 批量重命名
+    category: 效率
+    license: oss
+    free_tier_enough: true
+    why: 微软官方开源的效率工具集，窗口布局、批量重命名、取色器、键盘映射都在一个包里，免费且持续维护。
+    verified_at: "2026-11-07"
+    sources: [https://github.com/microsoft/PowerToys]
+
+  - name: Everything
+    winget: voidtools.Everything
+    role: 文件名秒搜
+    category: 文件
+    license: free
+    free_tier_enough: true
+    why: 按文件名即时检索全盘，比系统自带搜索快一个数量级，个人使用免费。
+    verified_at: "2026-11-07"
+    sources: [https://www.voidtools.com/]
+
+  - name: 7-Zip
+    winget: 7zip.7zip
+    role: 压缩 / 解压
+    category: 文件
+    license: oss
+    free_tier_enough: true
+    why: 开源压缩工具，支持 7z / zip / rar 等常见格式，无广告无付费墙。
+    verified_at: "2026-11-07"
+    sources: [https://www.7-zip.org/]
+
+  # 开发
+  - name: Windows Terminal
+    winget: Microsoft.WindowsTerminal
+    role: 终端
+    category: 开发
+    license: oss
+    free_tier_enough: true
+    why: 微软官方开源终端，多标签、分栏、GPU 渲染，PowerShell / WSL / CMD 统一管理。
+    verified_at: "2026-11-07"
+    sources: [https://github.com/microsoft/terminal]
+
+  - name: Visual Studio Code
+    winget: Microsoft.VisualStudioCode
+    role: 代码 / 文本编辑
+    category: 开发
+    license: free
+    free_tier_enough: true
+    why: 免费且跨平台的编辑器，扩展生态完整，日常写脚本、改配置、做开发都够用。
+    verified_at: "2026-11-07"
+    sources: [https://code.visualstudio.com/]
+
+  - name: Git
+    winget: Git.Git
+    role: 版本控制
+    category: 开发
+    license: oss
+    free_tier_enough: true
+    why: 事实标准的版本控制工具，Windows 官方安装包带 Git Bash，够用且免费。
+    verified_at: "2026-11-07"
+    sources: [https://git-scm.com/]
+
+  # 设计
+  - name: GIMP
+    winget: GIMP.GIMP
+    role: 位图编辑
+    category: 设计
+    license: oss
+    free_tier_enough: true
+    why: 开源位图编辑，修图与合成覆盖日常需求，可替代付费图像软件的基础功能。
+    verified_at: "2026-11-07"
+    sources: [https://www.gimp.org/]
+
+  - name: Inkscape
+    winget: Inkscape.Inkscape
+    role: 矢量编辑 / SVG
+    category: 设计
+    license: oss
+    free_tier_enough: true
+    why: 开源矢量工具，图标、插画与 SVG 工作流够用，导出格式开放。
+    verified_at: "2026-11-07"
+    sources: [https://inkscape.org/]
+
+  - name: Blender
+    winget: BlenderFoundation.Blender
+    role: 3D 创作
+    category: 设计
+    license: oss
+    free_tier_enough: true
+    why: 开源 3D 套件，建模 / 渲染 / 动画一体，完全免费。
+    verified_at: "2026-11-07"
+    sources: [https://www.blender.org/]
+
+  # 媒体
+  - name: OBS Studio
+    winget: OBSProject.OBSStudio
+    role: 录制 / 直播
+    category: 媒体
+    license: oss
+    free_tier_enough: true
+    why: 开源的专业录屏与直播工具，免费且功能完整，Windows 上原生支持。
+    verified_at: "2026-11-07"
+    sources: [https://obsproject.com/]
+
+  - name: VLC
+    winget: VideoLAN.VLC
+    role: 视频播放
+    category: 媒体
+    license: oss
+    free_tier_enough: true
+    why: 开源播放器，几乎支持所有常见音视频格式，不需要额外装解码器。
+    verified_at: "2026-11-07"
+    sources: [https://www.videolan.org/]
+
+  - name: Audacity
+    winget: Audacity.Audacity
+    role: 音频录制 / 编辑
+    category: 媒体
+    license: oss
+    free_tier_enough: true
+    why: 开源音频工具，播客与配音剪辑够用，Windows 上开箱即用。
+    verified_at: "2026-11-07"
+    sources: [https://www.audacityteam.org/]
+
+  - name: HandBrake
+    winget: HandBrake.HandBrake
+    role: 视频转码
+    category: 媒体
+    license: oss
+    free_tier_enough: true
+    why: 开源视频转码，支持批量与常见格式压缩，无付费版限制。
+    verified_at: "2026-11-07"
+    sources: [https://handbrake.fr/]
+
+  # 网络
+  - name: Firefox
+    winget: Mozilla.Firefox
+    role: 浏览器
+    category: 网络
+    license: oss
+    free_tier_enough: true
+    why: 开源浏览器，隐私设置与扩展生态完整，不绑定账号体系。
+    verified_at: "2026-11-07"
+    sources: [https://www.mozilla.org/firefox/]
+
+  - name: Thunderbird
+    winget: Mozilla.Thunderbird
+    role: 邮件客户端
+    category: 网络
+    license: oss
+    free_tier_enough: true
+    why: 开源邮件客户端，本地归档与多账号管理，数据可导出。
+    verified_at: "2026-11-07"
+    sources: [https://www.thunderbird.net/]
+
+  - name: LocalSend
+    winget: LocalSend.LocalSend
+    role: 局域网文件传输
+    category: 网络
+    license: oss
+    free_tier_enough: true
+    why: 开源、端到端加密的跨平台局域网传输，不用数据线也不用云端中转。
+    verified_at: "2026-11-07"
+    sources: [https://localsend.org/]
+
+  # 写作
+  - name: Obsidian
+    winget: Obsidian.Obsidian
+    role: 笔记 / 写作
+    category: 写作
+    license: free
+    free_tier_enough: true
+    why: 本地优先的 Markdown 笔记，个人使用免费，文件就是纯文本，方便迁移。
+    verified_at: "2026-11-07"
+    sources: [https://obsidian.md/]
+
+  # 安全
+  - name: KeePassXC
+    winget: KeePassXCTeam.KeePassXC
+    role: 密码管理
+    category: 安全
+    license: oss
+    free_tier_enough: true
+    why: 开源离线密码库，数据库文件自己保管，不依赖厂商云。
+    verified_at: "2026-11-07"
+    sources: [https://keepassxc.org/]
+
+  - name: Bitwarden
+    winget: Bitwarden.Bitwarden
+    role: 密码管理 / 同步
+    category: 安全
+    license: freemium
+    free_tier_enough: true
+    why: 免费版已覆盖无限设备与密码同步，客户端开源，跨 Windows / macOS / 手机。
+    verified_at: "2026-11-07"
+    sources: [https://bitwarden.com/pricing/]
+
+equivalences:
+  - from: [WinRAR, "付费压缩软件"]
+    from_role: 压缩 / 解压
+    to:
+      name: 7-Zip
+      winget: 7zip.7zip
+      license: oss
+    free_tier_enough: true
+    why: 7-Zip 开源免费，覆盖 rar / zip / 7z 常用格式，个人使用没有付费提示。
+    verified_at: "2026-11-07"
+    sources: [https://www.7-zip.org/]
+    playbook:
+      summary: 安装 7-Zip 并把压缩文件关联到它
+      data_fidelity: 原有压缩包内容完全不变；只改变由哪个程序打开。
+      steps:
+        - title: 用 winget 安装
+          detail: winget install --id 7zip.7zip --exact
+          source_url: https://www.7-zip.org/
+        - title: 设置文件关联
+          detail: 在 7-Zip 的「选项 → 集成」里勾选常见压缩格式，或在 Windows 设置中把 .zip/.rar 默认应用改为 7-Zip。
+          source_url: https://www.7-zip.org/
+        - title: 验证
+          detail: 双击一个原有压缩包，确认能正常解压且内容完整。
+          source_url: https://www.7-zip.org/
+      verified_at: "2026-11-07"
+
+  - from: ["Adobe Photoshop", "付费图像编辑器"]
+    from_role: 位图编辑
+    to:
+      name: GIMP
+      winget: GIMP.GIMP
+      license: oss
+    free_tier_enough: true
+    why: 修图、抠图、图层合成等日常需求 GIMP 免费覆盖，文件可导出为开放的 PNG / JPEG。
+    verified_at: "2026-11-07"
+    sources: [https://www.gimp.org/]
+    playbook:
+      summary: 先用 GIMP 处理日常图片，复杂 PSD 工程保留原软件
+      data_fidelity: 导出后的 PNG/JPEG 完全一致；PSD 中的智能对象、调整图层可能无法无损还原。
+      steps:
+        - title: 用 winget 安装
+          detail: winget install --id GIMP.GIMP --exact
+          source_url: https://www.gimp.org/
+        - title: 先做轻量任务
+          detail: 裁剪、调色、导出这类任务在 GIMP 中完成，确认输出与原软件一致。
+          source_url: https://docs.gimp.org/
+        - title: 处理旧工程
+          detail: 复杂 PSD 先由原软件导出为 PNG/TIFF 再继续编辑，不要直接在 GIMP 里覆盖原文件。
+          source_url: https://docs.gimp.org/
+      verified_at: "2026-11-07"
+
+  - from: ["1Password", LastPass, "付费密码管理器"]
+    from_role: 密码管理
+    to:
+      name: KeePassXC
+      winget: KeePassXCTeam.KeePassXC
+      license: oss
+    free_tier_enough: true
+    why: 免费开源、离线可用，密码库是本地文件，不依赖厂商订阅或云端。
+    verified_at: "2026-11-07"
+    sources: [https://keepassxc.org/]
+    playbook:
+      summary: 从原密码管理器导出 CSV，导入 KeePassXC 后核对
+      data_fidelity: 用户名 / 密码 / 网址可完整迁移；附件、共享文件夹、自动填充规则可能丢失。
+      steps:
+        - title: 从原工具导出
+          detail: 在原密码管理器里导出为 CSV，临时保存在本机加密目录，导入完成后删除。
+          source_url: https://keepassxc.org/docs/
+        - title: 用 winget 安装并导入
+          detail: winget install --id KeePassXCTeam.KeePassXC --exact，然后在 KeePassXC 里用「导入 → CSV」。
+          source_url: https://keepassxc.org/docs/
+        - title: 抽查与收尾
+          detail: 随机抽查 5 条记录能正常填充；确认无误后删除 CSV 明文文件。
+          source_url: https://keepassxc.org/docs/
+      verified_at: "2026-11-07"

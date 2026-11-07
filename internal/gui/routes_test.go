@@ -36,8 +36,8 @@ func TestRoutes(t *testing.T) {
 	get("/api/status", http.StatusOK)
 	get("/api/audit", http.StatusOK)
 	get("/api/toollists", http.StatusOK)
-	get("/api/toollist?toollist=developers", http.StatusOK)
-	get("/api/toollist/export?toollist=developers", http.StatusOK)
+	get("/api/toollist", http.StatusOK)
+	get("/api/toollist/export", http.StatusOK)
 	get("/api/presets", http.StatusOK)
 	get("/api/outdated", http.StatusBadRequest) // fake backend lacks capability
 	get("/api/explain", http.StatusBadRequest)  // missing app

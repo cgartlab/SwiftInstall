@@ -113,7 +113,7 @@
 const $=s=>document.querySelector(s);
 const LIC={oss:"开源",free:"免费",freemium:"免费版够用",paid:"付费"};
 const qp=k=>new URLSearchParams(location.search).get(k);
-const id=qp("toollist")||"mac-designers";
+let id=qp("toollist")||"";
 let CARDS=[], deck=[], swapN=0, keepN=0, hist=[], swaps=[], title="";
 
 function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
@@ -121,14 +121,14 @@ function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">"
 async function load(){
   try{
     const r=await fetch("/api/toollist?toollist="+encodeURIComponent(id));
-    const c=await r.json();
+    const c=await r.json(); if(!id) id=c.id||"current";
     if(!r.ok) throw new Error(c.error||"读取失败");
     title=c.title||"";
     CARDS=(c.equivalences||[]).map(eq=>{
       const pb=eq.playbook||null;
       const step = pb && pb.steps && pb.steps.length ? (pb.steps[0].title + (pb.steps[0].detail?("："+pb.steps[0].detail):"")) : "可参考官方文档手动切换";
       return {
-        from:(eq.from&&eq.from[0])||"", to:eq.to.name, lic:eq.to.license, brew:eq.to.brew,
+        from:(eq.from&&eq.from[0])||"", to:eq.to.name, lic:eq.to.license, brew:(eq.to.brew&&eq.to.brew!=="homebrew")?eq.to.brew:(eq.to.winget||""),
         role:eq.from_role||"", why:eq.why||"",
         fid:pb&&pb.data_fidelity?pb.data_fidelity:"（暂无数据保真说明）",
         step:step,

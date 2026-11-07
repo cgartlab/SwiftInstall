@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"os"
+	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -17,7 +18,8 @@ var builtinFS embed.FS
 // Item is one curated software entry in a toollist.
 type Item struct {
 	Name           string   `yaml:"name" json:"name"`
-	Brew           string   `yaml:"brew" json:"brew"` // homebrew cask/formula token, if installable
+	Brew           string   `yaml:"brew" json:"brew"`               // homebrew cask/formula token on macOS
+	Winget         string   `yaml:"winget" json:"winget,omitempty"` // winget package id on Windows
 	Role           string   `yaml:"role" json:"role"`
 	Category       string   `yaml:"category" json:"category"`
 	License        string   `yaml:"license" json:"license"` // free | oss | freemium | paid
@@ -29,10 +31,20 @@ type Item struct {
 	Sources        []string `yaml:"sources" json:"sources,omitempty"`
 }
 
+// InstallID returns the package-manager id used when saving a toollist as an
+// install preset. macOS catalogs use brew, Windows catalogs use winget.
+func (it Item) InstallID() string {
+	if it.Brew != "" && it.Brew != "homebrew" {
+		return it.Brew
+	}
+	return it.Winget
+}
+
 // To describes the replacement target of an Equivalence.
 type To struct {
 	Name    string `yaml:"name" json:"name"`
 	Brew    string `yaml:"brew" json:"brew"`
+	Winget  string `yaml:"winget" json:"winget,omitempty"`
 	License string `yaml:"license" json:"license"`
 }
 
@@ -67,20 +79,66 @@ type Equivalence struct {
 
 // Catalog is a curated toollist plus an equivalence table.
 type Catalog struct {
-	ID           string        `yaml:"id" json:"id"`
-	Title        string        `yaml:"title" json:"title"`
-	Audience     string        `yaml:"audience" json:"audience"`
-	Curator      string        `yaml:"curator" json:"curator"`
-	Updated      string        `yaml:"updated" json:"updated"`
+	ID       string `yaml:"id" json:"id"`
+	Title    string `yaml:"title" json:"title"`
+	Audience string `yaml:"audience" json:"audience"`
+	Curator  string `yaml:"curator" json:"curator"`
+	Updated  string `yaml:"updated" json:"updated"`
+	// Platform restricts which OS may surface this catalog:
+	// "macos", "windows", "any", or empty (= any, for imported shared lists).
+	Platform     string        `yaml:"platform" json:"platform,omitempty"`
 	Standard     []string      `yaml:"standard" json:"standard"`
 	Items        []Item        `yaml:"items" json:"items"`
 	Equivalences []Equivalence `yaml:"equivalences" json:"equivalences"`
 }
 
-// BuiltinName is the id/file name of the default shipped catalog.
+// Platform labels used by built-in catalogs.
+const (
+	PlatformMacOS   = "macos"
+	PlatformWindows = "windows"
+	PlatformAny     = "any"
+)
+
+// NormalizePlatform maps a runtime.GOOS value to a catalog platform label.
+func NormalizePlatform(goos string) string {
+	switch goos {
+	case "windows":
+		return PlatformWindows
+	case "darwin":
+		return PlatformMacOS
+	default:
+		return goos
+	}
+}
+
+// CurrentPlatform is the normalized platform of the running binary.
+func CurrentPlatform() string { return NormalizePlatform(runtime.GOOS) }
+
+// AvailableFor reports whether a catalog may be shown on goos. A missing or
+// "any" platform means the catalog is platform-independent (e.g. a list the
+// user imported), so it stays available everywhere.
+func AvailableFor(c *Catalog, goos string) bool {
+	if c == nil {
+		return false
+	}
+	p := NormalizePlatform(goos)
+	// Only the two supported desktop platforms are isolated. On any other GOOS
+	// (e.g. linux CI runners / release builds) every built-in catalog stays
+	// visible, so the CLI, health endpoint and tests keep working there.
+	if p != PlatformWindows && p != PlatformMacOS {
+		return true
+	}
+	if c.Platform == "" || c.Platform == PlatformAny {
+		return true
+	}
+	return c.Platform == p
+}
+
+// BuiltinName is the id/file name of the default shipped catalog on macOS.
 const BuiltinName = "mac-designers.yaml"
 
-// LoadBuiltin loads the catalog shipped inside the binary.
+// LoadBuiltin loads the default catalog shipped inside the binary (macOS
+// default). Platform-aware callers should use LoadBuiltinForPlatform instead.
 func LoadBuiltin() (*Catalog, error) {
 	b, err := builtinFS.ReadFile("builtin/" + BuiltinName)
 	if err != nil {
@@ -124,7 +182,8 @@ func SaveFile(c *Catalog, path string) error {
 	return os.WriteFile(path, b, 0o644)
 }
 
-// EmbeddedNames lists the filenames of the built-in catalogs.
+// EmbeddedNames lists the filenames of ALL built-in catalogs. For a list
+// filtered to the running platform use AvailableNames.
 func EmbeddedNames() ([]string, error) {
 	entries, err := builtinFS.ReadDir("builtin")
 	if err != nil {
@@ -140,8 +199,47 @@ func EmbeddedNames() ([]string, error) {
 	return names, nil
 }
 
+// AvailableNamesFor lists built-in catalog filenames that may be shown on goos.
+func AvailableNamesFor(goos string) ([]string, error) {
+	all, err := EmbeddedNames()
+	if err != nil {
+		return nil, err
+	}
+	out := make([]string, 0, len(all))
+	for _, n := range all {
+		c, err := LoadBuiltinNamed(n)
+		if err != nil {
+			continue
+		}
+		if AvailableFor(c, goos) {
+			out = append(out, n)
+		}
+	}
+	return out, nil
+}
+
+// AvailableNames lists built-in catalogs available on the current platform.
+func AvailableNames() ([]string, error) { return AvailableNamesFor(runtime.GOOS) }
+
+// DefaultNameFor returns the default built-in catalog filename for goos.
+func DefaultNameFor(goos string) string {
+	if NormalizePlatform(goos) == PlatformWindows {
+		return "windows-essentials.yaml"
+	}
+	return BuiltinName
+}
+
+// LoadBuiltinFor loads the default catalog for goos.
+func LoadBuiltinFor(goos string) (*Catalog, error) {
+	return LoadBuiltinNamed(DefaultNameFor(goos))
+}
+
+// LoadBuiltinForPlatform loads the default catalog for the running platform.
+func LoadBuiltinForPlatform() (*Catalog, error) { return LoadBuiltinFor(runtime.GOOS) }
+
 // LoadBuiltinNamed loads a built-in catalog by id ("mac-designers") or by
-// filename ("mac-designers.yaml").
+// filename ("mac-designers.yaml"). It does not apply platform filtering;
+// user-facing entry points should use LoadBuiltinNamedFor.
 func LoadBuiltinNamed(name string) (*Catalog, error) {
 	fname := name
 	if !strings.HasSuffix(fname, ".yaml") {
@@ -152,6 +250,21 @@ func LoadBuiltinNamed(name string) (*Catalog, error) {
 		return nil, fmt.Errorf("未找到内置书单 %q: %w", name, err)
 	}
 	return parse(b)
+}
+
+// LoadBuiltinNamedFor loads a built-in catalog by id but refuses catalogs
+// meant for another platform, so a macOS list cannot be surfaced on Windows
+// (and vice versa) even through a hand-written URL.
+func LoadBuiltinNamedFor(name, goos string) (*Catalog, error) {
+	c, err := LoadBuiltinNamed(name)
+	if err != nil {
+		return nil, err
+	}
+	if !AvailableFor(c, goos) {
+		return nil, fmt.Errorf("软件清单 %q 适用于 %s，当前平台为 %s，已按平台过滤",
+			c.ID, c.Platform, NormalizePlatform(goos))
+	}
+	return c, nil
 }
 
 // Parse parses catalog YAML bytes. Exported for callers such as the GUI import.
