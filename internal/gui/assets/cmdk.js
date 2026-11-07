@@ -44,14 +44,21 @@
   var CMDS = [
     { t: "环境体检", d: "扫描已装软件，看该装 / 该换什么", run: function () { location.href = "/audit"; } },
     { t: "软件清单", d: "浏览精选免费 / 开源清单", run: function () { location.href = "/toollists"; } },
-    { t: "逐条决策 · 设计师清单", d: "用平替滑卡逐条决定", run: function () { location.href = "/swap?toollist=mac-designers"; } },
-    { t: "逐条决策 · 开发者清单", d: "用平替滑卡逐条决定", run: function () { location.href = "/swap?toollist=developers"; } },
-    { t: "逐条决策 · 创作者清单", d: "用平替滑卡逐条决定", run: function () { location.href = "/swap?toollist=creators"; } },
+    { t: "逐条决策这些平替", d: "用平替滑卡逐条决定（当前平台默认清单）", run: function () { location.href = "/swap"; } },
     { t: "系统自检", d: "看包管理器 / 清单新鲜度 / AI 配置", run: function () { location.href = "/health"; } },
     { t: "回到主界面", d: "返回清单管理", run: function () { location.href = "/"; } },
     { t: "回到顶部", d: "滚动到页面顶部", run: function () { close(); window.scrollTo({ top: 0, behavior: "smooth" }); } },
     { t: "刷新", d: "重新加载页面", run: function () { location.reload(); } }
   ];
+  // 只列出服务端返回的「当前平台可用」清单，避免 macOS 清单出现在 Windows 上。
+  fetch("/api/toollists").then(function (r) { return r.json(); }).then(function (d) {
+    (d.toollists || []).forEach(function (b) {
+      if (b.equivalences > 0) {
+        CMDS.push({ t: "逐条决策 · " + b.title, d: "用平替滑卡逐条决定", run: function () { location.href = "/swap?toollist=" + encodeURIComponent(b.id); } });
+      }
+    });
+    filter("");
+  }).catch(function () {});
 
   var inp = ov.querySelector("#cmdkInput");
   var list = ov.querySelector("#cmdkList");

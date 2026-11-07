@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **平台感知软件清单**：内置清单新增 `platform: macos|windows` 标记；`sis toollist list/show/export/verify`、`sis audit`、`sis doctor`、GUI 的 `/api/toollists` / `/api/toollist` / 体检 / 自检 / ⌘K 命令面板全部按 `runtime.GOOS` 过滤，Windows 上不再出现任何 macOS 清单，手工构造 URL 也返回错误。新增 `windows-essentials` 清单（19 项，winget 包 ID 经 `winget search --exact` 核验），前端「设为安装清单」改用 `brew || winget` 安装 ID；前端不再硬编码 macOS 清单 id，体检页文案去掉 macOS 专属措辞。
+
 - **空状态引导**：主界面区分「清单为空」（引导去软件清单挑选）与「过滤无匹配」，附 CTA 按钮，新手更易上手。
 
 - **LLM 接口回归测试**：覆盖 `/api/llm` 保存后 GET 返回脱敏 key（绝不回显明文）、字段往返、非法 JSON→400。

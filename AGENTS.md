@@ -96,3 +96,5 @@ defaults (`install.go` resolves this with `cmd.Flags().Changed`).
 - **macOS manifest tokens** — `macOS/packages.txt` must use real lowercase Homebrew tokens; GUI apps need `kind: cask`.
 - **Production landing page** — `index.html` (自定义 GitHub Pages 入口)，已移除 Jekyll 主题改用纯 HTML
 - **DESIGN_ISSUES.md** — 架构评审文档，位于根目录
+- **Toollists are platform-tagged** — built-in catalogs in `internal/toollist/builtin/*.yaml` carry `platform: macos|windows`. All list/default entry points filter by `runtime.GOOS` (`toollist.AvailableNames` / `LoadBuiltinNamedFor` / `LoadBuiltinForPlatform`), so a Windows build never surfaces a macOS catalog, and a hand-written URL cannot bypass it. Imported catalogs without `platform` stay available everywhere.
+- **Windows install IDs** — Windows catalogs use `winget:` (verified `winget search --exact` ids) instead of `brew:`; the GUI's "设为安装清单" resolves `brew || winget` via `Item.InstallID()`.

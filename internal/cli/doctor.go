@@ -54,7 +54,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 		instCount = len(names)
 	}
 
-	listNames, listErr := toollist.EmbeddedNames()
+	listNames, listErr := toollist.AvailableNames()
 	total, fresh, aging, stale := 0, 0, 0, 0
 	if listErr == nil {
 		total, fresh, aging, stale = summarizeFreshness(listNames, time.Now())

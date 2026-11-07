@@ -392,7 +392,7 @@ func (s *server) handleHealth(w http.ResponseWriter, r *http.Request) {
 		out["installed"] = map[string]any{"ok": true, "count": len(names)}
 	}
 
-	names, _ := toollist.EmbeddedNames()
+	names, _ := toollist.AvailableNames()
 	lists := make([]map[string]any, 0, len(names))
 	totalItems, totalFresh, totalStale := 0, 0, 0
 	for _, n := range names {
@@ -419,7 +419,7 @@ func (s *server) handleHealth(w http.ResponseWriter, r *http.Request) {
 // built-in; empty id means the shipped default.
 func (s *server) catalogByName(id string) (*toollist.Catalog, error) {
 	if id == "" {
-		return toollist.LoadBuiltin()
+		return toollist.LoadBuiltinForPlatform()
 	}
 	s.catMu.RLock()
 	c := s.imported[id]
@@ -427,7 +427,7 @@ func (s *server) catalogByName(id string) (*toollist.Catalog, error) {
 	if c != nil {
 		return c, nil
 	}
-	return toollist.LoadBuiltinNamed(id)
+	return toollist.LoadBuiltinNamedFor(id, runtime.GOOS)
 }
 
 func (s *server) addImported(c *toollist.Catalog) {
@@ -463,7 +463,7 @@ func (s *server) handleToollists(w http.ResponseWriter, r *http.Request) {
 	if !requireGET(w, r) {
 		return
 	}
-	names, err := toollist.EmbeddedNames()
+	names, err := toollist.AvailableNames()
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 		return

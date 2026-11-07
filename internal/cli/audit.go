@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"text/tabwriter"
 
@@ -52,7 +53,7 @@ func newAuditCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&catalogFile, "catalog", "", "自定义软件清单 YAML 路径（默认使用内置软件清单）")
-	cmd.Flags().StringVar(&toollistID, "toollist", "", "内置软件清单 id（如 mac-designers / developers；默认 mac-designers）")
+	cmd.Flags().StringVar(&toollistID, "toollist", "", "内置软件清单 id（默认按当前平台选择；`sis toollist list` 查看可用清单）")
 	return cmd
 }
 
@@ -61,9 +62,9 @@ func loadToollist(path, id string) (*toollist.Catalog, error) {
 		return toollist.LoadFile(path)
 	}
 	if id != "" {
-		return toollist.LoadBuiltinNamed(id)
+		return toollist.LoadBuiltinNamedFor(id, runtime.GOOS)
 	}
-	return toollist.LoadBuiltin()
+	return toollist.LoadBuiltinForPlatform()
 }
 
 func licenseLabel(lic string) string {

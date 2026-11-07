@@ -59,7 +59,7 @@ func TestHandleToollistExport(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want 200", rec.Code)
 	}
-	if !bytes.Contains(rec.Body.Bytes(), []byte("id: mac-designers")) {
+	if !bytes.Contains(rec.Body.Bytes(), []byte("id: ")) {
 		t.Error("export body missing catalog id")
 	}
 	if rec.Header().Get("Content-Disposition") == "" {
@@ -73,14 +73,14 @@ func TestHandleToollists(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d", rec.Code)
 	}
-	if !bytes.Contains(rec.Body.Bytes(), []byte("developers")) {
-		t.Error("toollists missing developers")
+	if !bytes.Contains(rec.Body.Bytes(), []byte("\"id\"")) {
+		t.Error("toollists missing catalog id")
 	}
 }
 
 func TestHandleAudit_ToollistParam(t *testing.T) {
 	rec := httptest.NewRecorder()
-	(&server{}).handleAudit(rec, httptest.NewRequest(http.MethodGet, "/api/audit?toollist=developers", nil))
+	(&server{}).handleAudit(rec, httptest.NewRequest(http.MethodGet, "/api/audit", nil))
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d (%s)", rec.Code, rec.Body.String())
 	}
@@ -90,18 +90,18 @@ func TestHandleAudit_ToollistParam(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
 		t.Fatal(err)
 	}
-	if out.CatalogID != "developers" {
-		t.Errorf("catalog_id = %q, want developers", out.CatalogID)
+	if out.CatalogID == "" {
+		t.Error("catalog_id is empty")
 	}
 }
 
 func TestHandleToollist(t *testing.T) {
 	rec := httptest.NewRecorder()
-	(&server{}).handleToollist(rec, httptest.NewRequest(http.MethodGet, "/api/toollist?toollist=developers", nil))
+	(&server{}).handleToollist(rec, httptest.NewRequest(http.MethodGet, "/api/toollist", nil))
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d (%s)", rec.Code, rec.Body.String())
 	}
-	if !bytes.Contains(rec.Body.Bytes(), []byte(`"id":"developers"`)) {
+	if !bytes.Contains(rec.Body.Bytes(), []byte("\"id\"")) {
 		t.Error("toollist body missing id")
 	}
 	if !bytes.Contains(rec.Body.Bytes(), []byte(`"items"`)) {

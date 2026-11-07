@@ -27,8 +27,8 @@ func TestLoadToollist_BuiltinAndFile(t *testing.T) {
 		t.Fatalf("builtin catalog empty: %+v", c)
 	}
 
-	if dc, err := loadToollist("", "developers"); err != nil || dc.ID != "developers" || len(dc.Items) == 0 {
-		t.Fatalf("load developers: %v %+v", err, dc)
+	if dc, err := loadToollist("", c.ID); err != nil || dc.ID != c.ID || len(dc.Items) == 0 {
+		t.Fatalf("load %s: %v %+v", c.ID, err, dc)
 	}
 
 	p := filepath.Join(t.TempDir(), "c.yaml")
