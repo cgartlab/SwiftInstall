@@ -34,7 +34,7 @@ go install github.com/cgartlab/SwiftInstall/cmd/sis@latest
 | `sis explain <app>` | AI (LLM) first-pass: what the app is + free/open alternatives + migration notes. Requires `sis llm set`; output marked AI-generated |
 | `sis doctor` | One-shot environment self-check: package manager, installed-app scan, toollist freshness, LLM config |
 
-Built-in toollists: `mac-designers`, `developers`, `creators`, `essentials`, `privacy`. `sis audit` and `sis guide` accept `--toollist <id>` to choose one (default `mac-designers`).
+Built-in toollists: `mac-designers`, `developers`, `creators`, `essentials`, `privacy` (macOS) and `windows-essentials` (Windows); catalogs are filtered by the current OS. `sis audit` and `sis guide` accept `--toollist <id>` to choose one (default `mac-designers`).
 | `sis preset` | Save / list / show / delete named manifest presets |
 | `sis install --preset <name>` | Install using a saved preset (also `-p` on list/status/gui/tui) |
 | `sis install` | Install software from a manifest file |
