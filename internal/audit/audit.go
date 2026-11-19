@@ -204,17 +204,19 @@ var wingetColSep = regexp.MustCompile(`\s{2,}`)
 // Id 形如 "Git.Git"，用于与清单的 Winget 字段匹配；显示名（如 "Git"）用于与
 // 清单的 Name 匹配。winget 不可用或输出无法解析时静默跳过（目录扫描仍有效）。
 func (s SystemLister) addWingetTokens(ctx context.Context, set map[string]bool) {
-	if _, err := exec.LookPath("winget.exe"); err != nil {
-		if _, err := exec.LookPath("winget"); err != nil {
-			return
-		}
-	}
-
 	var out []byte
 	var err error
 	if s.wingetList != nil {
+		// 测试注入：跳过 PATH 探测，直接使用注入的输出，使解析逻辑在任意 OS
+		// 上都能被确定性验证（CI 的 ubuntu 上没有 winget 可执行文件）。
 		out, err = s.wingetList(ctx)
 	} else {
+		// 真实调用：先确认 winget 在 PATH 上，缺失则静默跳过（非 Windows 环境）。
+		if _, e := exec.LookPath("winget.exe"); e != nil {
+			if _, e := exec.LookPath("winget"); e != nil {
+				return
+			}
+		}
 		out, err = exec.CommandContext(ctx, "winget", "list",
 			"--accept-source-agreements", "--disable-interactivity").Output()
 	}
