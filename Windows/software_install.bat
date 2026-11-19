@@ -41,14 +41,18 @@ if %errorlevel% equ 0 (
 REM 逐行读取软件列表文件并安装软件
 REM 兼容两种清单：YAML manifest（缩进的 "- id: xxx" 行）与纯 TXT 列表（每行一个 ID）
 REM 说明：本脚本假定清单值是 winget 包 id（与 internal/backend/winget.go 一致），
-REM       因此对 "- id:" 提取路径用 --id --exact；对纯 TXT 兜底路径加 --exact --silent。
+REM       YAML 提取路径用「--id 值 --exact」形式；纯 TXT 兜底路径用「查询值 --exact」形式。
 set "YAML_IDS=%TEMP%\sis_yaml_ids_%RANDOM%%RANDOM%.txt"
 
 REM 只提取“缩进的 - id:”行，避免误匹配 proxy: / category: 等含 "id:" 子串的结构行
 findstr /r /c:"^[ 	]*- id:" "software_list.txt" > "%YAML_IDS%" 2>nul
 
-REM winget 安装参数：--id --exact --silent + 接受协议，防模糊匹配与交互挂起
-set "WG_FLAGS=--id --exact --silent --accept-package-agreements --accept-source-agreements"
+REM winget 安装参数：--exact --silent + 接受协议，防模糊匹配与交互挂起。
+REM 注意：--id 是取值选项，值必须紧跟其后，正确形式是 winget install --id 包ID --exact ...
+REM       若把包 ID 当位置参数、--id 悬空（winget install 包ID --id --exact ...），
+REM       winget 会把 --exact 当作 --id 的值，导致"找不到匹配的包"安装失败
+REM       （已用真实 winget 只读探针实证）。
+set "WG_FLAGS=--exact --silent --accept-package-agreements --accept-source-agreements"
 set /a OK_COUNT=0
 set /a FAIL_COUNT=0
 
@@ -60,7 +64,7 @@ if !errorlevel! equ 0 (
         for /f "tokens=*" %%c in ("!PKG!") do set "PKG=%%c"
         if not "!PKG!"=="" (
             echo Installing software: !PKG!
-            winget install "!PKG!" !WG_FLAGS!
+            winget install --id "!PKG!" !WG_FLAGS!
             if !errorlevel! equ 0 (
                 set /a OK_COUNT+=1
             ) else (
@@ -81,7 +85,7 @@ if !errorlevel! equ 0 (
         if not "!PKG!"=="" if not "!PKG:~0,1!"=="#" (
             if "!PKG!"=="!PKG::=!" (
                 echo Installing software: !PKG!
-                winget install "!PKG!" --exact --silent --accept-package-agreements --accept-source-agreements
+                winget install "!PKG!" !WG_FLAGS!
                 if !errorlevel! equ 0 (
                     set /a OK_COUNT+=1
                 ) else (
