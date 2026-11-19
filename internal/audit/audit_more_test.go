@@ -10,12 +10,20 @@ import (
 )
 
 // stubWinget 返回一个不触发真实 winget 子进程的 SystemLister（用于测试，
-// 保证在 Windows 开发机上 `go test` 既快速又不依赖本机装了哪些软件）。
+// 保证在 Windows 开机上 `go test` 既快速又不依赖本机装了哪些软件）。
 func stubWinget(roots []string) SystemLister {
 	return SystemLister{
 		Roots:      roots,
 		wingetList: func(context.Context) ([]byte, error) { return nil, nil },
 	}
+}
+
+// winOverride 返回一个指向 true 的指针，用于在任意 OS 上确定性地启用 Windows
+// 语义（Program Files 扫描 + winget token），使相关测试在 CI 的 ubuntu 上不被
+// runtime.GOOS 门控旁路。
+func winOverride() *bool {
+	b := true
+	return &b
 }
 
 func TestSystemLister_TempDir(t *testing.T) {
@@ -60,7 +68,12 @@ func TestSystemLister_WindowsProgramDirs(t *testing.T) {
 	mustWrite(t, filepath.Join(root, "uninstall.exe")) // 文件，忽略
 	mustWrite(t, filepath.Join(root, "Git", "bin", "git.exe"))
 
-	got, err := stubWinget([]string{root}).Installed(context.Background())
+	l := SystemLister{
+		Roots:             []string{root},
+		isWindowsOverride: winOverride(),
+		wingetList:        func(context.Context) ([]byte, error) { return nil, nil },
+	}
+	got, err := l.Installed(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,9 +102,12 @@ Tencent WeChat             Tencent.WeChat           3.9.10                 winge
 // TestSystemLister_WingetTokens 验证 winget 表格解析：Id 与显示名都进入已装集合，
 // 表头与分隔线被跳过。通过注入 wingetList，不依赖本机 winget。
 func TestSystemLister_WingetTokens(t *testing.T) {
-	l := SystemLister{wingetList: func(context.Context) ([]byte, error) {
-		return []byte(fakeWingetTable), nil
-	}}
+	l := SystemLister{
+		isWindowsOverride: winOverride(),
+		wingetList: func(context.Context) ([]byte, error) {
+			return []byte(fakeWingetTable), nil
+		},
+	}
 	got, err := l.Installed(context.Background())
 	if err != nil {
 		t.Fatal(err)
@@ -120,10 +136,11 @@ func TestSystemLister_WingetTokens(t *testing.T) {
 
 // TestSystemLister_WingetUnavailable 测试 winget 不可用/出错时优雅降级（不报错）。
 func TestSystemLister_WingetUnavailable(t *testing.T) {
-	l := SystemLister{wingetList: func(context.Context) ([]byte, error) {
-		return nil, context.DeadlineExceeded
-	}}
-	// 无 Roots（windowsRoots 在非 Windows 上为空）→ 不会 panic，返回空/少量结果。
+	l := SystemLister{
+		isWindowsOverride: winOverride(),
+		wingetList:        func(context.Context) ([]byte, error) { return nil, context.DeadlineExceeded },
+	}
+	// winget 出错应被吞掉、不向上冒泡；目录扫描缺失也优雅降级。
 	if _, err := l.Installed(context.Background()); err != nil {
 		t.Fatalf("winget failure should not surface as error: %v", err)
 	}

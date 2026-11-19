@@ -44,8 +44,21 @@ type SystemLister struct {
 	Roots []string
 	// wingetList overrides the `winget list` invocation (mainly for tests).
 	// When nil the real command is run; it returns the raw stdout bytes.
-	// Only used on windows.
+	// Only used when the effective OS is windows (see isWindows).
 	wingetList func(ctx context.Context) ([]byte, error)
+	// isWindowsOverride overrides the running-OS check (mainly for tests) so the
+	// Windows 目录扫描与 winget token 解析在任何 OS 上都能被确定性测试，
+	// 而不会在 CI 的 ubuntu 上被 runtime.GOOS 门控旁路掉。零值时回退到真实 GOOS。
+	isWindowsOverride *bool
+}
+
+// isWindows reports whether the Windows 语义（Program Files 扫描 + winget token）
+// 生效。默认取真实 runtime.GOOS，测试可通过 isWindowsOverride 字段覆盖。
+func (s SystemLister) isWindows() bool {
+	if s.isWindowsOverride != nil {
+		return *s.isWindowsOverride
+	}
+	return runtime.GOOS == "windows"
 }
 
 // darwinRoots 返回 macOS 上常见的应用目录。
@@ -85,12 +98,14 @@ func windowsRoots() []string {
 	return roots
 }
 
-// defaultRoots returns the application folders for the running OS.
-func defaultRoots() []string {
-	switch runtime.GOOS {
-	case "windows":
+// defaultRoots returns the application folders for the effective OS.
+// windows 参数来自 SystemLister.isWindows()，使注入的 OS 语义（测试）与真实
+// GOOS 走同一套选择逻辑。
+func defaultRoots(windows bool) []string {
+	switch {
+	case windows:
 		return windowsRoots()
-	case "darwin":
+	case runtime.GOOS == "darwin":
 		return darwinRoots()
 	default:
 		// linux/其它：没有统一的应用目录，返回空以优雅降级。
@@ -104,7 +119,7 @@ func (s SystemLister) Installed(ctx context.Context) ([]string, error) {
 
 	roots := s.Roots
 	if len(roots) == 0 {
-		roots = defaultRoots()
+		roots = defaultRoots(s.isWindows())
 	}
 
 	// .app bundle 扫描（macOS 语义）：所有平台都执行是无害的——非 macOS
@@ -112,12 +127,12 @@ func (s SystemLister) Installed(ctx context.Context) ([]string, error) {
 	// 契约在测试与边缘环境下保持一致。
 	scanAppBundleDirs(roots, set)
 	// Windows 额外记录标准安装目录下的顶层应用文件夹（Git、7-Zip、Steam 等）。
-	if runtime.GOOS == "windows" {
+	if s.isWindows() {
 		scanWindowsProgramDirs(roots, set)
 	}
 
 	// 包管理器 token：macOS 用 Homebrew，Windows 用 winget。
-	if runtime.GOOS == "windows" {
+	if s.isWindows() {
 		s.addWingetTokens(ctx, set)
 	} else {
 		addBrewTokens(ctx, set)
