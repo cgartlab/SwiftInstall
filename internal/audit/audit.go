@@ -14,6 +14,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -27,14 +29,27 @@ type Lister interface {
 	Installed(ctx context.Context) ([]string, error)
 }
 
-// SystemLister scans the running machine: standard macOS app folders plus
-// Homebrew tokens. Missing folders are ignored, so it degrades gracefully.
+// SystemLister scans the running machine for installed applications.
+//
+// 行为按操作系统划分：
+//   - darwin：扫描标准 .app 目录（/Applications 等）并追加 Homebrew token。
+//   - windows：扫描标准安装目录（Program Files / Program Files (x86) /
+//     %LOCALAPPDATA%\Programs）的顶层应用文件夹，并追加 `winget list` 的
+//     包 id 与显示名。
+//   - 其它 OS：没有统一的应用目录，目录扫描降级为空，仅依赖包管理器（当前无）。
+//
+// 缺失的目录与不可用的包管理器都会被忽略，因此在受限环境下优雅降级。
 type SystemLister struct {
 	// Roots overrides the default application folders (mainly for tests).
 	Roots []string
+	// wingetList overrides the `winget list` invocation (mainly for tests).
+	// When nil the real command is run; it returns the raw stdout bytes.
+	// Only used on windows.
+	wingetList func(ctx context.Context) ([]byte, error)
 }
 
-func defaultRoots() []string {
+// darwinRoots 返回 macOS 上常见的应用目录。
+func darwinRoots() []string {
 	home, _ := os.UserHomeDir()
 	return []string{
 		"/Applications",
@@ -42,6 +57,44 @@ func defaultRoots() []string {
 		"/System/Applications",
 		"/System/Applications/Utilities",
 		filepath.Join(home, "Applications"),
+	}
+}
+
+// windowsRoots 返回 Windows 上常见的应用安装目录。优先读取标准环境变量，
+// 缺失时回退到硬编码的默认路径，保证在环境变量被裁剪的极端环境下仍能扫描。
+func windowsRoots() []string {
+	var roots []string
+	add := func(p string) {
+		if p != "" {
+			roots = append(roots, p)
+		}
+	}
+	pf := os.Getenv("ProgramFiles")
+	if pf == "" {
+		pf = `C:\Program Files`
+	}
+	add(pf)
+	pfx86 := os.Getenv("ProgramFiles(x86)")
+	if pfx86 == "" {
+		pfx86 = `C:\Program Files (x86)`
+	}
+	add(pfx86)
+	if lad := os.Getenv("LOCALAPPDATA"); lad != "" {
+		add(filepath.Join(lad, "Programs"))
+	}
+	return roots
+}
+
+// defaultRoots returns the application folders for the running OS.
+func defaultRoots() []string {
+	switch runtime.GOOS {
+	case "windows":
+		return windowsRoots()
+	case "darwin":
+		return darwinRoots()
+	default:
+		// linux/其它：没有统一的应用目录，返回空以优雅降级。
+		return nil
 	}
 }
 
@@ -53,6 +106,35 @@ func (s SystemLister) Installed(ctx context.Context) ([]string, error) {
 	if len(roots) == 0 {
 		roots = defaultRoots()
 	}
+
+	// .app bundle 扫描（macOS 语义）：所有平台都执行是无害的——非 macOS
+	// 系统上几乎不存在 .app 目录，因此不会产生额外结果；同时让同一份目录
+	// 契约在测试与边缘环境下保持一致。
+	scanAppBundleDirs(roots, set)
+	// Windows 额外记录标准安装目录下的顶层应用文件夹（Git、7-Zip、Steam 等）。
+	if runtime.GOOS == "windows" {
+		scanWindowsProgramDirs(roots, set)
+	}
+
+	// 包管理器 token：macOS 用 Homebrew，Windows 用 winget。
+	if runtime.GOOS == "windows" {
+		s.addWingetTokens(ctx, set)
+	} else {
+		addBrewTokens(ctx, set)
+	}
+
+	res := make([]string, 0, len(set))
+	for k := range set {
+		res = append(res, k)
+	}
+	sort.Strings(res)
+	return res, nil
+}
+
+// scanAppBundleDirs 记录 roots 下出现的 .app bundle（去掉 .app 后缀），
+// 且不会进入 bundle 内部（避免把 helper/内嵌应用重复计数）。深层非应用目录
+// 会被跳过。缺失或不可读的目录被忽略。
+func scanAppBundleDirs(roots []string, set map[string]bool) {
 	for _, root := range roots {
 		_ = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
@@ -77,9 +159,77 @@ func (s SystemLister) Installed(ctx context.Context) ([]string, error) {
 			return nil
 		})
 	}
+}
 
-	// Homebrew tokens (casks + formulae) improve matching for CLI tools and
-	// for apps installed via brew.
+// scanWindowsProgramDirs 记录 roots 下每个顶层子目录的名字。Windows 上一个
+// 安装目录通常对应一个应用（Git、7-Zip、Node.js、Steam、WeChat 等），其名字
+// 足够与清单里的显示名做归一化匹配。只取顶层，避免把 bin/ 卸载器等子目录当应用。
+func scanWindowsProgramDirs(roots []string, set map[string]bool) {
+	for _, root := range roots {
+		entries, err := os.ReadDir(root)
+		if err != nil {
+			continue // 缺失或无权限的目录直接跳过
+		}
+		for _, e := range entries {
+			if !e.IsDir() {
+				continue
+			}
+			if name := e.Name(); name != "" {
+				set[name] = true
+			}
+		}
+	}
+}
+
+// wingetColSep 匹配 winget 表格输出里的列分隔（至少两个空白）。
+// Name 列本身可能含空格，因此不能用 strings.Fields。
+var wingetColSep = regexp.MustCompile(`\s{2,}`)
+
+// addWingetTokens 运行 `winget list`，把每个已装包的 Id 与显示名加入 set。
+// Id 形如 "Git.Git"，用于与清单的 Winget 字段匹配；显示名（如 "Git"）用于与
+// 清单的 Name 匹配。winget 不可用或输出无法解析时静默跳过（目录扫描仍有效）。
+func (s SystemLister) addWingetTokens(ctx context.Context, set map[string]bool) {
+	if _, err := exec.LookPath("winget.exe"); err != nil {
+		if _, err := exec.LookPath("winget"); err != nil {
+			return
+		}
+	}
+
+	var out []byte
+	var err error
+	if s.wingetList != nil {
+		out, err = s.wingetList(ctx)
+	} else {
+		out, err = exec.CommandContext(ctx, "winget", "list",
+			"--accept-source-agreements", "--disable-interactivity").Output()
+	}
+	if err != nil {
+		return
+	}
+
+	for _, line := range strings.Split(string(out), "\n") {
+		line = strings.TrimRight(line, " \t\r")
+		if line == "" || strings.HasPrefix(line, "---") {
+			continue // 空行 / 表格分隔线
+		}
+		cols := wingetColSep.Split(line, -1)
+		if len(cols) < 2 {
+			continue
+		}
+		id := strings.TrimSpace(cols[1])
+		name := strings.TrimSpace(cols[0])
+		if id != "" && !strings.EqualFold(id, "Id") {
+			set[id] = true
+		}
+		if name != "" && !strings.EqualFold(name, "Name") {
+			set[name] = true
+		}
+	}
+}
+
+// addBrewTokens 追加 Homebrew 的 formulae + casks token，用于改进 CLI 工具与
+// 通过 brew 安装的应用的匹配。brew 不可用时静默跳过。
+func addBrewTokens(ctx context.Context, set map[string]bool) {
 	if _, err := exec.LookPath("brew"); err == nil {
 		if out, err := exec.CommandContext(ctx, "brew", "list").Output(); err == nil {
 			for _, line := range strings.Split(string(out), "\n") {
@@ -90,13 +240,6 @@ func (s SystemLister) Installed(ctx context.Context) ([]string, error) {
 			}
 		}
 	}
-
-	res := make([]string, 0, len(set))
-	for k := range set {
-		res = append(res, k)
-	}
-	sort.Strings(res)
-	return res, nil
 }
 
 // Recommendation is one actionable item in the report.
@@ -105,6 +248,7 @@ type Recommendation struct {
 	From           string             `json:"from,omitempty"`
 	Name           string             `json:"name"`
 	Brew           string             `json:"brew,omitempty"`
+	Winget         string             `json:"winget,omitempty"` // winget 包 id（Windows）
 	License        string             `json:"license"`
 	Role           string             `json:"role,omitempty"`
 	Category       string             `json:"category,omitempty"`
@@ -186,8 +330,12 @@ func Run(ctx context.Context, l Lister, cat *toollist.Catalog) (*Report, error) 
 		if eq.To.Brew != "" && norm[Normalize(eq.To.Brew)] {
 			continue
 		}
+		if eq.To.Winget != "" && norm[Normalize(eq.To.Winget)] {
+			continue
+		}
 		rep.Replaces = append(rep.Replaces, Recommendation{
 			Kind: "replace", From: matched, Name: eq.To.Name, Brew: eq.To.Brew,
+			Winget: eq.To.Winget,
 			License: eq.To.License, Role: eq.FromRole, FreeTierEnough: eq.FreeTierEnough,
 			Why: eq.Why, Sources: eq.Sources, Playbook: eq.Playbook,
 			VerifiedAt: eq.VerifiedAt, Stale: staleState(eq.VerifiedAt),
@@ -195,15 +343,18 @@ func Run(ctx context.Context, l Lister, cat *toollist.Catalog) (*Report, error) 
 	}
 
 	// Toollist items: keep when installed, otherwise recommend adding.
+	// 已装判定同时看显示名（Name）与两个包管理器 token（Brew / Winget），
+	// 这样 Windows 上的 winget 条目也能参与匹配。
 	for _, it := range cat.Items {
 		installedItem := norm[Normalize(it.Name)] ||
-			(it.Brew != "" && norm[Normalize(it.Brew)])
+			(it.Brew != "" && norm[Normalize(it.Brew)]) ||
+			(it.Winget != "" && norm[Normalize(it.Winget)])
 		if installedItem {
 			rep.Keeps = append(rep.Keeps, it.Name)
 			continue
 		}
 		rep.Adds = append(rep.Adds, Recommendation{
-			Kind: "add", Name: it.Name, Brew: it.Brew, License: it.License,
+			Kind: "add", Name: it.Name, Brew: it.Brew, Winget: it.Winget, License: it.License,
 			Role: it.Role, Category: it.Category, FreeTierEnough: it.FreeTierEnough, Why: it.Why, Sources: it.Sources,
 			VerifiedAt: it.VerifiedAt, Stale: staleState(it.VerifiedAt),
 		})
@@ -218,6 +369,9 @@ func Run(ctx context.Context, l Lister, cat *toollist.Catalog) (*Report, error) 
 		if it.Brew != "" {
 			known[Normalize(it.Brew)] = true
 		}
+		if it.Winget != "" {
+			known[Normalize(it.Winget)] = true
+		}
 	}
 	for _, eq := range cat.Equivalences {
 		for _, f := range eq.From {
@@ -228,6 +382,9 @@ func Run(ctx context.Context, l Lister, cat *toollist.Catalog) (*Report, error) 
 		}
 		if eq.To.Brew != "" {
 			known[Normalize(eq.To.Brew)] = true
+		}
+		if eq.To.Winget != "" {
+			known[Normalize(eq.To.Winget)] = true
 		}
 	}
 	var unmatched []string

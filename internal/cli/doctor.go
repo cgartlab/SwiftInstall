@@ -71,6 +71,8 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 			inst["error"] = instErr.Error()
 		} else {
 			inst["count"] = instCount
+			// 扫描成功但为 0 时显式标注，避免下游把 0 误读为正常空环境。
+			inst["empty"] = instCount == 0
 		}
 		var tl map[string]any
 		if listErr != nil {
@@ -94,6 +96,10 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	}
 	if instErr != nil {
 		fmt.Printf("  已装扫描        ✗ %v\n", instErr)
+	} else if instCount == 0 {
+		// 扫描成功但一个应用都没识别到：不当作成功（避免误导性的绿色 ✓），
+		// 如实提示扫描可能不可用或受限。
+		fmt.Printf("  已装扫描        ! 未识别到任何已装应用（扫描可能不可用或受限，结果不可信）\n")
 	} else {
 		fmt.Printf("  已装扫描        ✓ 识别到 %d 个应用/包\n", instCount)
 	}
