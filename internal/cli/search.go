@@ -15,7 +15,7 @@ import (
 func newSearchCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "search <关键词>",
-		Short: "在 Homebrew 仓库中搜索软件包",
+		Short: "在当前后端的软件仓库中搜索软件包",
 		Long: `在当前后端的软件仓库中搜索软件包（macOS 上即 Homebrew 全部 formula 与 cask）。
 返回名称列表，标注频道与是否已安装。
 
