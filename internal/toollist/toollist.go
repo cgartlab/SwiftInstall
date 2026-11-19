@@ -247,7 +247,7 @@ func LoadBuiltinNamed(name string) (*Catalog, error) {
 	}
 	b, err := builtinFS.ReadFile("builtin/" + fname)
 	if err != nil {
-		return nil, fmt.Errorf("未找到内置书单 %q: %w", name, err)
+		return nil, fmt.Errorf("未找到内置软件清单 %q: %w", name, err)
 	}
 	return parse(b)
 }

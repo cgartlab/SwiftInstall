@@ -176,7 +176,7 @@ go build -ldflags "-X main.Version=$(cat VERSION)" -o sis ./cmd/sis/
 sis gui        图形界面（浏览器窗口内浏览、勾选、一键安装/卸载）
 sis tui        交互式终端界面（浏览清单、选择并安装）
 sis preset     保存 / 列出 / 切换 / 删除软件清单预设
-sis search     在 Homebrew 仓库中搜索软件包
+sis search     在当前后端的软件仓库中搜索（Windows winget 暂不支持）
 sis audit      体检已装软件：可核验评价 + 免费/开源平替建议（--toollist 选内置软件清单）
 sis guide      查看迁移指导（从软件换到免费/开源平替的步骤，只读）
 sis toollist    查看 / 导出软件清单（导出 YAML 分享，别人可 sis audit --catalog 加载）
@@ -230,14 +230,14 @@ sis tui
 
 ---
 
-### search — 搜索 Homebrew 仓库
+### search — 搜索当前后端的软件仓库
 
 ```bash
-sis search figma            # 搜索全部 formula / cask
+sis search figma            # 搜索全部 formula / cask（macOS / Homebrew）
 sis search python --format json
 ```
 
-在 Homebrew 全仓库（所有 tap 的 formula 与 cask）中搜索，结果标注频道与是否已安装。GUI 里点顶部「搜索 Homebrew」按钮可在浏览器中实时搜索，结果可一键加入清单再安装。
+在当前后端的软件仓库中搜索。**macOS** 上走 Homebrew：在全仓库（所有 tap 的 formula 与 cask）中搜索，结果标注频道与是否已安装；GUI 里点顶部「搜索」按钮可在浏览器中实时搜索，结果可一键加入清单再安装。**Windows** 上 winget 后端暂未实现仓库搜索，`sis search` 会提示「当前后端 (winget) 不支持仓库搜索」。
 
 ---
 

@@ -2,7 +2,8 @@
 # 使用 sis install -f software_list.txt 安装
 
 settings:
-  proxy: "http://127.0.0.1:7890"
+  # 如需代理，请在命令行用 --proxy 或在此取消注释并填入你的代理地址
+  # proxy: "http://127.0.0.1:7890"
   skip_existing: true
   retry_count: 3
   retry_delay: 5
