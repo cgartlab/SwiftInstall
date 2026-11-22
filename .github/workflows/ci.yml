@@ -60,7 +60,7 @@ jobs:
         run: ./sis-linux-amd64 --help
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sis-linux-amd64-${{ github.sha }}
           path: sis-linux-amd64
